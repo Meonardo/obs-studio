@@ -451,7 +451,7 @@ bool OBSApp::InitGlobalConfigDefaults()
 	config_set_default_bool(globalConfig, "BasicWindow",
 				"KeepRecordingWhenStreamStops", false);
 	config_set_default_bool(globalConfig, "BasicWindow", "SysTrayEnabled",
-				true);
+				false);
 	config_set_default_bool(globalConfig, "BasicWindow",
 				"SysTrayWhenStarted", false);
 	config_set_default_bool(globalConfig, "BasicWindow", "SaveProjectors",
@@ -1468,6 +1468,9 @@ bool OBSApp::OBSInit()
 	connect(mainWindow, SIGNAL(destroyed()), this, SLOT(quit()));
 
 	mainWindow->OBSInit();
+	// hide main window
+	/*mainWindow->hide();
+	mainWindow->setVisible(false);*/
 
 	connect(this, &QGuiApplication::applicationStateChanged,
 		[this](Qt::ApplicationState state) {

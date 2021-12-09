@@ -1398,7 +1398,7 @@ bool OBSBasic::InitBasicConfigDefaults()
 	config_set_default_string(basicConfig, "SimpleOutput", "FilePath",
 				  GetDefaultVideoSavePath().c_str());
 	config_set_default_string(basicConfig, "SimpleOutput", "RecFormat",
-				  "mkv");
+				  "mp4");
 	config_set_default_uint(basicConfig, "SimpleOutput", "VBitrate", 2500);
 	config_set_default_uint(basicConfig, "SimpleOutput", "ABitrate", 160);
 	config_set_default_bool(basicConfig, "SimpleOutput", "UseAdvanced",
@@ -1426,7 +1426,7 @@ bool OBSBasic::InitBasicConfigDefaults()
 
 	config_set_default_string(basicConfig, "AdvOut", "RecFilePath",
 				  GetDefaultVideoSavePath().c_str());
-	config_set_default_string(basicConfig, "AdvOut", "RecFormat", "mkv");
+	config_set_default_string(basicConfig, "AdvOut", "RecFormat", "mp4");
 	config_set_default_bool(basicConfig, "AdvOut", "RecUseRescale", false);
 	config_set_default_uint(basicConfig, "AdvOut", "RecTracks", (1 << 0));
 	config_set_default_string(basicConfig, "AdvOut", "RecEncoder", "none");
@@ -1487,8 +1487,8 @@ bool OBSBasic::InitBasicConfigDefaults()
 	uint32_t scale_cy = cy;
 
 	/* use a default scaled resolution that has a pixel count no higher
-	 * than 1280x720 */
-	while (((scale_cx * scale_cy) > (1280 * 720)) && scaled_vals[i] > 0.0) {
+	 * than 1280x720  -> 1920x1080*/
+	while (((scale_cx * scale_cy) > (1920 * 1080)) && scaled_vals[i] > 0.0) {
 		double scale = scaled_vals[i++];
 		scale_cx = uint32_t(double(cx) / scale);
 		scale_cy = uint32_t(double(cy) / scale);
@@ -2033,9 +2033,9 @@ void OBSBasic::OBSInit()
 		config_save_safe(App()->GlobalConfig(), "tmp", nullptr);
 	}
 
-	if (!first_run && !has_last_version && !Active())
-		QMetaObject::invokeMethod(this, "on_autoConfigure_triggered",
-					  Qt::QueuedConnection);
+	//if (!first_run && !has_last_version && !Active())
+	//	QMetaObject::invokeMethod(this, "on_autoConfigure_triggered",
+	//				  Qt::QueuedConnection);
 
 	ToggleMixerLayout(config_get_bool(App()->GlobalConfig(), "BasicWindow",
 					  "VerticalVolControl"));
