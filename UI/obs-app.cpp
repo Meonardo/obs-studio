@@ -76,6 +76,7 @@ static string currentLogFile;
 static string lastLogFile;
 static string lastCrashLogFile;
 
+bool hide_main_window = true;
 bool portable_mode = false;
 static bool multi = false;
 static bool log_verbose = false;
@@ -1469,9 +1470,12 @@ bool OBSApp::OBSInit()
 
 	mainWindow->OBSInit();
 	// hide main window
-	/*mainWindow->hide();
-	mainWindow->setVisible(false);*/
 
+	if (hide_main_window) {
+		mainWindow->hide();
+		mainWindow->setVisible(false);
+	}
+	
 	connect(this, &QGuiApplication::applicationStateChanged,
 		[this](Qt::ApplicationState state) {
 			ResetHotkeyState(state == Qt::ApplicationActive);
@@ -1516,6 +1520,11 @@ string OBSApp::GetVersionString() const
 bool OBSApp::IsPortableMode()
 {
 	return portable_mode;
+}
+
+bool OBSApp::IsHideMainWindow()
+{
+	return hide_main_window;
 }
 
 bool OBSApp::IsUpdaterDisabled()
@@ -2713,6 +2722,9 @@ int main(int argc, char *argv[])
 	for (int i = 1; i < argc; i++) {
 		if (arg_is(argv[i], "--portable", "-p")) {
 			portable_mode = true;
+
+		} else if (arg_is(argv[i], "--show", nullptr)) {
+			hide_main_window = false;
 
 		} else if (arg_is(argv[i], "--multi", "-m")) {
 			multi = true;
