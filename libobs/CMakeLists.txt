@@ -201,17 +201,20 @@ elseif(UNIX)
 
 	if(ENABLE_WAYLAND)
 		find_package(Wayland COMPONENTS Client REQUIRED)
+		find_package(Xkbcommon REQUIRED)
 
 		set(libobs_PLATFORM_SOURCES ${libobs_PLATFORM_SOURCES}
 			obs-nix-wayland.c)
 
 		include_directories(
-			${WAYLAND_CLIENT_INCLUDE_DIR})
+			${WAYLAND_CLIENT_INCLUDE_DIR}
+			${XKBCOMMON_INCLUDE_DIR})
 		add_definitions(
 			${WAYLAND_DEFINITIONS})
 		set(libobs_PLATFORM_DEPS
 			${libobs_PLATFORM_DEPS}
-			${WAYLAND_CLIENT_LIBRARIES})
+			${WAYLAND_CLIENT_LIBRARIES}
+			${XKBCOMMON_LIBRARIES})
 	endif()
 
 	if(HAVE_PULSEAUDIO)
@@ -378,6 +381,7 @@ set(libobs_util_SOURCES
 	util/bmem.c
 	util/config-file.c
 	util/lexer.c
+	util/task.c
 	util/dstr.c
 	util/utf8.c
 	util/crc32.c
@@ -408,6 +412,7 @@ set(libobs_util_HEADERS
 	util/serializer.h
 	util/config-file.h
 	util/lexer.h
+	util/task.h
 	util/platform.h
 	util/profiler.h
 	util/profiler.hpp

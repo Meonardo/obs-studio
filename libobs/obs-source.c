@@ -87,6 +87,7 @@ static const char *source_signals[] = {
 	"void update_properties(ptr source)",
 	"void update_flags(ptr source, int flags)",
 	"void audio_sync(ptr source, int out int offset)",
+	"void audio_balance(ptr source, in out float balance)",
 	"void audio_mixers(ptr source, in out int mixers)",
 	"void audio_monitoring(ptr source, int type)",
 	"void audio_activate(ptr source)",
@@ -606,11 +607,10 @@ static inline void obs_source_frame_decref(struct obs_source_frame *frame)
 
 static bool obs_source_filter_remove_refless(obs_source_t *source,
 					     obs_source_t *filter);
+static void obs_source_destroy_defer(struct obs_source *source);
 
 void obs_source_destroy(struct obs_source *source)
 {
-	size_t i;
-
 	if (!obs_source_valid(source, "obs_source_destroy"))
 		return;
 
@@ -634,15 +634,28 @@ void obs_source_destroy(struct obs_source *source)
 
 	obs_context_data_remove(&source->context);
 
-	blog(LOG_DEBUG, "%ssource '%s' destroyed",
-	     source->context.private ? "private " : "", source->context.name);
+	/* defer source destroy */
+	os_task_queue_queue_task(obs->destruction_task_thread,
+				 (os_task_t)obs_source_destroy_defer, source);
+}
+
+static void obs_source_destroy_defer(struct obs_source *source)
+{
+	size_t i;
 
 	obs_source_dosignal(source, "source_destroy", "destroy");
+
+	/* prevents the destruction of sources if destroy triggered inside of
+	 * a video tick call */
+	obs_context_wait(&source->context);
 
 	if (source->context.data) {
 		source->info.destroy(source->context.data);
 		source->context.data = NULL;
 	}
+
+	blog(LOG_DEBUG, "%ssource '%s' destroyed",
+	     source->context.private ? "private " : "", source->context.name);
 
 	audio_monitor_destroy(source->monitor);
 
@@ -792,8 +805,12 @@ void obs_source_remove(obs_source_t *source)
 		return;
 
 	if (!source->removed) {
-		source->removed = true;
-		obs_source_dosignal(source, "source_remove", "remove");
+		obs_source_t *s = obs_source_get_ref(source);
+		if (s) {
+			s->removed = true;
+			obs_source_dosignal(s, "source_remove", "remove");
+			obs_source_release(s);
+		}
 	}
 }
 
@@ -2939,7 +2956,11 @@ obs_source_output_video_internal(obs_source_t *source,
 		return;
 
 	if (!frame) {
+		pthread_mutex_lock(&source->async_mutex);
 		source->async_active = false;
+		source->last_frame_ts = 0;
+		free_async_cache(source);
+		pthread_mutex_unlock(&source->async_mutex);
 		return;
 	}
 
@@ -5134,10 +5155,19 @@ enum speaker_layout obs_source_get_speaker_layout(obs_source_t *source)
 
 void obs_source_set_balance_value(obs_source_t *source, float balance)
 {
-	if (!obs_source_valid(source, "obs_source_set_balance_value"))
-		return;
+	if (obs_source_valid(source, "obs_source_set_balance_value")) {
+		struct calldata data;
+		uint8_t stack[128];
 
-	source->balance = balance;
+		calldata_init_fixed(&data, stack, sizeof(stack));
+		calldata_set_ptr(&data, "source", source);
+		calldata_set_float(&data, "balance", balance);
+
+		signal_handler_signal(source->context.signals, "audio_balance",
+				      &data);
+
+		source->balance = (float)calldata_float(&data, "balance");
+	}
 }
 
 float obs_source_get_balance_value(const obs_source_t *source)

@@ -66,6 +66,8 @@ OBSAdvAudioCtrl::OBSAdvAudioCtrl(QGridLayout *, obs_source_t *source_)
 					     this);
 	mixersSignal.Connect(handler, "audio_mixers", OBSSourceMixersChanged,
 			     this);
+	balChangedSignal.Connect(handler, "audio_balance",
+				 OBSSourceBalanceChanged, this);
 
 	hlayout = new QHBoxLayout();
 	hlayout->setContentsMargins(0, 0, 0, 0);
@@ -351,6 +353,13 @@ void OBSAdvAudioCtrl::OBSSourceMixersChanged(void *param, calldata_t *calldata)
 				  Q_ARG(uint32_t, mixers));
 }
 
+void OBSAdvAudioCtrl::OBSSourceBalanceChanged(void *param, calldata_t *calldata)
+{
+	int balance = (float)calldata_float(calldata, "balance") * 100.0f;
+	QMetaObject::invokeMethod(reinterpret_cast<OBSAdvAudioCtrl *>(param),
+				  "SourceBalanceChanged", Q_ARG(int, balance));
+}
+
 /* ------------------------------------------------------------------------- */
 /* Qt event queue source callbacks */
 
@@ -386,6 +395,13 @@ void OBSAdvAudioCtrl::SourceVolumeChanged(float value)
 	percent->setValue((int)std::round(value * 100.0f));
 	percent->blockSignals(false);
 	volume->blockSignals(false);
+}
+
+void OBSAdvAudioCtrl::SourceBalanceChanged(int value)
+{
+	balance->blockSignals(true);
+	balance->setValue(value);
+	balance->blockSignals(false);
 }
 
 void OBSAdvAudioCtrl::SourceSyncChanged(int64_t offset)
@@ -429,9 +445,9 @@ void OBSAdvAudioCtrl::volumeChanged(double db)
 	obs_source_set_volume(source, val);
 
 	auto undo_redo = [](const std::string &name, float val) {
-		obs_source_t *source = obs_get_source_by_name(name.c_str());
+		OBSSourceAutoRelease source =
+			obs_get_source_by_name(name.c_str());
 		obs_source_set_volume(source, val);
-		obs_source_release(source);
 	};
 
 	const char *name = obs_source_get_name(source);
@@ -452,9 +468,9 @@ void OBSAdvAudioCtrl::percentChanged(int percent)
 	obs_source_set_volume(source, val);
 
 	auto undo_redo = [](const std::string &name, float val) {
-		obs_source_t *source = obs_get_source_by_name(name.c_str());
+		OBSSourceAutoRelease source =
+			obs_get_source_by_name(name.c_str());
 		obs_source_set_volume(source, val);
-		obs_source_release(source);
 	};
 
 	const char *name = obs_source_get_name(source);
@@ -491,9 +507,9 @@ void OBSAdvAudioCtrl::downmixMonoChanged(bool val)
 	obs_source_set_flags(source, flags);
 
 	auto undo_redo = [](const std::string &name, bool val) {
-		obs_source_t *source = obs_get_source_by_name(name.c_str());
+		OBSSourceAutoRelease source =
+			obs_get_source_by_name(name.c_str());
 		set_mono(source, val);
-		obs_source_release(source);
 	};
 
 	QString text = QTStr(val ? "Undo.ForceMono.On" : "Undo.ForceMono.Off");
@@ -520,9 +536,9 @@ void OBSAdvAudioCtrl::balanceChanged(int val)
 	obs_source_set_balance_value(source, bal);
 
 	auto undo_redo = [](const std::string &name, float val) {
-		obs_source_t *source = obs_get_source_by_name(name.c_str());
+		OBSSourceAutoRelease source =
+			obs_get_source_by_name(name.c_str());
 		obs_source_set_balance_value(source, val);
-		obs_source_release(source);
 	};
 
 	const char *name = obs_source_get_name(source);
@@ -549,9 +565,9 @@ void OBSAdvAudioCtrl::syncOffsetChanged(int milliseconds)
 	obs_source_set_sync_offset(source, val);
 
 	auto undo_redo = [](const std::string &name, int64_t val) {
-		obs_source_t *source = obs_get_source_by_name(name.c_str());
+		OBSSourceAutoRelease source =
+			obs_get_source_by_name(name.c_str());
 		obs_source_set_sync_offset(source, val);
-		obs_source_release(source);
 	};
 
 	const char *name = obs_source_get_name(source);
@@ -589,9 +605,9 @@ void OBSAdvAudioCtrl::monitoringTypeChanged(int index)
 	     name ? name : "(null)", type);
 
 	auto undo_redo = [](const std::string &name, obs_monitoring_type val) {
-		obs_source_t *source = obs_get_source_by_name(name.c_str());
+		OBSSourceAutoRelease source =
+			obs_get_source_by_name(name.c_str());
 		obs_source_set_monitoring_type(source, val);
-		obs_source_release(source);
 	};
 
 	OBSBasic::Get()->undo_s.add_action(
@@ -614,9 +630,9 @@ static inline void setMixer(obs_source_t *source, const int mixerIdx,
 	obs_source_set_audio_mixers(source, new_mixers);
 
 	auto undo_redo = [](const std::string &name, uint32_t mixers) {
-		obs_source_t *source = obs_get_source_by_name(name.c_str());
+		OBSSourceAutoRelease source =
+			obs_get_source_by_name(name.c_str());
 		obs_source_set_audio_mixers(source, mixers);
-		obs_source_release(source);
 	};
 
 	const char *name = obs_source_get_name(source);

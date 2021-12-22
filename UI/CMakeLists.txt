@@ -73,7 +73,7 @@ find_package(Threads REQUIRED)
 find_package(Qt5Network ${FIND_MODE})
 find_package(Qt5Widgets ${FIND_MODE})
 find_package(Qt5Svg ${FIND_MODE})
-if(WIN32)
+if(WIN32 AND (Qt5Widgets_VERSION VERSION_LESS 6.0.0))
 	find_package(Qt5WinExtras ${FIND_MODE})
 endif()
 find_package(Qt5Xml ${FIND_MODE})
@@ -454,6 +454,11 @@ if(WIN32)
 			OUTPUT_NAME "accrecorder${_output_suffix}")
 	target_link_libraries(obs
 			Qt5::WinExtras)
+
+	if(Qt5Widgets_VERSION VERSION_LESS 6.0.0)
+		target_link_libraries(obs
+				Qt5::WinExtras)		
+	endif()	
 endif()
 
 target_link_libraries(obs

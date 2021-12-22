@@ -17,8 +17,27 @@
     "--talk-name=org.freedesktop.Flatpak",
     "--talk-name=org.freedesktop.Notifications",
     "--own-name=org.kde.StatusNotifierItem-2-2",
-    "--system-talk-name=org.freedesktop.Avahi"
+    "--system-talk-name=org.freedesktop.Avahi",
+    "--env=VST_PATH=/app/extensions/Plugins/lxvst"
   ],
+  "add-extensions": {
+    "com.obsproject.Studio.Plugin": {
+      "directory": "plugins",
+      "subdirectories": true,
+      "add-ld-path": "lib",
+      "merge-dirs": "lib/obs-plugins;share/obs/obs-plugins",
+      "no-autodownload": true,
+      "autodelete": true
+    },
+    "org.freedesktop.LinuxAudio.Plugins": {
+      "directory": "extensions/Plugins",
+      "version": "21.08",
+      "add-ld-path": "lib",
+      "merge-dirs": "lxvst",
+      "subdirectories": true,
+      "no-autodownload": true
+    }
+  },
   "cleanup": [
     "/lib/pkgconfig",
     "/share/man",
@@ -38,7 +57,7 @@
         {
           "type": "git",
           "url": "https://code.videolan.org/videolan/x264.git",
-          "commit": "b86ae3c66f51ac9eab5ab7ad09a9d62e67961b8a"
+          "commit": "66a5bc1bd1563d8227d5d18440b525a09bcf17ca"
         }
       ]
     },
@@ -58,8 +77,8 @@
       "sources": [
         {
           "type": "archive",
-          "url": "https://linuxtv.org/downloads/v4l-utils/v4l-utils-1.20.0.tar.bz2",
-          "sha256": "956118713f7ccb405c55c7088a6a2490c32d54300dd9a30d8d5008c28d3726f7"
+          "url": "https://linuxtv.org/downloads/v4l-utils/v4l-utils-1.22.0.tar.bz2",
+          "sha256": "1069e5d7909bcc563baeaadc3a5c496f0e658524c413cf7818816e37bfcea344"
         }
       ]
     },
@@ -239,8 +258,8 @@
       "sources": [
         {
           "type": "archive",
-          "url": "https://cdn-fastly.obsproject.com/downloads/cef_binary_4280_linux64.tar.bz2",
-          "sha256": "d91c78349ecbfbfdfc18d5f882dc28b939028f1a631191c603b5d0d938ada972"
+          "url": "https://cdn-fastly.obsproject.com/downloads/cef_binary_4638_linux64.tar.bz2",
+          "sha256": "ea2b50304cfca48f1619db2e2fe35ca8a54bd14aed373179328a41038c7fb86f"
         }
       ]
     },
@@ -268,6 +287,10 @@
         "-DYOUTUBE_CLIENTID_HASH=$YOUTUBE_CLIENTID_HASH",
         "-DYOUTUBE_SECRET=$YOUTUBE_SECRET",
         "-DYOUTUBE_SECRET_HASH=$YOUTUBE_SECRET_HASH"
+      ],
+      "post-install": [
+        "install -d /app/plugins",
+        "install -d /app/extensions/Plugins"
       ],
       "sources": [
         {

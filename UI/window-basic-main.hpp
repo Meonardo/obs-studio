@@ -22,7 +22,7 @@
 #include <QThread>
 #include <QWidgetAction>
 #include <QSystemTrayIcon>
-#ifdef _WIN32
+#if defined(_WIN32) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QWinTaskbarButton>
 #endif
 #include <QStyledItemDelegate>
@@ -195,6 +195,12 @@ class OBSBasic : public OBSMainWindow {
 		DropType_Url,
 	};
 
+	enum ContextBarSize {
+		ContextBarSize_Minimized,
+		ContextBarSize_Reduced,
+		ContextBarSize_Normal
+	};
+
 private:
 	obs_frontend_callbacks *api = nullptr;
 
@@ -210,9 +216,10 @@ private:
 	long disableSaving = 1;
 	bool projectChanged = false;
 	bool previewEnabled = true;
+	ContextBarSize contextBarSize = ContextBarSize_Normal;
 
 	std::deque<SourceCopyInfo> clipboard;
-	OBSWeakSource copyFiltersSource;
+	OBSWeakSourceAutoRelease copyFiltersSource;
 	bool copyVisible = true;
 
 	bool closing = false;
@@ -301,6 +308,7 @@ private:
 	QPointer<QMenu> sceneProjectorMenu;
 	QPointer<QMenu> sourceProjector;
 	QPointer<QMenu> scaleFilteringMenu;
+	QPointer<QMenu> blendingModeMenu;
 	QPointer<QMenu> colorMenu;
 	QPointer<QWidgetAction> colorWidgetAction;
 	QPointer<ColorSelect> colorSelect;
@@ -310,7 +318,7 @@ private:
 	QPointer<QAction> renameScene;
 	QPointer<QAction> renameSource;
 
-#ifdef _WIN32
+#if defined(_WIN32) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 	QWinTaskbarButton *taskBtn = new QWinTaskbarButton(this);
 #endif
 
@@ -531,7 +539,7 @@ private:
 	void SaveExtraBrowserDocks();
 	void ManageExtraBrowserDocks();
 	void AddExtraBrowserDock(const QString &title, const QString &url,
-				 bool firstCreate);
+				 const QString &uuid, bool firstCreate);
 #endif
 
 	QIcon imageIcon;
@@ -699,6 +707,8 @@ private slots:
 	void SetDeinterlacingOrder();
 
 	void SetScaleFilter();
+
+	void SetBlendingMode();
 
 	void IconActivated(QSystemTrayIcon::ActivationReason reason);
 	void SetShowing(bool showing);
@@ -873,6 +883,7 @@ public:
 
 	QMenu *AddDeinterlacingMenu(QMenu *menu, obs_source_t *source);
 	QMenu *AddScaleFilteringMenu(QMenu *menu, obs_sceneitem_t *item);
+	QMenu *AddBlendingModeMenu(QMenu *menu, obs_sceneitem_t *item);
 	QMenu *AddBackgroundColorMenu(QMenu *menu, QWidgetAction *widgetAction,
 				      ColorSelect *select,
 				      obs_sceneitem_t *item);
@@ -1118,6 +1129,7 @@ public slots:
 	void ClearContextBar();
 	void UpdateContextBar(bool force = false);
 	void UpdateContextBarDeferred(bool force = false);
+	void UpdateContextBarVisibility();
 
 public:
 	explicit OBSBasic(QWidget *parent = 0);

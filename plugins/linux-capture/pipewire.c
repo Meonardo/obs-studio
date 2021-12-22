@@ -35,6 +35,7 @@
 #include <spa/debug/format.h>
 #include <spa/debug/types.h>
 #include <spa/param/video/type-info.h>
+#include <spa/utils/result.h>
 
 #define REQUEST_PATH "/org/freedesktop/portal/desktop/request/%s/obs%u"
 #define SESSION_PATH "/org/freedesktop/portal/desktop/session/%s/obs%u"
@@ -60,11 +61,18 @@
 	fourcc_code('A', 'B', '2', \
 		    '4') /* [31:0] A:B:G:R 8:8:8:8 little endian */
 
+struct obs_pw_version {
+	int major;
+	int minor;
+	int micro;
+};
+
 struct _obs_pipewire_data {
 	GCancellable *cancellable;
 
 	char *sender_name;
 	char *session_handle;
+	char *restore_token;
 
 	uint32_t pipewire_node;
 	int pipewire_fd;
@@ -81,6 +89,9 @@ struct _obs_pipewire_data {
 
 	struct pw_core *core;
 	struct spa_hook core_listener;
+	int server_version_sync;
+
+	struct obs_pw_version server_version;
 
 	struct pw_stream *stream;
 	struct spa_hook stream_listener;
@@ -114,6 +125,35 @@ struct dbus_call_data {
 };
 
 /* auxiliary methods */
+
+static bool parse_pw_version(struct obs_pw_version *dst, const char *version)
+{
+	int n_matches = sscanf(version, "%d.%d.%d", &dst->major, &dst->minor,
+			       &dst->micro);
+	return n_matches == 3;
+}
+
+static bool check_pw_version(const struct obs_pw_version *pw_version, int major,
+			     int minor, int micro)
+{
+	if (pw_version->major != major)
+		return pw_version->major > major;
+	if (pw_version->minor != minor)
+		return pw_version->minor > minor;
+	return pw_version->micro >= micro;
+}
+
+static void update_pw_versions(obs_pipewire_data *obs_pw, const char *version)
+{
+	blog(LOG_INFO, "[pipewire] server version: %s", version);
+	blog(LOG_INFO, "[pipewire] library version: %s",
+	     pw_get_library_version());
+	blog(LOG_INFO, "[pipewire] header version: %s",
+	     pw_get_headers_version());
+
+	if (!parse_pw_version(&obs_pw->server_version, version))
+		blog(LOG_WARNING, "[pipewire] failed to parse server version");
+}
 
 static const char *capture_type_to_string(enum obs_pw_capture_type capture_type)
 {
@@ -513,6 +553,7 @@ static void on_param_changed_cb(void *user_data, uint32_t id,
 	obs_pipewire_data *obs_pw = user_data;
 	struct spa_pod_builder pod_builder;
 	const struct spa_pod *params[3];
+	uint32_t buffer_types;
 	uint8_t params_buffer[1024];
 	int result;
 
@@ -529,6 +570,10 @@ static void on_param_changed_cb(void *user_data, uint32_t id,
 		return;
 
 	spa_format_video_raw_parse(param, &obs_pw->format.info.raw);
+
+	buffer_types = 1 << SPA_DATA_MemPtr;
+	if (check_pw_version(&obs_pw->server_version, 0, 3, 24))
+		buffer_types |= 1 << SPA_DATA_DmaBuf;
 
 	blog(LOG_DEBUG, "[pipewire] Negotiated format:");
 
@@ -566,8 +611,7 @@ static void on_param_changed_cb(void *user_data, uint32_t id,
 	/* Buffer options */
 	params[2] = spa_pod_builder_add_object(
 		&pod_builder, SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
-		SPA_PARAM_BUFFERS_dataType,
-		SPA_POD_Int((1 << SPA_DATA_MemPtr) | (1 << SPA_DATA_DmaBuf)));
+		SPA_PARAM_BUFFERS_dataType, SPA_POD_Int(buffer_types));
 
 	pw_stream_update_params(obs_pw->stream, params, 3);
 
@@ -594,6 +638,13 @@ static const struct pw_stream_events stream_events = {
 	.process = on_process_cb,
 };
 
+static void on_core_info_cb(void *user_data, const struct pw_core_info *info)
+{
+	obs_pipewire_data *obs_pw = user_data;
+
+	update_pw_versions(obs_pw, info->version);
+}
+
 static void on_core_error_cb(void *user_data, uint32_t id, int seq, int res,
 			     const char *message)
 {
@@ -609,16 +660,15 @@ static void on_core_error_cb(void *user_data, uint32_t id, int seq, int res,
 
 static void on_core_done_cb(void *user_data, uint32_t id, int seq)
 {
-	UNUSED_PARAMETER(seq);
-
 	obs_pipewire_data *obs_pw = user_data;
 
-	if (id == PW_ID_CORE)
+	if (id == PW_ID_CORE && obs_pw->server_version_sync == seq)
 		pw_thread_loop_signal(obs_pw->thread_loop, FALSE);
 }
 
 static const struct pw_core_events core_events = {
 	PW_VERSION_CORE_EVENTS,
+	.info = on_core_info_cb,
 	.done = on_core_done_cb,
 	.error = on_core_error_cb,
 };
@@ -653,6 +703,11 @@ static void play_pipewire_stream(obs_pipewire_data *obs_pw)
 
 	pw_core_add_listener(obs_pw->core, &obs_pw->core_listener, &core_events,
 			     obs_pw);
+
+	// Dispatch to receive the info core event
+	obs_pw->server_version_sync = pw_core_sync(obs_pw->core, PW_ID_CORE,
+						   obs_pw->server_version_sync);
+	pw_thread_loop_wait(obs_pw->thread_loop);
 
 	/* Stream */
 	obs_pw->stream = pw_stream_new(
@@ -808,6 +863,20 @@ static void on_start_response_received_cb(GDBusConnection *connection,
 	g_variant_iter_loop(&iter, "(u@a{sv})", &obs_pw->pipewire_node,
 			    &stream_properties);
 
+	if (portal_get_screencast_version() >= 4) {
+		g_autoptr(GVariant) restore_token = NULL;
+
+		g_clear_pointer(&obs_pw->restore_token, bfree);
+
+		restore_token = g_variant_lookup_value(result, "restore_token",
+						       G_VARIANT_TYPE_STRING);
+		if (restore_token)
+			obs_pw->restore_token = bstrdup(
+				g_variant_get_string(restore_token, NULL));
+
+		obs_source_save(obs_pw->source);
+	}
+
 	blog(LOG_INFO, "[pipewire] %s selected, setting up screencast",
 	     capture_type_to_string(obs_pw->capture_type));
 
@@ -940,6 +1009,16 @@ static void select_source(obs_pipewire_data *obs_pw)
 	else
 		g_variant_builder_add(&builder, "{sv}", "cursor_mode",
 				      g_variant_new_uint32(1));
+
+	if (portal_get_screencast_version() >= 4) {
+		g_variant_builder_add(&builder, "{sv}", "persist_mode",
+				      g_variant_new_uint32(2));
+		if (obs_pw->restore_token && *obs_pw->restore_token) {
+			g_variant_builder_add(
+				&builder, "{sv}", "restore_token",
+				g_variant_new_string(obs_pw->restore_token));
+		}
+	}
 
 	g_dbus_proxy_call(portal_get_dbus_proxy(), "SelectSources",
 			  g_variant_new("(oa{sv})", obs_pw->session_handle,
@@ -1104,6 +1183,8 @@ static bool reload_session_cb(obs_properties_t *properties,
 
 	obs_pipewire_data *obs_pw = data;
 
+	g_clear_pointer(&obs_pw->restore_token, bfree);
+
 	teardown_pipewire(obs_pw);
 	destroy_session(obs_pw);
 
@@ -1123,6 +1204,8 @@ void *obs_pipewire_create(enum obs_pw_capture_type capture_type,
 	obs_pw->settings = settings;
 	obs_pw->capture_type = capture_type;
 	obs_pw->cursor.visible = obs_data_get_bool(settings, "ShowCursor");
+	obs_pw->restore_token =
+		bstrdup(obs_data_get_string(settings, "RestoreToken"));
 
 	if (!init_obs_pipewire(obs_pw))
 		g_clear_pointer(&obs_pw, bfree);
@@ -1138,12 +1221,20 @@ void obs_pipewire_destroy(obs_pipewire_data *obs_pw)
 	teardown_pipewire(obs_pw);
 	destroy_session(obs_pw);
 
+	g_clear_pointer(&obs_pw->restore_token, bfree);
+
 	bfree(obs_pw);
+}
+
+void obs_pipewire_save(obs_pipewire_data *obs_pw, obs_data_t *settings)
+{
+	obs_data_set_string(settings, "RestoreToken", obs_pw->restore_token);
 }
 
 void obs_pipewire_get_defaults(obs_data_t *settings)
 {
 	obs_data_set_default_bool(settings, "ShowCursor", true);
+	obs_data_set_default_string(settings, "RestoreToken", NULL);
 }
 
 obs_properties_t *obs_pipewire_get_properties(obs_pipewire_data *obs_pw,

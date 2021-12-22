@@ -294,14 +294,9 @@ static void PopulateAACBitrates(initializer_list<QComboBox *> boxes)
 	}
 }
 
-static int gcd(int a, int b)
-{
-	return b == 0 ? a : gcd(b, a % b);
-}
-
 static std::tuple<int, int> aspect_ratio(int cx, int cy)
 {
-	int common = gcd(cx, cy);
+	int common = std::gcd(cx, cy);
 	int newCX = cx / common;
 	int newCY = cy / common;
 
@@ -401,6 +396,7 @@ OBSBasicSettings::OBSBasicSettings(QWidget *parent)
 	HookWidget(ui->systemTrayWhenStarted,CHECK_CHANGED,  GENERAL_CHANGED);
 	HookWidget(ui->systemTrayAlways,     CHECK_CHANGED,  GENERAL_CHANGED);
 	HookWidget(ui->saveProjectors,       CHECK_CHANGED,  GENERAL_CHANGED);
+	HookWidget(ui->closeProjectors,      CHECK_CHANGED,  GENERAL_CHANGED);
 	HookWidget(ui->snappingEnabled,      CHECK_CHANGED,  GENERAL_CHANGED);
 	HookWidget(ui->screenSnapping,       CHECK_CHANGED,  GENERAL_CHANGED);
 	HookWidget(ui->centerSnapping,       CHECK_CHANGED,  GENERAL_CHANGED);
@@ -1264,6 +1260,10 @@ void OBSBasicSettings::LoadGeneralSettings()
 					      "SaveProjectors");
 	ui->saveProjectors->setChecked(saveProjectors);
 
+	bool closeProjectors = config_get_bool(GetGlobalConfig(), "BasicWindow",
+					       "CloseExistingProjectors");
+	ui->closeProjectors->setChecked(closeProjectors);
+
 	bool snappingEnabled = config_get_bool(GetGlobalConfig(), "BasicWindow",
 					       "SnappingEnabled");
 	ui->snappingEnabled->setChecked(snappingEnabled);
@@ -1828,7 +1828,7 @@ OBSPropertiesView *
 OBSBasicSettings::CreateEncoderPropertyView(const char *encoder,
 					    const char *path, bool changed)
 {
-	obs_data_t *settings = obs_encoder_defaults(encoder);
+	OBSDataAutoRelease settings = obs_encoder_defaults(encoder);
 	OBSPropertiesView *view;
 
 	if (path) {
@@ -1844,13 +1844,12 @@ OBSBasicSettings::CreateEncoderPropertyView(const char *encoder,
 	}
 
 	view = new OBSPropertiesView(
-		settings, encoder,
+		settings.Get(), encoder,
 		(PropertiesReloadCallback)obs_get_encoder_properties, 170);
 	view->setFrameShape(QFrame::StyledPanel);
 	view->setProperty("changed", QVariant(changed));
 	QObject::connect(view, SIGNAL(Changed()), this, SLOT(OutputsChanged()));
 
-	obs_data_release(settings);
 	return view;
 }
 
@@ -2210,9 +2209,9 @@ void OBSBasicSettings::LoadListValues(QComboBox *widget, obs_property_t *prop,
 {
 	size_t count = obs_property_list_item_count(prop);
 
-	obs_source_t *source = obs_get_output_source(index);
+	OBSSourceAutoRelease source = obs_get_output_source(index);
 	const char *deviceId = nullptr;
-	obs_data_t *settings = nullptr;
+	OBSDataAutoRelease settings = nullptr;
 
 	if (source) {
 		settings = obs_source_get_settings(source);
@@ -2243,11 +2242,6 @@ void OBSBasicSettings::LoadListValues(QComboBox *widget, obs_property_t *prop,
 					       "errorLabel");
 		}
 	}
-
-	if (settings)
-		obs_data_release(settings);
-	if (source)
-		obs_source_release(source);
 }
 
 void OBSBasicSettings::LoadAudioDevices()
@@ -3177,6 +3171,11 @@ void OBSBasicSettings::SaveGeneralSettings()
 				"SaveProjectors",
 				ui->saveProjectors->isChecked());
 
+	if (WidgetChanged(ui->closeProjectors))
+		config_set_bool(GetGlobalConfig(), "BasicWindow",
+				"CloseExistingProjectors",
+				ui->closeProjectors->isChecked());
+
 	if (WidgetChanged(ui->studioPortraitLayout)) {
 		config_set_bool(GetGlobalConfig(), "BasicWindow",
 				"StudioPortraitLayout",
@@ -3710,13 +3709,11 @@ void OBSBasicSettings::SaveHotkeySettings()
 		if (!hotkey.first)
 			continue;
 
-		obs_data_array_t *array = obs_hotkey_save(hw.id);
-		obs_data_t *data = obs_data_create();
+		OBSDataArrayAutoRelease array = obs_hotkey_save(hw.id);
+		OBSDataAutoRelease data = obs_data_create();
 		obs_data_set_array(data, "bindings", array);
 		const char *json = obs_data_get_json(data);
 		config_set_string(config, "Hotkeys", hw.name.c_str(), json);
-		obs_data_release(data);
-		obs_data_array_release(array);
 	}
 
 	if (!main->outputHandler || !main->outputHandler->replayBuffer)
@@ -3724,11 +3721,10 @@ void OBSBasicSettings::SaveHotkeySettings()
 
 	const char *id = obs_obj_get_id(main->outputHandler->replayBuffer);
 	if (strcmp(id, "replay_buffer") == 0) {
-		obs_data_t *hotkeys = obs_hotkeys_save_output(
+		OBSDataAutoRelease hotkeys = obs_hotkeys_save_output(
 			main->outputHandler->replayBuffer);
 		config_set_string(config, "Hotkeys", "ReplayBuffer",
 				  obs_data_get_json(hotkeys));
-		obs_data_release(hotkeys);
 	}
 }
 
@@ -4780,10 +4776,10 @@ void OBSBasicSettings::AdvReplayBufferChanged()
 					 sizeof(encoderJsonPath),
 					 "recordEncoder.json");
 		if (ret > 0) {
-			obs_data_t *data = obs_data_create_from_json_file_safe(
-				encoderJsonPath, "bak");
+			OBSDataAutoRelease data =
+				obs_data_create_from_json_file_safe(
+					encoderJsonPath, "bak");
 			obs_data_apply(settings, data);
-			obs_data_release(data);
 		}
 	}
 
@@ -4853,8 +4849,8 @@ void OBSBasicSettings::SimpleRecordingEncoderChanged()
 	delete simpleOutRecWarning;
 
 	if (enforceBitrate && service) {
-		obs_data_t *videoSettings = obs_data_create();
-		obs_data_t *audioSettings = obs_data_create();
+		OBSDataAutoRelease videoSettings = obs_data_create();
+		OBSDataAutoRelease audioSettings = obs_data_create();
 		int oldVBitrate = ui->simpleOutputVBitrate->value();
 		int oldABitrate =
 			ui->simpleOutputABitrate->currentText().toInt();
@@ -4876,9 +4872,6 @@ void OBSBasicSettings::SimpleRecordingEncoderChanged()
 			warning += SIMPLE_OUTPUT_WARNING("AudioBitrate")
 					   .arg(newABitrate);
 		}
-
-		obs_data_release(videoSettings);
-		obs_data_release(audioSettings);
 	}
 
 	if (qual == "Lossless") {
