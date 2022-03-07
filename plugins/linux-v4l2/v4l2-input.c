@@ -148,13 +148,6 @@ static void v4l2_prep_obs_frame(struct v4l2_data *data,
 		plane_offsets[1] = data->linesize * data->height;
 		plane_offsets[2] = data->linesize * data->height * 5 / 4;
 		break;
-	case V4L2_PIX_FMT_MJPEG:
-		frame->linesize[0] = 0;
-		frame->linesize[1] = 0;
-		frame->linesize[2] = 0;
-		plane_offsets[1] = 0;
-		plane_offsets[2] = 0;
-		break;
 	default:
 		frame->linesize[0] = data->linesize;
 		break;
@@ -189,7 +182,8 @@ static void *v4l2_thread(void *vptr)
 	blog(LOG_DEBUG, "%s: framerate: %.2f fps", data->device_id, ffps);
 	/* Timeout set to 5 frame periods. */
 	timeout_usec = (1000000 * data->timeout_frames) / ffps;
-	blog(LOG_INFO, "%s: select timeout set to %ldus (%dx frame periods)",
+	blog(LOG_INFO,
+	     "%s: select timeout set to %" PRIu64 " (%dx frame periods)",
 	     data->device_id, timeout_usec, data->timeout_frames);
 
 	if (v4l2_start_capture(data->dev, &data->buffers) < 0)
@@ -478,7 +472,8 @@ static void v4l2_format_list(int dev, obs_property_t *prop)
 			dstr_cat(&buffer, " (Emulated)");
 
 		if (v4l2_to_obs_video_format(fmt.pixelformat) !=
-		    VIDEO_FORMAT_NONE) {
+			    VIDEO_FORMAT_NONE ||
+		    fmt.pixelformat == V4L2_PIX_FMT_MJPEG) {
 			obs_property_list_add_int(prop, buffer.array,
 						  fmt.pixelformat);
 			blog(LOG_INFO, "Pixelformat: %s (available)",
@@ -1002,7 +997,8 @@ static void v4l2_init(struct v4l2_data *data)
 		blog(LOG_ERROR, "Unable to set format");
 		goto fail;
 	}
-	if (v4l2_to_obs_video_format(data->pixfmt) == VIDEO_FORMAT_NONE) {
+	if (v4l2_to_obs_video_format(data->pixfmt) == VIDEO_FORMAT_NONE &&
+	    data->pixfmt != V4L2_PIX_FMT_MJPEG) {
 		blog(LOG_ERROR, "Selected video format not supported");
 		goto fail;
 	}

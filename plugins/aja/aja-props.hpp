@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aja-enums.hpp"
+#include "aja-vpid-data.hpp"
 
 #include <media-io/audio-io.h>
 
@@ -10,38 +11,6 @@
 #include <map>
 #include <string>
 #include <vector>
-
-class VPIDData {
-public:
-	VPIDData();
-	VPIDData(ULWord vpidA, ULWord vpidB);
-	VPIDData(const VPIDData &other);
-	VPIDData(VPIDData &&other);
-	~VPIDData() = default;
-
-	VPIDData &operator=(const VPIDData &other);
-	VPIDData &operator=(VPIDData &&other);
-	bool operator==(const VPIDData &rhs) const;
-	bool operator!=(const VPIDData &rhs) const;
-
-	void SetA(ULWord vpidA);
-	void SetB(ULWord vpidB);
-	void Parse();
-	bool IsRGB() const;
-
-	VPIDStandard Standard() const;
-	VPIDSampling Sampling() const;
-
-private:
-	ULWord mVpidA;
-	ULWord mVpidB;
-	VPIDStandard mStandardA;
-	VPIDSampling mSamplingA;
-	VPIDStandard mStandardB;
-	VPIDSampling mSamplingB;
-};
-
-using VPIDDataList = std::vector<VPIDData>;
 
 //TODO(paulh): Consolidate the two Props classes
 class SourceProps {
@@ -56,7 +25,10 @@ public:
 	bool operator==(const SourceProps &props);
 	bool operator!=(const SourceProps &props);
 
+	NTV2InputSource InitialInputSource() const;
+	NTV2InputSourceSet InputSources() const;
 	NTV2Channel Channel() const;
+	NTV2Channel Framestore() const;
 	NTV2AudioSystem AudioSystem() const;
 	NTV2AudioRate AudioRate() const;
 	size_t AudioSize() const;
@@ -65,10 +37,10 @@ public:
 
 	NTV2DeviceID deviceID;
 	IOSelection ioSelect;
-	NTV2InputSource inputSource;
 	NTV2VideoFormat videoFormat;
 	NTV2PixelFormat pixelFormat;
-	SDI4KTransport sdi4kTransport;
+	SDITransport sdiTransport;
+	SDITransport4K sdi4kTransport;
 	VPIDDataList vpids;
 	uint32_t audioNumChannels;
 	uint32_t audioSampleSize;
@@ -90,6 +62,7 @@ public:
 
 	NTV2FormatDesc FormatDesc();
 	NTV2Channel Channel() const;
+	NTV2Channel Framestore() const;
 	NTV2AudioSystem AudioSystem() const;
 	NTV2AudioRate AudioRate() const;
 	size_t AudioSize() const;
@@ -101,7 +74,8 @@ public:
 	NTV2OutputDestination outputDest;
 	NTV2VideoFormat videoFormat;
 	NTV2PixelFormat pixelFormat;
-	SDI4KTransport sdi4kTransport;
+	SDITransport sdiTransport;
+	SDITransport4K sdi4kTransport;
 	uint32_t audioNumChannels;
 	uint32_t audioSampleSize;
 	uint32_t audioSampleRate;

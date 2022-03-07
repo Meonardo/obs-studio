@@ -29,6 +29,7 @@
 #include <util/dstr.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavutil/channel_layout.h>
 
 #define ANSI_COLOR_RED "\x1b[0;91m"
 #define ANSI_COLOR_MAGENTA "\x1b[0;95m"
@@ -100,6 +101,7 @@ struct audio_params {
 	char *name;
 	int abitrate;
 	int sample_rate;
+	int frame_size;
 	int channels;
 };
 
@@ -219,6 +221,8 @@ static bool get_audio_params(struct audio_params *audio, int *argc,
 	if (!get_opt_int(argc, argv, &audio->abitrate, "audio bitrate"))
 		return false;
 	if (!get_opt_int(argc, argv, &audio->sample_rate, "audio sample rate"))
+		return false;
+	if (!get_opt_int(argc, argv, &audio->frame_size, "audio frame size"))
 		return false;
 	if (!get_opt_int(argc, argv, &audio->channels, "audio channels"))
 		return false;
@@ -446,6 +450,7 @@ static void create_audio_stream(struct ffmpeg_mux *ffm, int idx)
 	context->bit_rate = (int64_t)ffm->audio[idx].abitrate * 1000;
 	context->channels = ffm->audio[idx].channels;
 	context->sample_rate = ffm->audio[idx].sample_rate;
+	context->frame_size = ffm->audio[idx].frame_size;
 	context->sample_fmt = AV_SAMPLE_FMT_S16;
 	context->time_base = stream->time_base;
 	context->extradata = extradata;

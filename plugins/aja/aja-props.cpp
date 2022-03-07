@@ -1,129 +1,18 @@
 #include "aja-props.hpp"
+#include "aja-common.hpp"
 
 #include <ajantv2/includes/ntv2devicefeatures.h>
 #include <ajantv2/includes/ntv2utils.h>
-#include <ajantv2/includes/ntv2vpid.h>
-
-VPIDData::VPIDData()
-	: mVpidA{0},
-	  mVpidB{0},
-	  mStandardA{VPIDStandard_Unknown},
-	  mStandardB{VPIDStandard_Unknown},
-	  mSamplingA{VPIDSampling_XYZ_444},
-	  mSamplingB{VPIDSampling_XYZ_444}
-{
-}
-
-VPIDData::VPIDData(ULWord vpidA, ULWord vpidB)
-	: mVpidA{vpidA},
-	  mVpidB{vpidB},
-	  mStandardA{VPIDStandard_Unknown},
-	  mStandardB{VPIDStandard_Unknown},
-	  mSamplingA{VPIDSampling_XYZ_444},
-	  mSamplingB{VPIDSampling_XYZ_444}
-{
-	Parse();
-}
-
-VPIDData::VPIDData(const VPIDData &other)
-	: mVpidA{other.mVpidA},
-	  mVpidB{other.mVpidB},
-	  mStandardA{VPIDStandard_Unknown},
-	  mStandardB{VPIDStandard_Unknown},
-	  mSamplingA{VPIDSampling_XYZ_444},
-	  mSamplingB{VPIDSampling_XYZ_444}
-{
-	Parse();
-}
-VPIDData::VPIDData(VPIDData &&other)
-	: mVpidA{other.mVpidA},
-	  mVpidB{other.mVpidB},
-	  mStandardA{VPIDStandard_Unknown},
-	  mStandardB{VPIDStandard_Unknown},
-	  mSamplingA{VPIDSampling_XYZ_444},
-	  mSamplingB{VPIDSampling_XYZ_444}
-{
-	Parse();
-}
-
-VPIDData &VPIDData::operator=(const VPIDData &other)
-{
-	mVpidA = other.mVpidA;
-	mVpidB = other.mVpidB;
-	return *this;
-}
-
-VPIDData &VPIDData::operator=(VPIDData &&other)
-{
-	mVpidA = other.mVpidA;
-	mVpidB = other.mVpidB;
-	return *this;
-}
-
-bool VPIDData::operator==(const VPIDData &rhs) const
-{
-	return (mVpidA == rhs.mVpidA && mVpidB == rhs.mVpidB);
-}
-
-bool VPIDData::operator!=(const VPIDData &rhs) const
-{
-	return !operator==(rhs);
-}
-
-void VPIDData::SetA(ULWord vpidA)
-{
-	mVpidA = vpidA;
-}
-
-void VPIDData::SetB(ULWord vpidB)
-{
-	mVpidB = vpidB;
-}
-
-void VPIDData::Parse()
-{
-	CNTV2VPID parserA;
-	parserA.SetVPID(mVpidA);
-	mStandardA = parserA.GetStandard();
-	mSamplingA = parserA.GetSampling();
-
-	CNTV2VPID parserB;
-	parserB.SetVPID(mVpidB);
-	mStandardB = parserB.GetStandard();
-	mSamplingB = parserB.GetSampling();
-}
-
-bool VPIDData::IsRGB() const
-{
-	switch (mSamplingA) {
-	default:
-		break;
-	case VPIDSampling_GBR_444:
-	case VPIDSampling_GBRA_4444:
-	case VPIDSampling_GBRD_4444:
-		return true;
-	}
-	return false;
-}
-
-VPIDStandard VPIDData::Standard() const
-{
-	return mStandardA;
-}
-
-VPIDSampling VPIDData::Sampling() const
-{
-	return mSamplingA;
-}
 
 // AJASource Properties
 SourceProps::SourceProps()
 	: deviceID{DEVICE_ID_NOTFOUND},
 	  ioSelect{IOSelection::Invalid},
-	  inputSource{NTV2_INPUTSOURCE_INVALID},
+	  //   inputSource{NTV2_INPUTSOURCE_INVALID},
 	  videoFormat{NTV2_FORMAT_UNKNOWN},
 	  pixelFormat{NTV2_FBF_INVALID},
-	  sdi4kTransport{SDI4KTransport::TwoSampleInterleave},
+	  sdiTransport{SDITransport::SingleLink},
+	  sdi4kTransport{SDITransport4K::TwoSampleInterleave},
 	  audioNumChannels{8},
 	  audioSampleSize{4},
 	  audioSampleRate{48000},
@@ -136,10 +25,11 @@ SourceProps::SourceProps()
 SourceProps::SourceProps(NTV2DeviceID devID)
 	: deviceID{devID},
 	  ioSelect{IOSelection::Invalid},
-	  inputSource{NTV2_INPUTSOURCE_INVALID},
+	  //   inputSource{NTV2_INPUTSOURCE_INVALID},
 	  videoFormat{NTV2_FORMAT_UNKNOWN},
 	  pixelFormat{NTV2_FBF_INVALID},
-	  sdi4kTransport{SDI4KTransport::TwoSampleInterleave},
+	  sdiTransport{SDITransport::SingleLink},
+	  sdi4kTransport{SDITransport4K::TwoSampleInterleave},
 	  audioNumChannels{8},
 	  audioSampleSize{4},
 	  audioSampleRate{48000},
@@ -153,9 +43,10 @@ SourceProps::SourceProps(const SourceProps &props)
 {
 	deviceID = props.deviceID;
 	ioSelect = props.ioSelect;
-	inputSource = props.inputSource;
+	// inputSource = props.inputSource;
 	videoFormat = props.videoFormat;
 	pixelFormat = props.pixelFormat;
+	sdiTransport = props.sdiTransport;
 	sdi4kTransport = props.sdi4kTransport;
 	audioNumChannels = props.audioNumChannels;
 	audioSampleSize = props.audioSampleSize;
@@ -169,9 +60,10 @@ SourceProps::SourceProps(SourceProps &&props)
 {
 	deviceID = props.deviceID;
 	ioSelect = props.ioSelect;
-	inputSource = props.inputSource;
+	// inputSource = props.inputSource;
 	videoFormat = props.videoFormat;
 	pixelFormat = props.pixelFormat;
+	sdiTransport = props.sdiTransport;
 	sdi4kTransport = props.sdi4kTransport;
 	audioNumChannels = props.audioNumChannels;
 	audioSampleSize = props.audioSampleSize;
@@ -185,9 +77,10 @@ void SourceProps::operator=(const SourceProps &props)
 {
 	deviceID = props.deviceID;
 	ioSelect = props.ioSelect;
-	inputSource = props.inputSource;
+	// inputSource = props.inputSource;
 	videoFormat = props.videoFormat;
 	pixelFormat = props.pixelFormat;
+	sdiTransport = props.sdiTransport;
 	sdi4kTransport = props.sdi4kTransport;
 	audioNumChannels = props.audioNumChannels;
 	audioSampleSize = props.audioSampleSize;
@@ -201,9 +94,10 @@ void SourceProps::operator=(SourceProps &&props)
 {
 	deviceID = props.deviceID;
 	ioSelect = props.ioSelect;
-	inputSource = props.inputSource;
+	// inputSource = props.inputSource;
 	videoFormat = props.videoFormat;
 	pixelFormat = props.pixelFormat;
+	sdiTransport = props.sdiTransport;
 	sdi4kTransport = props.sdi4kTransport;
 	audioNumChannels = props.audioNumChannels;
 	audioSampleSize = props.audioSampleSize;
@@ -221,6 +115,7 @@ bool SourceProps::operator==(const SourceProps &props)
 		pixelFormat == props.pixelFormat &&
 		// vpid == props.vpid &&
 		autoDetect == props.autoDetect &&
+		sdiTransport == props.sdiTransport &&
 		sdi4kTransport == props.sdi4kTransport &&
 		audioNumChannels == props.audioNumChannels &&
 		audioSampleSize == props.audioSampleSize &&
@@ -233,9 +128,34 @@ bool SourceProps::operator!=(const SourceProps &props)
 	return !operator==(props);
 }
 
+NTV2InputSource SourceProps::InitialInputSource() const
+{
+	auto inputSources = InputSources();
+	if (!inputSources.empty()) {
+		return *inputSources.begin();
+	}
+	return NTV2_INPUTSOURCE_INVALID;
+}
+
+NTV2InputSourceSet SourceProps::InputSources() const
+{
+	NTV2InputSourceSet inputSources;
+	aja::IOSelectionToInputSources(ioSelect, inputSources);
+	return inputSources;
+}
+
 NTV2Channel SourceProps::Channel() const
 {
-	return NTV2InputSourceToChannel(inputSource);
+	return NTV2InputSourceToChannel(InitialInputSource());
+}
+
+NTV2Channel SourceProps::Framestore() const
+{
+	if (deviceID == DEVICE_ID_KONAHDMI && ioSelect == IOSelection::HDMI2 &&
+	    NTV2_IS_4K_VIDEO_FORMAT(videoFormat)) {
+		return NTV2_CHANNEL3;
+	}
+	return NTV2InputSourceToChannel(InitialInputSource());
 }
 
 NTV2AudioSystem SourceProps::AudioSystem() const
@@ -291,7 +211,7 @@ OutputProps::OutputProps(NTV2DeviceID devID)
 	  outputDest{NTV2_OUTPUTDESTINATION_ANALOG},
 	  videoFormat{NTV2_FORMAT_UNKNOWN},
 	  pixelFormat{NTV2_FBF_INVALID},
-	  sdi4kTransport{SDI4KTransport::TwoSampleInterleave},
+	  sdi4kTransport{SDITransport4K::TwoSampleInterleave},
 	  audioNumChannels{8},
 	  audioSampleSize{4},
 	  audioSampleRate{48000}
@@ -305,6 +225,7 @@ OutputProps::OutputProps(OutputProps &&props)
 	outputDest = props.outputDest;
 	videoFormat = props.videoFormat;
 	pixelFormat = props.pixelFormat;
+	sdiTransport = props.sdiTransport;
 	sdi4kTransport = props.sdi4kTransport;
 	audioNumChannels = props.audioNumChannels;
 	audioSampleSize = props.audioSampleSize;
@@ -318,6 +239,7 @@ OutputProps::OutputProps(const OutputProps &props)
 	outputDest = props.outputDest;
 	videoFormat = props.videoFormat;
 	pixelFormat = props.pixelFormat;
+	sdiTransport = props.sdiTransport;
 	sdi4kTransport = props.sdi4kTransport;
 	audioNumChannels = props.audioNumChannels;
 	audioSampleSize = props.audioSampleSize;
@@ -331,6 +253,7 @@ void OutputProps::operator=(const OutputProps &props)
 	outputDest = props.outputDest;
 	videoFormat = props.videoFormat;
 	pixelFormat = props.pixelFormat;
+	sdiTransport = props.sdiTransport;
 	sdi4kTransport = props.sdi4kTransport;
 	audioNumChannels = props.audioNumChannels;
 	audioSampleSize = props.audioSampleSize;
@@ -344,6 +267,7 @@ void OutputProps::operator=(OutputProps &&props)
 	outputDest = props.outputDest;
 	videoFormat = props.videoFormat;
 	pixelFormat = props.pixelFormat;
+	sdiTransport = props.sdiTransport;
 	sdi4kTransport = props.sdi4kTransport;
 	audioNumChannels = props.audioNumChannels;
 	audioSampleSize = props.audioSampleSize;
@@ -356,6 +280,8 @@ bool OutputProps::operator==(const OutputProps &props)
 		// outputDest == props.outputDest &&
 		videoFormat == props.videoFormat &&
 		pixelFormat == props.pixelFormat &&
+		sdiTransport == props.sdiTransport &&
+		sdi4kTransport == props.sdi4kTransport &&
 		audioNumChannels == props.audioNumChannels &&
 		audioSampleSize == props.audioSampleSize &&
 		audioSampleRate == props.audioSampleRate);
@@ -384,10 +310,36 @@ NTV2Channel OutputProps::Channel() const
 		return NTV2_CHANNEL4;
 	}
 
-	if (NTV2_OUTPUT_DEST_IS_HDMI(outputDest))
+	if (NTV2_OUTPUT_DEST_IS_HDMI(outputDest)) {
+		if (aja::CardCanDoHDMIMonitorOutput(deviceID) &&
+		    NTV2_IS_4K_VIDEO_FORMAT(videoFormat))
+			return NTV2_CHANNEL3;
 		return static_cast<NTV2Channel>(
 			NTV2DeviceGetNumFrameStores(deviceID) - 1);
+	}
 
+	return NTV2OutputDestinationToChannel(outputDest);
+}
+
+NTV2Channel OutputProps::Framestore() const
+{
+	if (deviceID == DEVICE_ID_TTAP_PRO) {
+		return NTV2_CHANNEL1;
+	} else if (deviceID == DEVICE_ID_KONA1) {
+		return NTV2_CHANNEL2;
+	} else if (deviceID == DEVICE_ID_IO4K ||
+		   deviceID == DEVICE_ID_IO4KPLUS) {
+		// SDI Monitor output uses framestore 4
+		if (ioSelect == IOSelection::SDI5)
+			return NTV2_CHANNEL4;
+	}
+	// HDMI Monitor output uses framestore 4
+	if (ioSelect == IOSelection::HDMIMonitorOut) {
+		if (NTV2_IS_4K_VIDEO_FORMAT(videoFormat))
+			return NTV2_CHANNEL3;
+		else
+			return NTV2_CHANNEL4;
+	}
 	return NTV2OutputDestinationToChannel(outputDest);
 }
 

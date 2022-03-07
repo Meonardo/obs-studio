@@ -36,6 +36,11 @@
 #include <QMenu>
 #include <QVariant>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN 1
+#include <Windows.h>
+#endif
+
 using namespace std;
 
 Q_DECLARE_METATYPE(OBSSource);
@@ -62,7 +67,6 @@ OBSBasicFilters::OBSBasicFilters(QWidget *parent, OBSSource source_)
 	setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
 	ui->setupUi(this);
-	UpdateFilters();
 
 	ui->asyncFilters->setItemDelegate(
 		new VisibilityItemDelegate(ui->asyncFilters));
@@ -136,6 +140,8 @@ OBSBasicFilters::OBSBasicFilters(QWidget *parent, OBSSource source_)
 		UpdateSplitter();
 	}
 
+	obs_source_inc_showing(source);
+
 	auto addDrawCallback = [this]() {
 		obs_display_add_draw_callback(ui->preview->GetDisplay(),
 					      OBSBasicFilters::DrawPreview,
@@ -176,10 +182,13 @@ OBSBasicFilters::OBSBasicFilters(QWidget *parent, OBSSource source_)
 	renameAsync->setShortcut({Qt::Key_F2});
 	renameEffect->setShortcut({Qt::Key_F2});
 #endif
+
+	UpdateFilters();
 }
 
 OBSBasicFilters::~OBSBasicFilters()
 {
+	obs_source_dec_showing(source);
 	ClearListItems(ui->asyncFilters);
 	ClearListItems(ui->effectFilters);
 }
@@ -259,6 +268,13 @@ void FilterChangeUndoRedo(void *vp, obs_data_t *nd_old_settings,
 
 void OBSBasicFilters::UpdatePropertiesView(int row, bool async)
 {
+	OBSSource filter = GetFilter(row, async);
+	if (filter && view && view->IsObject(filter)) {
+		/* do not recreate properties view if already using a view
+		 * with the same object */
+		return;
+	}
+
 	if (view) {
 		updatePropertiesSignal.Disconnect();
 		ui->propertiesFrame->setVisible(false);
@@ -267,7 +283,6 @@ void OBSBasicFilters::UpdatePropertiesView(int row, bool async)
 		view = nullptr;
 	}
 
-	OBSSource filter = GetFilter(row, async);
 	if (!filter)
 		return;
 
@@ -477,7 +492,8 @@ static bool filter_compatible(bool async, uint32_t sourceFlags,
 	bool audioOnly = (sourceFlags & OBS_SOURCE_VIDEO) == 0;
 	bool asyncSource = (sourceFlags & OBS_SOURCE_ASYNC) != 0;
 
-	if (async && ((audioOnly && filterVideo) || (!audio && !asyncSource)))
+	if (async && ((audioOnly && filterVideo) || (!audio && !asyncSource) ||
+		      (filterAudio && !audio)))
 		return false;
 
 	return (async && (filterAudio || filterAsync)) ||
@@ -673,6 +689,32 @@ void OBSBasicFilters::closeEvent(QCloseEvent *event)
 					 OBSBasicFilters::DrawPreview, this);
 
 	main->SaveProject();
+}
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+bool OBSBasicFilters::nativeEvent(const QByteArray &, void *message, qintptr *)
+#else
+bool OBSBasicFilters::nativeEvent(const QByteArray &, void *message, long *)
+#endif
+{
+#ifdef _WIN32
+	const MSG &msg = *static_cast<MSG *>(message);
+	switch (msg.message) {
+	case WM_MOVE:
+		for (OBSQTDisplay *const display :
+		     findChildren<OBSQTDisplay *>()) {
+			display->OnMove();
+		}
+		break;
+	case WM_DISPLAYCHANGE:
+		for (OBSQTDisplay *const display :
+		     findChildren<OBSQTDisplay *>()) {
+			display->OnDisplayChange();
+		}
+	}
+#endif
+
+	return false;
 }
 
 /* OBS Signals */

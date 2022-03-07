@@ -193,6 +193,9 @@ void SourceTreeItem::DisconnectSignals()
 	lockedSignal.Disconnect();
 	renameSignal.Disconnect();
 	removeSignal.Disconnect();
+
+	if (obs_sceneitem_is_group(sceneitem))
+		groupReorderSignal.Disconnect();
 }
 
 void SourceTreeItem::Clear()
@@ -517,6 +520,7 @@ void SourceTreeItem::VisibilityChanged(bool visible)
 void SourceTreeItem::LockedChanged(bool locked)
 {
 	lock->setChecked(locked);
+	OBSBasic::Get()->UpdateEditMenu();
 }
 
 void SourceTreeItem::Renamed(const QString &name)
@@ -620,12 +624,14 @@ void SourceTreeItem::Select()
 {
 	tree->SelectItem(sceneitem, true);
 	OBSBasic::Get()->UpdateContextBarDeferred();
+	OBSBasic::Get()->UpdateEditMenu();
 }
 
 void SourceTreeItem::Deselect()
 {
 	tree->SelectItem(sceneitem, false);
 	OBSBasic::Get()->UpdateContextBarDeferred();
+	OBSBasic::Get()->UpdateEditMenu();
 }
 
 /* ========================================================================= */
