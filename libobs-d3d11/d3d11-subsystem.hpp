@@ -25,7 +25,7 @@
 #include <memory>
 
 #include <windows.h>
-#include <dxgi1_5.h>
+#include <dxgi1_6.h>
 #include <d3d11_1.h>
 #include <d3dcompiler.h>
 
@@ -105,6 +105,8 @@ static inline DXGI_FORMAT ConvertGSTextureFormatResource(gs_color_format format)
 		return DXGI_FORMAT_B8G8R8X8_UNORM;
 	case GS_BGRA_UNORM:
 		return DXGI_FORMAT_B8G8R8A8_UNORM;
+	case GS_RG16:
+		return DXGI_FORMAT_R16G16_UNORM;
 	}
 
 	return DXGI_FORMAT_UNKNOWN;
@@ -184,6 +186,8 @@ static inline gs_color_format ConvertDXGITextureFormat(DXGI_FORMAT format)
 		return GS_BGRX_UNORM;
 	case DXGI_FORMAT_B8G8R8A8_UNORM:
 		return GS_BGRA_UNORM;
+	case DXGI_FORMAT_R16G16_UNORM:
+		return GS_RG16;
 	}
 
 	return GS_UNKNOWN;

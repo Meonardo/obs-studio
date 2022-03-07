@@ -157,15 +157,24 @@ static bool av1_update(struct av1_encoder *enc, obs_data_t *settings)
 		av_opt_set_int(enc->context->priv_data, "row-mt", 1, 0);
 	}
 
+	if (enc->svtav1)
+		av_opt_set(enc->context->priv_data, "rc", "vbr", 0);
+
 	if (astrcmpi(rc, "cqp") == 0) {
 		bitrate = 0;
 		enc->context->global_quality = cqp;
+
+		if (enc->svtav1)
+			av_opt_set(enc->context->priv_data, "rc", "cqp", 0);
 
 	} else if (astrcmpi(rc, "vbr") != 0) { /* CBR by default */
 		const int64_t rate = bitrate * INT64_C(1000);
 		enc->context->rc_max_rate = rate;
 		enc->context->rc_min_rate = rate;
 		cqp = 0;
+
+		if (enc->svtav1)
+			av_opt_set(enc->context->priv_data, "rc", "cvbr", 0);
 	}
 
 	const int rate = bitrate * 1000;
@@ -336,7 +345,6 @@ static inline void copy_data(AVFrame *pic, const struct encoder_frame *frame,
 #define SEC_TO_NSEC 1000000000LL
 #define TIMEOUT_MAX_SEC 5
 #define TIMEOUT_MAX_NSEC (TIMEOUT_MAX_SEC * SEC_TO_NSEC)
-static const AVRational nsec_timebase = {1, 1000000000};
 
 static bool av1_encode(void *data, struct encoder_frame *frame,
 		       struct encoder_packet *packet, bool *received_packet)
@@ -400,10 +408,9 @@ static bool av1_encode(void *data, struct encoder_frame *frame,
 		*received_packet = true;
 
 		uint64_t recv_ts_nsec =
-			(uint64_t)av_rescale_q_rnd(
-				av_pkt.dts, enc->context->time_base,
-				nsec_timebase,
-				AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX) +
+			util_mul_div64((uint64_t)av_pkt.dts,
+				       (uint64_t)SEC_TO_NSEC,
+				       (uint64_t)enc->context->time_base.den) +
 			enc->start_ts;
 
 #if 0
@@ -496,6 +503,12 @@ obs_properties_t *av1_properties(bool svtav1)
 		obs_property_list_add_int(p, "Very likely too slow (6)", 6);
 		obs_property_list_add_int(p, "Probably too slow (7)", 7);
 		obs_property_list_add_int(p, "Seems okay (8)", 8);
+		obs_property_list_add_int(p, "Might be better (9)", 9);
+		obs_property_list_add_int(p, "A little bit faster? (10)", 10);
+		obs_property_list_add_int(p, "Hmm, not bad speed (11)", 11);
+		obs_property_list_add_int(
+			p, "Whoa, although quality might be not so great (12)",
+			12);
 	} else {
 		obs_property_list_add_int(p, "Probably too slow (7)", 7);
 		obs_property_list_add_int(p, "Okay (8)", 8);

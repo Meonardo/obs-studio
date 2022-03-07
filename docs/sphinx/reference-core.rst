@@ -271,6 +271,15 @@ Libobs Objects
 
 ---------------------
 
+.. function:: obs_scene_t *obs_get_scene_by_name(const char *name)
+
+   Gets a scene by its name.
+  
+   Increments the scene reference counter, use
+   :c:func:`obs_scene_release()` to release it when complete.
+
+---------------------
+
 .. function:: obs_output_t *obs_get_output_by_name(const char *name)
 
    Gets an output by its name.
@@ -425,9 +434,9 @@ Video, Audio, and Graphics
 
 ---------------------
 
-.. function:: bool obs_audio_monitoring_supported(void)
+.. function:: bool obs_audio_monitoring_available(void)
 
-   :return: Whether audio monitoring is supported on the current platform
+   :return: Whether audio monitoring is supported and available on the current platform
 
 ---------------------
 

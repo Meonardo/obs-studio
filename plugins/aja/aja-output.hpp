@@ -28,14 +28,6 @@ struct AudioFrames {
 	size_t size;
 };
 
-//TODO(paulh): Refactor me into OutputProps
-struct FrameTimes {
-	double obsFps;
-	uint64_t obsFrameTime;
-	double cardFps;
-	uint64_t cardFrameTime;
-};
-
 using VideoQueue = std::deque<VideoFrame>;
 using AudioQueue = std::deque<AudioFrames>;
 
@@ -66,6 +58,9 @@ public:
 	void SetOutputProps(const OutputProps &props);
 	OutputProps GetOutputProps() const;
 
+	void CacheConnections(const NTV2XptConnections &cnx);
+	void ClearConnections();
+
 	void GenerateTestPattern(NTV2VideoFormat vf, NTV2PixelFormat pf,
 				 NTV2TestPatternSelect pattern);
 
@@ -89,8 +84,6 @@ public:
 	std::string mOutputID;
 	UWord mDeviceIndex;
 	NTV2DeviceID mDeviceID;
-
-	FrameTimes mFrameTimes;
 
 	uint32_t mAudioPlayCursor;
 	uint32_t mAudioWriteCursor;
@@ -157,4 +150,6 @@ private:
 	std::unique_ptr<AudioQueue> mAudioQueue;
 
 	obs_output_t *mOBSOutput;
+
+	NTV2XptConnections mCrosspoints;
 };

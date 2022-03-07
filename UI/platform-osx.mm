@@ -23,6 +23,7 @@
 #include "obs-app.hpp"
 
 #include <unistd.h>
+#include <sys/sysctl.h>
 
 #import <AppKit/AppKit.h>
 
@@ -87,7 +88,7 @@ bool InitApplicationBundle()
 #endif
 }
 
-void CheckAppWithSameBundleID(bool &already_running)
+void CheckIfAlreadyRunning(bool &already_running)
 {
 	try {
 		NSBundle *bundle = [NSBundle mainBundle];
@@ -106,7 +107,7 @@ void CheckAppWithSameBundleID(bool &already_running)
 		already_running = app_count > 1;
 
 	} catch (const char *error) {
-		blog(LOG_ERROR, "CheckAppWithSameBundleID: %s", error);
+		blog(LOG_ERROR, "CheckIfAlreadyRunning: %s", error);
 	}
 }
 
@@ -195,6 +196,12 @@ void SetAlwaysOnTop(QWidget *window, bool enable)
 	window->show();
 }
 
+bool SetDisplayAffinitySupported(void)
+{
+	// Not implemented yet
+	return false;
+}
+
 typedef void (*set_int_t)(int);
 
 void EnableOSXVSync(bool enable)
@@ -233,6 +240,19 @@ void EnableOSXDockIcon(bool enable)
 	else
 		[NSApp setActivationPolicy:
 				NSApplicationActivationPolicyProhibited];
+}
+
+bool ProcessIsRosettaTranslated()
+{
+#ifdef __aarch64__
+	return false;
+#else
+	int ret = 0;
+	size_t size = sizeof(ret);
+	if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1)
+		return false;
+	return ret == 1;
+#endif
 }
 
 /*

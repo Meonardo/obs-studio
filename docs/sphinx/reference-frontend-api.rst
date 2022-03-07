@@ -659,15 +659,14 @@ Functions
 .. function:: obs_source_t *obs_frontend_get_current_preview_scene(void)
 
    :return: A new reference to the current preview scene if studio mode
-            is active, or the current scene if studio mode is not
-            active
+            is active, or *NULL* if studio mode is not active.
 
 ---------------------------------------
 
 .. function:: void obs_frontend_set_current_preview_scene(obs_source_t *scene)
 
-   Sets the current preview scene in studio mode, or the currently
-   active scene if not in studio mode.
+   Sets the current preview scene in studio mode. Does nothing if studio
+   mode is disabled.
 
    :param scene: The scene to set as the current preview
 
@@ -733,7 +732,7 @@ Functions
 
 ---------------------------------------
 
-.. function:: void *obs_frontend_open_properties(obs_source_t *source)
+.. function:: void *obs_frontend_open_source_properties(obs_source_t *source)
 
    Opens the properties window of the specified source.
 
@@ -741,11 +740,20 @@ Functions
 
 ---------------------------------------
 
-.. function:: void *obs_frontend_open_filters(obs_source_t *source)
+.. function:: void *obs_frontend_open_source_filters(obs_source_t *source)
 
    Opens the filters window of the specified source.
 
    :param source: The source to open the filters window of
+
+---------------------------------------
+
+.. function:: void *obs_frontend_open_source_interaction(obs_source_t *source)
+
+   Opens the interact window of the specified source. Only call if
+   source has the *OBS_SOURCE_INTERACTION* output flag.
+
+   :param source: The source to open the interact window of
 
 ---------------------------------------
 

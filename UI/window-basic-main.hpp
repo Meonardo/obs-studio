@@ -92,8 +92,9 @@ struct SavedProjectorInfo {
 struct SourceCopyInfo {
 	OBSWeakSource weak_source;
 	bool visible;
-	std::shared_ptr<obs_sceneitem_crop> crop;
-	std::shared_ptr<obs_transform_info> transform;
+	obs_sceneitem_crop crop;
+	obs_transform_info transform;
+	obs_blending_type blend;
 };
 
 struct QuickTransition {
@@ -221,6 +222,9 @@ private:
 	std::deque<SourceCopyInfo> clipboard;
 	OBSWeakSourceAutoRelease copyFiltersSource;
 	bool copyVisible = true;
+	obs_transform_info copiedTransformInfo;
+	obs_sceneitem_crop copiedCropInfo;
+	bool hasCopiedTransform = false;
 
 	bool closing = false;
 	QScopedPointer<QThread> devicePropertiesThread;
@@ -939,8 +943,17 @@ public:
 
 	void UpdateEditMenu();
 
+	void SetDisplayAffinity(QWindow *window);
+
 protected:
 	virtual void closeEvent(QCloseEvent *event) override;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	virtual bool nativeEvent(const QByteArray &eventType, void *message,
+				 qintptr *result) override;
+#else
+	virtual bool nativeEvent(const QByteArray &eventType, void *message,
+				 long *result) override;
+#endif
 	virtual void changeEvent(QEvent *event) override;
 
 private slots:
@@ -960,10 +973,9 @@ private slots:
 	void on_actionShowCrashLogs_triggered();
 	void on_actionUploadLastCrashLog_triggered();
 
-	void on_menuBasic_MainMenu_Edit_aboutToShow();
-
 	void on_actionEditTransform_triggered();
 	void on_actionCopyTransform_triggered();
+	void on_actionPasteTransform_triggered();
 	void on_actionRotate90CW_triggered();
 	void on_actionRotate90CCW_triggered();
 	void on_actionRotate180_triggered();
@@ -1091,6 +1103,7 @@ private slots:
 	void OpenSceneFilters();
 	void OpenFilters(OBSSource source = nullptr);
 	void OpenProperties(OBSSource source = nullptr);
+	void OpenInteraction(OBSSource source = nullptr);
 
 	void EnablePreviewDisplay(bool enable);
 	void TogglePreview();
@@ -1111,8 +1124,6 @@ private slots:
 	void OpenSourceWindow();
 	void OpenMultiviewWindow();
 	void OpenSceneWindow();
-
-	void DeferredSysTrayLoad(int requeueCount);
 
 	void StackedMixerAreaContextMenuRequested();
 

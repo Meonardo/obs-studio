@@ -284,7 +284,6 @@ OBSBasic::OBSBasic(QWidget *parent)
 	qRegisterMetaTypeStreamOperators<std::vector<std::shared_ptr<OBSSignal>>>(
 		"std::vector<std::shared_ptr<OBSSignal>>");
 	qRegisterMetaTypeStreamOperators<OBSScene>("OBSScene");
-	qRegisterMetaTypeStreamOperators<OBSSceneItem>("OBSSceneItem");
 #endif
 
 	ui->scenes->setAttribute(Qt::WA_MacShowFocusRect, false);
@@ -354,6 +353,7 @@ OBSBasic::OBSBasic(QWidget *parent)
 	ui->actionRemoveSource->setShortcuts({Qt::Key_Backspace});
 	ui->actionRemoveScene->setShortcuts({Qt::Key_Backspace});
 
+	ui->actionCheckForUpdates->setMenuRole(QAction::AboutQtRole);
 	ui->action_Settings->setMenuRole(QAction::PreferencesRole);
 	ui->actionE_xit->setMenuRole(QAction::QuitRole);
 #else
@@ -1012,9 +1012,7 @@ void OBSBasic::LoadData(obs_data_t *data, const char *file)
 	LoadAudioDevice(AUX_AUDIO_4, 6, data);
 
 	if (!sources) {
-		sources = groups;
-		obs_data_array_addref(groups);
-		groups = nullptr;
+		sources = std::move(groups);
 	} else {
 		obs_data_array_push_back_array(sources, groups);
 	}
@@ -1059,12 +1057,10 @@ retryScene:
 		goto retryScene;
 	}
 
-	if (!curProgramScene) {
-		curProgramScene = curScene;
-		obs_source_addref(curScene);
-	}
-
 	SetCurrentScene(curScene.Get(), true);
+
+	if (!curProgramScene)
+		curProgramScene = std::move(curScene);
 	if (IsPreviewProgramMode())
 		TransitionToScene(curProgramScene.Get(), true);
 
@@ -1749,7 +1745,7 @@ void OBSBasic::OBSInit()
 	}
 
 	/* load audio monitoring */
-	if (obs_audio_monitoring_supported()) {
+	if (obs_audio_monitoring_available()) {
 		const char *device_name = config_get_string(
 			basicConfig, "Audio", "MonitoringDeviceName");
 		const char *device_id = config_get_string(basicConfig, "Audio",
@@ -1846,6 +1842,7 @@ void OBSBasic::OBSInit()
 	ui->contextContainer->setVisible(contextVisible);
 	if (contextVisible)
 		UpdateContextBar(true);
+	UpdateEditMenu();
 
 	{
 		ProfileScope("OBSBasic::Load");
@@ -1890,9 +1887,21 @@ void OBSBasic::OBSInit()
 
 	connect(ui->preview, &OBSQTDisplay::DisplayCreated, addDisplay);
 
+	/* Show the main window, unless the tray icon isn't available
+	 * or neither the setting nor flag for starting minimized is set. */
+	bool sysTrayEnabled = config_get_bool(App()->GlobalConfig(),
+					      "BasicWindow", "sysTrayEnabled");
+	bool sysTrayWhenStarted = config_get_bool(
+		App()->GlobalConfig(), "BasicWindow", "SysTrayWhenStarted");
+	bool hideWindowOnStart = QSystemTrayIcon::isSystemTrayAvailable() &&
+				 sysTrayEnabled &&
+				 (opt_minimize_tray || sysTrayWhenStarted);
+
 #ifdef _WIN32
 	SetWin32DropStyle(this);
-	show();
+
+	if (!hideWindowOnStart)
+		show();
 #endif
 
 	bool alwaysOnTop = config_get_bool(App()->GlobalConfig(), "BasicWindow",
@@ -1916,7 +1925,8 @@ void OBSBasic::OBSInit()
 	}
 
 #ifndef _WIN32
-	show();
+	if (!hideWindowOnStart)
+		show();
 #endif
 
 	/* setup stats dock */
@@ -1973,9 +1983,7 @@ void OBSBasic::OBSInit()
 	ui->lockUI->setChecked(docksLocked);
 	ui->lockUI->blockSignals(false);
 
-#ifndef __APPLE__
 	SystemTray(true);
-#endif
 
 #if defined(_WIN32) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 	taskBtn->setWindow(windowHandle());
@@ -2051,11 +2059,6 @@ void OBSBasic::OBSInit()
 	OnFirstLoad();
 
 	activateWindow();
-
-#ifdef __APPLE__
-	QMetaObject::invokeMethod(this, "DeferredSysTrayLoad",
-				  Qt::QueuedConnection, Q_ARG(int, 10));
-#endif
 }
 
 void OBSBasic::OnFirstLoad()
@@ -2084,20 +2087,6 @@ void OBSBasic::OnFirstLoad()
 		on_actionViewCurrentLog_triggered();
 }
 
-void OBSBasic::DeferredSysTrayLoad(int requeueCount)
-{
-	if (--requeueCount > 0) {
-		QMetaObject::invokeMethod(this, "DeferredSysTrayLoad",
-					  Qt::QueuedConnection,
-					  Q_ARG(int, requeueCount));
-		return;
-	}
-
-	/* Minimizng to tray on initial startup does not work on mac
-	 * unless it is done in the deferred load */
-	SystemTray(true);
-}
-
 /* shows a "what's new" page on startup of new versions using CEF */
 void OBSBasic::ReceivedIntroJson(const QString &text)
 {
@@ -2120,6 +2109,7 @@ void OBSBasic::ReceivedIntroJson(const QString &text)
 		const std::string &version = item["version"].string_value();
 		const std::string &url = item["url"].string_value();
 		int increment = item["increment"].int_value();
+		int beta = item["Beta"].int_value();
 		int rc = item["RC"].int_value();
 
 		int major = 0;
@@ -2130,9 +2120,12 @@ void OBSBasic::ReceivedIntroJson(const QString &text)
 		if (major == OBS_RELEASE_CANDIDATE_MAJOR &&
 		    minor == OBS_RELEASE_CANDIDATE_MINOR &&
 		    rc == OBS_RELEASE_CANDIDATE) {
+#elif OBS_BETA > 0
+		if (major == OBS_BETA_MAJOR && minor == OBS_BETA_MINOR &&
+		    beta == OBS_BETA) {
 #else
 		if (major == LIBOBS_API_MAJOR_VER &&
-		    minor == LIBOBS_API_MINOR_VER && rc == 0) {
+		    minor == LIBOBS_API_MINOR_VER && rc == 0 && beta == 0) {
 #endif
 			info_url = url;
 			info_increment = increment;
@@ -2147,6 +2140,9 @@ void OBSBasic::ReceivedIntroJson(const QString &text)
 #if OBS_RELEASE_CANDIDATE > 0
 	uint32_t lastVersion = config_get_int(App()->GlobalConfig(), "General",
 					      "LastRCVersion");
+#elif OBS_BETA > 0
+	uint32_t lastVersion = config_get_int(App()->GlobalConfig(), "General",
+					      "LastBetaVersion");
 #else
 	uint32_t lastVersion =
 		config_get_int(App()->GlobalConfig(), "General", "LastVersion");
@@ -2156,6 +2152,8 @@ void OBSBasic::ReceivedIntroJson(const QString &text)
 
 #if OBS_RELEASE_CANDIDATE > 0
 	if (lastVersion < OBS_RELEASE_CANDIDATE_VER) {
+#elif OBS_BETA > 0
+	if (lastVersion < OBS_BETA_VER) {
 #else
 	if ((lastVersion & ~0xFFFF) < (LIBOBS_API_VER & ~0xFFFF)) {
 #endif
@@ -2174,7 +2172,9 @@ void OBSBasic::ReceivedIntroJson(const QString &text)
 		       info_increment);
 
 	/* Don't show What's New dialog for new users */
-#if !defined(OBS_RELEASE_CANDIDATE) || OBS_RELEASE_CANDIDATE == 0
+#if !defined(OBS_RELEASE_CANDIDATE) || OBS_RELEASE_CANDIDATE == 0 || \
+	!defined(OBS_BETA) || OBS_BETA == 0
+
 	if (!lastVersion) {
 		return;
 	}
@@ -2646,6 +2646,9 @@ OBSBasic::~OBSBasic()
 #if OBS_RELEASE_CANDIDATE > 0
 	config_set_int(App()->GlobalConfig(), "General", "LastRCVersion",
 		       OBS_RELEASE_CANDIDATE_VER);
+#elif OBS_BETA > 0
+	config_set_int(App()->GlobalConfig(), "General", "LastBetaVersion",
+		       OBS_BETA_VER);
 #endif
 
 	bool alwaysOnTop = IsAlwaysOnTop(this);
@@ -3800,8 +3803,6 @@ void OBSBasic::RemoveSelectedScene()
 	OBSScene scene = GetCurrentScene();
 	obs_source_t *source = obs_scene_get_source(scene);
 
-	OBSSource curProgramScene = OBSGetStrongRef(programScene);
-
 	if (!source || !QueryRemoveSource(source)) {
 		return;
 	}
@@ -3906,8 +3907,8 @@ void OBSBasic::RemoveSelectedScene()
 			auto cb = [](obs_scene_t *scene, obs_sceneitem_t *item,
 				     void *data) {
 				UNUSED_PARAMETER(scene);
-				std::vector<obs_source_t *> *existing =
-					(std::vector<obs_source_t *> *)data;
+				std::vector<OBSSource> *existing =
+					(std::vector<OBSSource> *)data;
 				OBSSource source =
 					obs_sceneitem_get_source(item);
 				obs_sceneitem_remove(item);
@@ -4530,6 +4531,8 @@ void OBSBasic::ClearSceneData()
 {
 	disableSaving++;
 
+	setCursor(Qt::WaitCursor);
+
 	CloseDialogs();
 
 	ClearVolumeControls();
@@ -4573,6 +4576,8 @@ void OBSBasic::ClearSceneData()
 	do {
 		QApplication::sendPostedEvents(nullptr);
 	} while (obs_wait_for_destroy_queue());
+
+	unsetCursor();
 
 	disableSaving--;
 
@@ -4676,6 +4681,32 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 	QMetaObject::invokeMethod(App(), "quit", Qt::QueuedConnection);
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+bool OBSBasic::nativeEvent(const QByteArray &, void *message, qintptr *)
+#else
+bool OBSBasic::nativeEvent(const QByteArray &, void *message, long *)
+#endif
+{
+#ifdef _WIN32
+	const MSG &msg = *static_cast<MSG *>(message);
+	switch (msg.message) {
+	case WM_MOVE:
+		for (OBSQTDisplay *const display :
+		     findChildren<OBSQTDisplay *>()) {
+			display->OnMove();
+		}
+		break;
+	case WM_DISPLAYCHANGE:
+		for (OBSQTDisplay *const display :
+		     findChildren<OBSQTDisplay *>()) {
+			display->OnDisplayChange();
+		}
+	}
+#endif
+
+	return false;
+}
+
 void OBSBasic::changeEvent(QEvent *event)
 {
 	if (event->type() == QEvent::WindowStateChange) {
@@ -4760,8 +4791,6 @@ void OBSBasic::on_action_Settings_triggered()
 		OBSBasicSettings settings(this);
 		settings.exec();
 	}
-
-	SystemTray(false);
 
 	settings_already_executing = false;
 
@@ -5117,9 +5146,8 @@ void OBSBasic::on_actionAddScene_triggered()
 				  undo_fn, redo_fn, name, name);
 
 		OBSSceneAutoRelease scene = obs_scene_create(name.c_str());
-		source = obs_scene_get_source(scene);
-		obs_source_addref(source);
-		SetCurrentScene(source.Get());
+		obs_source_t *scene_source = obs_scene_get_source(scene);
+		SetCurrentScene(scene_source);
 	}
 }
 
@@ -5369,8 +5397,6 @@ ColorSelect::ColorSelect(QWidget *parent)
 
 void OBSBasic::CreateSourcePopupMenu(int idx, bool preview)
 {
-	UpdateEditMenu();
-
 	QMenu popup(this);
 	delete previewProjectorSource;
 	delete sourceProjector;
@@ -5743,7 +5769,7 @@ OBSData OBSBasic::BackupScene(obs_scene_t *scene,
 
 static bool add_source_enum(obs_scene_t *, obs_sceneitem_t *item, void *p)
 {
-	auto sources = static_cast<std::vector<obs_source_t *> *>(p);
+	auto sources = static_cast<std::vector<OBSSource> *>(p);
 	sources->push_back(obs_sceneitem_get_source(item));
 	return true;
 }
@@ -6186,6 +6212,15 @@ void OBSBasic::OpenProperties(OBSSource source)
 		source = obs_sceneitem_get_source(item);
 	}
 	CreatePropertiesWindow(source);
+}
+
+void OBSBasic::OpenInteraction(OBSSource source)
+{
+	if (source == nullptr) {
+		OBSSceneItem item = GetCurrentSceneItem();
+		source = obs_sceneitem_get_source(item);
+	}
+	CreateInteractionWindow(source);
 }
 
 void OBSBasic::OpenSceneFilters()
@@ -7254,8 +7289,6 @@ void OBSBasic::ReplayBufferSave()
 	if (!outputHandler->ReplayBufferActive())
 		return;
 
-	outputHandler->ConfigureReplayBuffer();
-
 	calldata_t cd = {0};
 	proc_handler_t *ph =
 		obs_output_get_proc_handler(outputHandler->replayBuffer);
@@ -7756,41 +7789,54 @@ config_t *OBSBasic::Config() const
 
 void OBSBasic::UpdateEditMenu()
 {
-	int idx = GetTopSelectedSourceItem();
+	QModelIndexList items = GetAllSelectedSourceItems();
+	int count = items.count();
 	size_t filter_count = 0;
-	OBSSceneItem sceneItem;
-	OBSSource source;
 
-	if (idx != -1) {
-		sceneItem = ui->sources->Get(idx);
-		source = obs_sceneitem_get_source(sceneItem);
+	if (count == 1) {
+		OBSSceneItem sceneItem =
+			ui->sources->Get(GetTopSelectedSourceItem());
+		OBSSource source = obs_sceneitem_get_source(sceneItem);
 		filter_count = obs_source_filter_count(source);
 	}
 
+	bool allowPastingDuplicate = !!clipboard.size();
 	for (size_t i = clipboard.size(); i > 0; i--) {
 		const size_t idx = i - 1;
 		OBSWeakSource &weak = clipboard[idx].weak_source;
-		if (obs_weak_source_expired(weak))
+		if (obs_weak_source_expired(weak)) {
 			clipboard.erase(clipboard.begin() + idx);
+			continue;
+		}
+		OBSSourceAutoRelease strong =
+			obs_weak_source_get_source(weak.Get());
+		if (allowPastingDuplicate &&
+		    obs_source_get_output_flags(strong) &
+			    OBS_SOURCE_DO_NOT_DUPLICATE)
+			allowPastingDuplicate = false;
 	}
 
-	ui->actionCopySource->setEnabled(idx != -1);
-	ui->actionEditTransform->setEnabled(idx != -1);
-	ui->actionCopyTransform->setEnabled(idx != -1);
+	ui->actionCopySource->setEnabled(count > 0);
+	ui->actionEditTransform->setEnabled(count == 1);
+	ui->actionCopyTransform->setEnabled(count == 1);
+	ui->actionPasteTransform->setEnabled(hasCopiedTransform && count > 0);
 	ui->actionCopyFilters->setEnabled(filter_count > 0);
 	ui->actionPasteFilters->setEnabled(
-		!obs_weak_source_expired(copyFiltersSource) && idx != -1);
+		!obs_weak_source_expired(copyFiltersSource) && count > 0);
 	ui->actionPasteRef->setEnabled(!!clipboard.size());
-	ui->actionPasteDup->setEnabled(!!clipboard.size());
+	ui->actionPasteDup->setEnabled(allowPastingDuplicate);
 
-	ui->actionMoveUp->setEnabled(idx != -1);
-	ui->actionMoveDown->setEnabled(idx != -1);
-	ui->actionMoveToTop->setEnabled(idx != -1);
-	ui->actionMoveToBottom->setEnabled(idx != -1);
+	ui->actionMoveUp->setEnabled(count > 0);
+	ui->actionMoveDown->setEnabled(count > 0);
+	ui->actionMoveToTop->setEnabled(count > 0);
+	ui->actionMoveToBottom->setEnabled(count > 0);
 
 	bool canTransform = false;
-	if (sceneItem)
-		canTransform = !obs_sceneitem_locked(sceneItem);
+	for (int i = 0; i < count; i++) {
+		OBSSceneItem item = ui->sources->Get(items.value(i).row());
+		if (!obs_sceneitem_locked(item))
+			canTransform = true;
+	}
 
 	ui->actionResetTransform->setEnabled(canTransform);
 	ui->actionRotate90CW->setEnabled(canTransform);
@@ -7803,11 +7849,6 @@ void OBSBasic::UpdateEditMenu()
 	ui->actionCenterToScreen->setEnabled(canTransform);
 	ui->actionVerticalCenter->setEnabled(canTransform);
 	ui->actionHorizontalCenter->setEnabled(canTransform);
-}
-
-void OBSBasic::on_menuBasic_MainMenu_Edit_aboutToShow()
-{
-	UpdateEditMenu();
 }
 
 void OBSBasic::on_actionEditTransform_triggered()
@@ -7827,7 +7868,13 @@ void OBSBasic::on_actionEditTransform_triggered()
 
 void OBSBasic::on_actionCopyTransform_triggered()
 {
+	OBSSceneItem item = GetCurrentSceneItem();
+
+	obs_sceneitem_get_info(item, &copiedTransformInfo);
+	obs_sceneitem_get_crop(item, &copiedCropInfo);
+
 	ui->actionPasteTransform->setEnabled(true);
+	hasCopiedTransform = true;
 }
 
 void undo_redo(const std::string &data)
@@ -7839,6 +7886,37 @@ void undo_redo(const std::string &data)
 		->SetCurrentScene(source.Get(), true);
 
 	obs_scene_load_transform_states(data.c_str());
+}
+
+void OBSBasic::on_actionPasteTransform_triggered()
+{
+	OBSDataAutoRelease wrapper =
+		obs_scene_save_transform_states(GetCurrentScene(), false);
+	auto func = [](obs_scene_t *, obs_sceneitem_t *item, void *data) {
+		if (!obs_sceneitem_selected(item))
+			return true;
+
+		OBSBasic *main = reinterpret_cast<OBSBasic *>(data);
+
+		obs_sceneitem_defer_update_begin(item);
+		obs_sceneitem_set_info(item, &main->copiedTransformInfo);
+		obs_sceneitem_set_crop(item, &main->copiedCropInfo);
+		obs_sceneitem_defer_update_end(item);
+
+		return true;
+	};
+
+	obs_scene_enum_items(GetCurrentScene(), func, this);
+
+	OBSDataAutoRelease rwrapper =
+		obs_scene_save_transform_states(GetCurrentScene(), false);
+
+	std::string undo_data(obs_data_get_json(wrapper));
+	std::string redo_data(obs_data_get_json(rwrapper));
+	undo_s.add_action(
+		QTStr("Undo.Transform.Paste")
+			.arg(obs_source_get_name(GetCurrentSceneSource())),
+		undo_redo, undo_redo, undo_data, redo_data);
 }
 
 static bool reset_tr(obs_scene_t *scene, obs_sceneitem_t *item, void *param)
@@ -8919,12 +8997,15 @@ void OBSBasic::SystemTrayInit()
 	AddProjectorMenuMonitors(studioProgramProjector, this,
 				 SLOT(OpenStudioProgramProjector()));
 	trayMenu->addAction(showHide);
+	trayMenu->addSeparator();
 	trayMenu->addMenu(previewProjector);
 	trayMenu->addMenu(studioProgramProjector);
+	trayMenu->addSeparator();
 	trayMenu->addAction(sysTrayStream);
 	trayMenu->addAction(sysTrayRecord);
 	trayMenu->addAction(sysTrayReplayBuffer);
 	trayMenu->addAction(sysTrayVirtualCam);
+	trayMenu->addSeparator();
 	trayMenu->addAction(exit);
 	trayIcon->setContextMenu(trayMenu);
 	trayIcon->show();
@@ -9003,9 +9084,7 @@ void OBSBasic::SystemTray(bool firstStarted)
 	} else {
 		trayIcon->show();
 		if (firstStarted && (sysTrayWhenStarted || opt_minimize_tray)) {
-			QTimer::singleShot(50, this, SLOT(hide()));
 			EnablePreviewDisplay(false);
-			setVisible(false);
 #ifdef __APPLE__
 			EnableOSXDockIcon(false);
 #endif
@@ -9038,34 +9117,25 @@ void OBSBasic::on_actionMainRedo_triggered()
 void OBSBasic::on_actionCopySource_triggered()
 {
 	clipboard.clear();
-	bool allowPastingDuplicate = true;
 
 	for (auto &selectedSource : GetAllSelectedSourceItems()) {
 		OBSSceneItem item = ui->sources->Get(selectedSource.row());
 		if (!item)
 			continue;
 
-		on_actionCopyTransform_triggered();
-
 		OBSSource source = obs_sceneitem_get_source(item);
 
 		SourceCopyInfo copyInfo;
 		copyInfo.weak_source = OBSGetWeakRef(source);
-		copyInfo.transform = std::make_shared<obs_transform_info>();
-		obs_sceneitem_get_info(item, copyInfo.transform.get());
-		copyInfo.crop = std::make_shared<obs_sceneitem_crop>();
-		obs_sceneitem_get_crop(item, copyInfo.crop.get());
+		obs_sceneitem_get_info(item, &copyInfo.transform);
+		obs_sceneitem_get_crop(item, &copyInfo.crop);
+		copyInfo.blend = obs_sceneitem_get_blending_mode(item);
 		copyInfo.visible = obs_sceneitem_visible(item);
 
 		clipboard.push_back(copyInfo);
-
-		uint32_t output_flags = obs_source_get_output_flags(source);
-		if (output_flags & OBS_SOURCE_DO_NOT_DUPLICATE)
-			allowPastingDuplicate = false;
 	}
 
-	ui->actionPasteRef->setEnabled(true);
-	ui->actionPasteDup->setEnabled(allowPastingDuplicate);
+	UpdateEditMenu();
 }
 
 void OBSBasic::on_actionPasteRef_triggered()
@@ -9904,4 +9974,35 @@ void OBSBasic::UpdatePreviewSafeAreas()
 {
 	drawSafeAreas = config_get_bool(App()->GlobalConfig(), "BasicWindow",
 					"ShowSafeAreas");
+}
+
+void OBSBasic::SetDisplayAffinity(QWindow *window)
+{
+	if (!SetDisplayAffinitySupported())
+		return;
+
+	bool hideFromCapture = config_get_bool(App()->GlobalConfig(),
+					       "BasicWindow",
+					       "HideOBSWindowsFromCapture");
+
+	// Don't hide projectors, those are designed to be visible / captured
+	if (window->property("isOBSProjectorWindow") == true)
+		return;
+
+#ifdef _WIN32
+	HWND hwnd = (HWND)window->winId();
+
+	DWORD curAffinity;
+	if (GetWindowDisplayAffinity(hwnd, &curAffinity)) {
+		if (hideFromCapture && curAffinity != WDA_EXCLUDEFROMCAPTURE)
+			SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+		else if (curAffinity != WDA_NONE)
+			SetWindowDisplayAffinity(hwnd, WDA_NONE);
+	}
+
+#else
+	// TODO: Implement for other platforms if possible. Don't forget to
+	// implement SetDisplayAffinitySupported too!
+	UNUSED_PARAMETER(hideFromCapture);
+#endif
 }
