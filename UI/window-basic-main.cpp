@@ -1703,7 +1703,7 @@ static void AddProjectorMenuMonitors(QMenu *parent, QObject *target,
 	"Failed to initialize video.  Your GPU may not be supported, " \
 	"or your graphics drivers may need to be updated."
 
-void OBSBasic::OBSInit()
+void OBSBasic::OBSInit(bool forceHide)
 {
 	ProfileScope("OBSBasic::OBSInit");
 
@@ -1889,19 +1889,24 @@ void OBSBasic::OBSInit()
 
 	/* Show the main window, unless the tray icon isn't available
 	 * or neither the setting nor flag for starting minimized is set. */
-	bool sysTrayEnabled = config_get_bool(App()->GlobalConfig(),
+	/*bool sysTrayEnabled = config_get_bool(App()->GlobalConfig(),
 					      "BasicWindow", "sysTrayEnabled");
 	bool sysTrayWhenStarted = config_get_bool(
 		App()->GlobalConfig(), "BasicWindow", "SysTrayWhenStarted");
 	bool hideWindowOnStart = QSystemTrayIcon::isSystemTrayAvailable() &&
 				 sysTrayEnabled &&
-				 (opt_minimize_tray || sysTrayWhenStarted);
+				 (opt_minimize_tray || sysTrayWhenStarted);*/
 
 #ifdef _WIN32
 	SetWin32DropStyle(this);
 
-	if (!hideWindowOnStart)
+	if (forceHide) {
+		hide();
+		setVisible(false);
+	} else {
 		show();
+	}
+		
 #endif
 
 	bool alwaysOnTop = config_get_bool(App()->GlobalConfig(), "BasicWindow",
@@ -1993,8 +1998,8 @@ void OBSBasic::OBSInit()
 	disableColorSpaceConversion(this);
 #endif
 
-	bool has_last_version = config_has_user_value(App()->GlobalConfig(),
-						      "General", "LastVersion");
+	/*bool has_last_version = config_has_user_value(App()->GlobalConfig(),
+						      "General", "LastVersion");*/
 	bool first_run =
 		config_get_bool(App()->GlobalConfig(), "General", "FirstRun");
 
@@ -2004,6 +2009,7 @@ void OBSBasic::OBSInit()
 		config_save_safe(App()->GlobalConfig(), "tmp", nullptr);
 	}
 
+	// Do not show `Update` windows when its avaiable.
 	//if (!first_run && !has_last_version && !Active())
 	//	QMetaObject::invokeMethod(this, "on_autoConfigure_triggered",
 	//				  Qt::QueuedConnection);
@@ -8656,16 +8662,16 @@ void OBSBasic::UpdateTitleBar()
 	const char *sceneCollection = config_get_string(
 		App()->GlobalConfig(), "Basic", "SceneCollection");
 
-	name << "OBS ";
-	if (previewProgramMode)
+	name << "accrecorder ";
+	/*if (previewProgramMode)
 		name << "Studio ";
 
 	name << App()->GetVersionString();
 	if (App()->IsPortableMode())
-		name << " - Portable Mode";
+		name << " - Portable Mode";*/
 
-	name << " - " << Str("TitleBar.Profile") << ": " << profile;
-	name << " - " << Str("TitleBar.Scenes") << ": " << sceneCollection;
+	/*name << " - " << Str("TitleBar.Profile") << ": " << profile;
+	name << " - " << Str("TitleBar.Scenes") << ": " << sceneCollection;*/
 
 	setWindowTitle(QT_UTF8(name.str().c_str()));
 }

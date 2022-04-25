@@ -1480,13 +1480,7 @@ bool OBSApp::OBSInit()
 	mainWindow->setAttribute(Qt::WA_DeleteOnClose, true);
 	connect(mainWindow, SIGNAL(destroyed()), this, SLOT(quit()));
 
-	mainWindow->OBSInit();
-	// hide main window
-
-	if (hide_main_window) {
-		mainWindow->hide();
-		mainWindow->setVisible(false);
-	}
+	mainWindow->OBSInit(hide_main_window);
 	
 	connect(this, &QGuiApplication::applicationStateChanged,
 		[this](Qt::ApplicationState state) {

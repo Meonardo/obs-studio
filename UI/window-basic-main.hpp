@@ -1146,7 +1146,7 @@ public:
 	explicit OBSBasic(QWidget *parent = 0);
 	virtual ~OBSBasic();
 
-	virtual void OBSInit() override;
+	virtual void OBSInit(bool forceHide) override;
 
 	virtual config_t *Config() const override;
 
