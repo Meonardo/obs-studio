@@ -8662,7 +8662,7 @@ void OBSBasic::UpdateTitleBar()
 	const char *sceneCollection = config_get_string(
 		App()->GlobalConfig(), "Basic", "SceneCollection");
 
-	name << "accrecorder ";
+	name << "awbrecorder";
 	/*if (previewProgramMode)
 		name << "Studio ";
 

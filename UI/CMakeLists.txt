@@ -451,7 +451,7 @@ if(WIN32)
 
 	set_target_properties(obs
 		PROPERTIES
-			OUTPUT_NAME "accrecorder${_output_suffix}")
+			OUTPUT_NAME "awbrecorder${_output_suffix}")
 	target_link_libraries(obs
 			Qt5::WinExtras)
 
