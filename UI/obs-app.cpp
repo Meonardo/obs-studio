@@ -79,6 +79,7 @@ static string currentLogFile;
 static string lastLogFile;
 static string lastCrashLogFile;
 
+bool hide_main_window = true;
 bool portable_mode = false;
 static bool multi = false;
 static bool log_verbose = false;
@@ -461,7 +462,7 @@ bool OBSApp::InitGlobalConfigDefaults()
 	config_set_default_bool(globalConfig, "BasicWindow",
 				"KeepRecordingWhenStreamStops", false);
 	config_set_default_bool(globalConfig, "BasicWindow", "SysTrayEnabled",
-				true);
+				false);
 	config_set_default_bool(globalConfig, "BasicWindow",
 				"SysTrayWhenStarted", false);
 	config_set_default_bool(globalConfig, "BasicWindow", "SaveProjectors",
@@ -531,34 +532,34 @@ static bool MakeUserDirs()
 {
 	char path[512];
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/basic") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/basic") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/logs") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/logs") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/profiler_data") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/profiler_data") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 
 #ifdef _WIN32
-	if (GetConfigPath(path, sizeof(path), "obs-studio/crashes") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/crashes") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/updates") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/updates") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 #endif
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/plugin_config") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/plugin_config") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
@@ -570,12 +571,12 @@ static bool MakeUserProfileDirs()
 {
 	char path[512];
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/basic/profiles") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/basic/profiles") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/basic/scenes") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/basic/scenes") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
@@ -589,7 +590,7 @@ static string GetProfileDirFromName(const char *name)
 	os_glob_t *glob;
 	char path[512];
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/basic/profiles") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/basic/profiles") <= 0)
 		return outputPath;
 
 	strcat(path, "/*");
@@ -635,7 +636,7 @@ static string GetSceneCollectionFileFromName(const char *name)
 	os_glob_t *glob;
 	char path[512];
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/basic/scenes") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/basic/scenes") <= 0)
 		return outputPath;
 
 	strcat(path, "/*.json");
@@ -716,7 +717,7 @@ bool OBSApp::InitGlobalConfig()
 	char path[512];
 	bool changed = false;
 
-	int len = GetConfigPath(path, sizeof(path), "obs-studio/global.ini");
+	int len = GetConfigPath(path, sizeof(path), "accrecorder/global.ini");
 	if (len <= 0) {
 		return false;
 	}
@@ -1170,7 +1171,7 @@ std::string OBSApp::GetTheme(std::string name, std::string path)
 	if (path == "") {
 		char userDir[512];
 		name = "themes/" + name + ".qss";
-		string temp = "obs-studio/" + name;
+		string temp = "accrecorder/" + name;
 		int ret = GetConfigPath(userDir, sizeof(userDir), temp.c_str());
 
 		if (ret > 0 && QFile::exists(userDir)) {
@@ -1301,13 +1302,13 @@ static void move_basic_to_profiles(void)
 	os_glob_t *glob;
 
 	/* if not first time use */
-	if (GetConfigPath(path, 512, "obs-studio/basic") <= 0)
+	if (GetConfigPath(path, 512, "accrecorder/basic") <= 0)
 		return;
 	if (!os_file_exists(path))
 		return;
 
 	/* if the profiles directory doesn't already exist */
-	if (GetConfigPath(new_path, 512, "obs-studio/basic/profiles") <= 0)
+	if (GetConfigPath(new_path, 512, "accrecorder/basic/profiles") <= 0)
 		return;
 	if (os_file_exists(new_path))
 		return;
@@ -1354,12 +1355,12 @@ static void move_basic_to_scene_collections(void)
 	char path[512];
 	char new_path[512];
 
-	if (GetConfigPath(path, 512, "obs-studio/basic") <= 0)
+	if (GetConfigPath(path, 512, "accrecorder/basic") <= 0)
 		return;
 	if (!os_file_exists(path))
 		return;
 
-	if (GetConfigPath(new_path, 512, "obs-studio/basic/scenes") <= 0)
+	if (GetConfigPath(new_path, 512, "accrecorder/basic/scenes") <= 0)
 		return;
 	if (os_file_exists(new_path))
 		return;
@@ -1446,7 +1447,7 @@ static bool StartupOBS(const char *locale, profiler_name_store_t *store)
 {
 	char path[512];
 
-	if (GetConfigPath(path, sizeof(path), "obs-studio/plugin_config") <= 0)
+	if (GetConfigPath(path, sizeof(path), "accrecorder/plugin_config") <= 0)
 		return false;
 
 	return obs_startup(locale, path, store);
@@ -1571,8 +1572,8 @@ bool OBSApp::OBSInit()
 	mainWindow->setAttribute(Qt::WA_DeleteOnClose, true);
 	connect(mainWindow, SIGNAL(destroyed()), this, SLOT(quit()));
 
-	mainWindow->OBSInit();
-
+	mainWindow->OBSInit(hide_main_window);
+	
 	connect(this, &QGuiApplication::applicationStateChanged,
 		[this](Qt::ApplicationState state) {
 			ResetHotkeyState(state == Qt::ApplicationActive);
@@ -1617,6 +1618,11 @@ string OBSApp::GetVersionString() const
 bool OBSApp::IsPortableMode()
 {
 	return portable_mode;
+}
+
+bool OBSApp::IsHideMainWindow()
+{
+	return hide_main_window;
 }
 
 bool OBSApp::IsUpdaterDisabled()
@@ -2033,13 +2039,13 @@ static void create_log_file(fstream &logFile)
 {
 	stringstream dst;
 
-	get_last_log(false, "obs-studio/logs", lastLogFile);
+	get_last_log(false, "accrecorder/logs", lastLogFile);
 #ifdef _WIN32
-	get_last_log(true, "obs-studio/crashes", lastCrashLogFile);
+	get_last_log(true, "accrecorder/crashes", lastCrashLogFile);
 #endif
 
 	currentLogFile = GenerateTimeDateFilename("txt");
-	dst << "obs-studio/logs/" << currentLogFile.c_str();
+	dst << "accrecorder/logs/" << currentLogFile.c_str();
 
 	BPtr<char> path(GetConfigPathPtr(dst.str().c_str()));
 
@@ -2052,7 +2058,7 @@ static void create_log_file(fstream &logFile)
 #endif
 
 	if (logFile.is_open()) {
-		delete_oldest_file(false, "obs-studio/logs");
+		delete_oldest_file(false, "accrecorder/logs");
 		base_set_log_handler(do_log, &logFile);
 	} else {
 		blog(LOG_ERROR, "Failed to open log file");
@@ -2095,7 +2101,7 @@ static void SaveProfilerData(const ProfilerSnapshot &snap)
 
 #define LITERAL_SIZE(x) x, (sizeof(x) - 1)
 	ostringstream dst;
-	dst.write(LITERAL_SIZE("obs-studio/profiler_data/"));
+	dst.write(LITERAL_SIZE("accrecorder/profiler_data/"));
 	dst.write(currentLogFile.c_str(), pos);
 	dst.write(LITERAL_SIZE(".csv.gz"));
 #undef LITERAL_SIZE
@@ -2200,7 +2206,7 @@ static int run_program(fstream &logFile, int argc, char *argv[])
 		bool created_log = false;
 
 		program.AppInit();
-		delete_oldest_file(false, "obs-studio/profiler_data");
+		delete_oldest_file(false, "accrecorder/profiler_data");
 
 		OBSTranslator translator;
 		program.installTranslator(&translator);
@@ -2366,7 +2372,7 @@ static void main_crash_handler(const char *format, va_list args, void *param)
 	vsnprintf(text, MAX_CRASH_REPORT_SIZE, format, args);
 	text[MAX_CRASH_REPORT_SIZE - 1] = 0;
 
-	string crashFilePath = "obs-studio/crashes";
+	string crashFilePath = "accrecorder/crashes";
 
 	delete_oldest_file(true, crashFilePath.c_str());
 
@@ -2595,7 +2601,7 @@ bool GetUnusedSceneCollectionFile(std::string &name, std::string &file)
 		return false;
 	}
 
-	ret = GetConfigPath(path, sizeof(path), "obs-studio/basic/scenes/");
+	ret = GetConfigPath(path, sizeof(path), "accrecorder/basic/scenes/");
 	if (ret <= 0) {
 		blog(LOG_WARNING, "Failed to get scene collection config path");
 		return false;
@@ -2645,7 +2651,7 @@ static void move_to_xdg(void)
 	if (!home)
 		return;
 
-	if (snprintf(old_path, 512, "%s/.obs-studio", home) <= 0)
+	if (snprintf(old_path, 512, "%s/.accrecorder", home) <= 0)
 		return;
 
 	/* make base xdg path if it doesn't already exist */
@@ -2654,7 +2660,7 @@ static void move_to_xdg(void)
 	if (os_mkdirs(new_path) == MKDIR_ERROR)
 		return;
 
-	if (GetConfigPath(new_path, 512, "obs-studio") <= 0)
+	if (GetConfigPath(new_path, 512, "accrecorder") <= 0)
 		return;
 
 	if (os_file_exists(old_path) && !os_file_exists(new_path)) {
@@ -2798,7 +2804,7 @@ static void convert_14_2_encoder_setting(const char *encoder, const char *file)
 static void upgrade_settings(void)
 {
 	char path[512];
-	int pathlen = GetConfigPath(path, 512, "obs-studio/basic/profiles");
+	int pathlen = GetConfigPath(path, 512, "accrecorder/basic/profiles");
 
 	if (pathlen <= 0)
 		return;
@@ -2919,6 +2925,9 @@ int main(int argc, char *argv[])
 	for (int i = 1; i < argc; i++) {
 		if (arg_is(argv[i], "--portable", "-p")) {
 			portable_mode = true;
+
+		} else if (arg_is(argv[i], "--show", nullptr)) {
+			hide_main_window = false;
 
 		} else if (arg_is(argv[i], "--multi", "-m")) {
 			multi = true;

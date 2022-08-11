@@ -163,6 +163,7 @@ public:
 
 	std::string GetVersionString() const;
 	bool IsPortableMode();
+	bool IsHideMainWindow();
 	bool IsUpdaterDisabled();
 	bool IsMissingFilesCheckDisabled();
 

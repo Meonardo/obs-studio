@@ -1375,8 +1375,8 @@ bool OBSBasic::InitBasicConfigDefaults()
 	config_set_default_string(basicConfig, "SimpleOutput", "FilePath",
 				  GetDefaultVideoSavePath().c_str());
 	config_set_default_string(basicConfig, "SimpleOutput", "RecFormat",
-				  "mkv");
-	config_set_default_uint(basicConfig, "SimpleOutput", "VBitrate", 2500);
+				  "mp4");
+	config_set_default_uint(basicConfig, "SimpleOutput", "VBitrate", 2048);
 	config_set_default_uint(basicConfig, "SimpleOutput", "ABitrate", 160);
 	config_set_default_bool(basicConfig, "SimpleOutput", "UseAdvanced",
 				false);
@@ -1403,7 +1403,7 @@ bool OBSBasic::InitBasicConfigDefaults()
 
 	config_set_default_string(basicConfig, "AdvOut", "RecFilePath",
 				  GetDefaultVideoSavePath().c_str());
-	config_set_default_string(basicConfig, "AdvOut", "RecFormat", "mkv");
+	config_set_default_string(basicConfig, "AdvOut", "RecFormat", "mp4");
 	config_set_default_bool(basicConfig, "AdvOut", "RecUseRescale", false);
 	config_set_default_uint(basicConfig, "AdvOut", "RecTracks", (1 << 0));
 	config_set_default_string(basicConfig, "AdvOut", "RecEncoder", "none");
@@ -1413,7 +1413,7 @@ bool OBSBasic::InitBasicConfigDefaults()
 	config_set_default_string(basicConfig, "AdvOut", "FFFilePath",
 				  GetDefaultVideoSavePath().c_str());
 	config_set_default_string(basicConfig, "AdvOut", "FFExtension", "mp4");
-	config_set_default_uint(basicConfig, "AdvOut", "FFVBitrate", 2500);
+	config_set_default_uint(basicConfig, "AdvOut", "FFVBitrate", 2048);
 	config_set_default_uint(basicConfig, "AdvOut", "FFVGOPSize", 250);
 	config_set_default_bool(basicConfig, "AdvOut", "FFUseRescale", false);
 	config_set_default_bool(basicConfig, "AdvOut", "FFIgnoreCompat", false);
@@ -1470,8 +1470,8 @@ bool OBSBasic::InitBasicConfigDefaults()
 	uint32_t scale_cy = cy;
 
 	/* use a default scaled resolution that has a pixel count no higher
-	 * than 1280x720 */
-	while (((scale_cx * scale_cy) > (1280 * 720)) && scaled_vals[i] > 0.0) {
+	 * than 1280x720  -> 1920x1080*/
+	while (((scale_cx * scale_cy) > (1920 * 1080)) && scaled_vals[i] > 0.0) {
 		double scale = scaled_vals[i++];
 		scale_cx = uint32_t(double(cx) / scale);
 		scale_cy = uint32_t(double(cy) / scale);
@@ -1713,7 +1713,7 @@ static void AddProjectorMenuMonitors(QMenu *parent, QObject *target,
 	"Failed to initialize video.  Your GPU may not be supported, " \
 	"or your graphics drivers may need to be updated."
 
-void OBSBasic::OBSInit()
+void OBSBasic::OBSInit(bool forceHide)
 {
 	ProfileScope("OBSBasic::OBSInit");
 
@@ -1727,7 +1727,7 @@ void OBSBasic::OBSInit()
 		throw "Failed to get scene collection name";
 
 	ret = snprintf(fileName, sizeof(fileName),
-		       "obs-studio/basic/scenes/%s.json", sceneCollection);
+		       "accrecorder/basic/scenes/%s.json", sceneCollection);
 	if (ret <= 0)
 		throw "Failed to create scene collection file name";
 
@@ -1864,7 +1864,8 @@ void OBSBasic::OBSInit()
 		disableSaving++;
 	}
 
-	TimedCheckForUpdates();
+	// disable update check
+	// TimedCheckForUpdates();
 	loaded = true;
 
 	previewEnabled = config_get_bool(App()->GlobalConfig(), "BasicWindow",
@@ -1901,19 +1902,24 @@ void OBSBasic::OBSInit()
 
 	/* Show the main window, unless the tray icon isn't available
 	 * or neither the setting nor flag for starting minimized is set. */
-	bool sysTrayEnabled = config_get_bool(App()->GlobalConfig(),
+	/*bool sysTrayEnabled = config_get_bool(App()->GlobalConfig(),
 					      "BasicWindow", "sysTrayEnabled");
 	bool sysTrayWhenStarted = config_get_bool(
 		App()->GlobalConfig(), "BasicWindow", "SysTrayWhenStarted");
 	bool hideWindowOnStart = QSystemTrayIcon::isSystemTrayAvailable() &&
 				 sysTrayEnabled &&
-				 (opt_minimize_tray || sysTrayWhenStarted);
+				 (opt_minimize_tray || sysTrayWhenStarted);*/
 
 #ifdef _WIN32
 	SetWin32DropStyle(this);
 
-	if (!hideWindowOnStart)
+	if (forceHide) {
+		hide();
+		setVisible(false);
+	} else {
 		show();
+	}
+		
 #endif
 
 	bool alwaysOnTop = config_get_bool(App()->GlobalConfig(), "BasicWindow",
@@ -2003,8 +2009,8 @@ void OBSBasic::OBSInit()
 	disableColorSpaceConversion(this);
 #endif
 
-	bool has_last_version = config_has_user_value(App()->GlobalConfig(),
-						      "General", "LastVersion");
+	/*bool has_last_version = config_has_user_value(App()->GlobalConfig(),
+						      "General", "LastVersion");*/
 	bool first_run =
 		config_get_bool(App()->GlobalConfig(), "General", "FirstRun");
 
@@ -2014,9 +2020,10 @@ void OBSBasic::OBSInit()
 		config_save_safe(App()->GlobalConfig(), "tmp", nullptr);
 	}
 
-	if (!first_run && !has_last_version && !Active())
-		QMetaObject::invokeMethod(this, "on_autoConfigure_triggered",
-					  Qt::QueuedConnection);
+	// Do not show `Update` windows when its avaiable.
+	//if (!first_run && !has_last_version && !Active())
+	//	QMetaObject::invokeMethod(this, "on_autoConfigure_triggered",
+	//				  Qt::QueuedConnection);
 
 	ToggleMixerLayout(config_get_bool(App()->GlobalConfig(), "BasicWindow",
 					  "VerticalVolControl"));
@@ -2779,7 +2786,7 @@ void OBSBasic::SaveProjectDeferred()
 		return;
 
 	ret = snprintf(fileName, sizeof(fileName),
-		       "obs-studio/basic/scenes/%s.json", sceneCollection);
+		       "accrecorder/basic/scenes/%s.json", sceneCollection);
 	if (ret <= 0)
 		return;
 
@@ -6154,7 +6161,7 @@ void OBSBasic::UploadLog(const char *subdir, const char *file, const bool crash)
 void OBSBasic::on_actionShowLogs_triggered()
 {
 	char logDir[512];
-	if (GetConfigPath(logDir, sizeof(logDir), "obs-studio/logs") <= 0)
+	if (GetConfigPath(logDir, sizeof(logDir), "accrecorder/logs") <= 0)
 		return;
 
 	QUrl url = QUrl::fromLocalFile(QT_UTF8(logDir));
@@ -6163,12 +6170,12 @@ void OBSBasic::on_actionShowLogs_triggered()
 
 void OBSBasic::on_actionUploadCurrentLog_triggered()
 {
-	UploadLog("obs-studio/logs", App()->GetCurrentLog(), false);
+	UploadLog("accrecorder/logs", App()->GetCurrentLog(), false);
 }
 
 void OBSBasic::on_actionUploadLastLog_triggered()
 {
-	UploadLog("obs-studio/logs", App()->GetLastLog(), false);
+	UploadLog("accrecorder/logs", App()->GetLastLog(), false);
 }
 
 void OBSBasic::on_actionViewCurrentLog_triggered()
@@ -6187,7 +6194,7 @@ void OBSBasic::on_actionViewCurrentLog_triggered()
 void OBSBasic::on_actionShowCrashLogs_triggered()
 {
 	char logDir[512];
-	if (GetConfigPath(logDir, sizeof(logDir), "obs-studio/crashes") <= 0)
+	if (GetConfigPath(logDir, sizeof(logDir), "accrecorder/crashes") <= 0)
 		return;
 
 	QUrl url = QUrl::fromLocalFile(QT_UTF8(logDir));
@@ -6196,7 +6203,7 @@ void OBSBasic::on_actionShowCrashLogs_triggered()
 
 void OBSBasic::on_actionUploadLastCrashLog_triggered()
 {
-	UploadLog("obs-studio/crashes", App()->GetLastCrashLog(), true);
+	UploadLog("accrecorder/crashes", App()->GetLastCrashLog(), true);
 }
 
 void OBSBasic::on_actionCheckForUpdates_triggered()
@@ -7751,7 +7758,7 @@ void OBSBasic::on_actionDiscord_triggered()
 void OBSBasic::on_actionShowSettingsFolder_triggered()
 {
 	char path[512];
-	int ret = GetConfigPath(path, 512, "obs-studio");
+	int ret = GetConfigPath(path, 512, "accrecorder");
 	if (ret <= 0)
 		return;
 
@@ -8853,16 +8860,16 @@ void OBSBasic::UpdateTitleBar()
 	const char *sceneCollection = config_get_string(
 		App()->GlobalConfig(), "Basic", "SceneCollection");
 
-	name << "OBS ";
-	if (previewProgramMode)
+	name << "accrecorder ";
+	/*if (previewProgramMode)
 		name << "Studio ";
 
 	name << App()->GetVersionString();
 	if (App()->IsPortableMode())
-		name << " - Portable Mode";
+		name << " - Portable Mode";*/
 
-	name << " - " << Str("TitleBar.Profile") << ": " << profile;
-	name << " - " << Str("TitleBar.Scenes") << ": " << sceneCollection;
+	/*name << " - " << Str("TitleBar.Profile") << ": " << profile;
+	name << " - " << Str("TitleBar.Scenes") << ": " << sceneCollection;*/
 
 	setWindowTitle(QT_UTF8(name.str().c_str()));
 }
@@ -8881,7 +8888,7 @@ int OBSBasic::GetProfilePath(char *path, size_t size, const char *file) const
 	if (!file)
 		file = "";
 
-	ret = GetConfigPath(profiles_path, 512, "obs-studio/basic/profiles");
+	ret = GetConfigPath(profiles_path, 512, "accrecorder/basic/profiles");
 	if (ret <= 0)
 		return ret;
 
