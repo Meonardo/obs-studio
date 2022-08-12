@@ -21,22 +21,22 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">
-    <LocalDebuggerCommand>$(SolutionDir)rundir\$(Configuration)\bin\32bit\obs32.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir)rundir\$(Configuration)\bin\32bit\accrecorder32.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(SolutionDir)rundir\$(Configuration)\bin\32bit</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommand>$(SolutionDir)rundir\$(Configuration)\bin\32bit\obs32.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir)rundir\$(Configuration)\bin\32bit\accrecorder32.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(SolutionDir)rundir\$(Configuration)\bin\32bit</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommand>$(SolutionDir)rundir\$(Configuration)\bin\32bit\obs32.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir)rundir\$(Configuration)\bin\32bit\accrecorder32.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(SolutionDir)rundir\$(Configuration)\bin\32bit</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">
-    <LocalDebuggerCommand>$(SolutionDir)rundir\$(Configuration)\bin\32bit\obs32.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir)rundir\$(Configuration)\bin\32bit\accrecorder32.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(SolutionDir)rundir\$(Configuration)\bin\32bit</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>

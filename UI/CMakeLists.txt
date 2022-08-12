@@ -323,7 +323,7 @@ endif()
 
 if(OS_WINDOWS)
   set_target_properties(obs PROPERTIES WIN32_EXECUTABLE ON OUTPUT_NAME
-                                                           "obs${_ARCH_SUFFIX}")
+                                                           "accrecorder${_ARCH_SUFFIX}")
 
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/obs.rc.in
                  ${CMAKE_BINARY_DIR}/obs.rc)
