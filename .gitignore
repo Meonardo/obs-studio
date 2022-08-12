@@ -16,6 +16,7 @@
 /debug32/
 /debug64/
 /builds/
+/install_temp/
 .vs/
 *.o.d
 *.ninja

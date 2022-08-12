@@ -79,7 +79,7 @@ static string currentLogFile;
 static string lastLogFile;
 static string lastCrashLogFile;
 
-bool hide_main_window = true;
+bool hide_main_window = false;
 bool portable_mode = false;
 static bool multi = false;
 static bool log_verbose = false;
