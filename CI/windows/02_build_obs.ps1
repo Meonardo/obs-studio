@@ -62,6 +62,9 @@ function Configure-OBS {
     $CefDirectory = Resolve-Path -Path "${CheckoutDir}/../obs-build-dependencies/cef_binary_${WindowsCefVersion}_windows_${BuildArch}"
     $BuildDirectoryActual = "${BuildDirectory}$(if (${BuildArch} -eq "x64") { "64" } else { "32" })"
     $GeneratorPlatform = "$(if (${BuildArch} -eq "x64") { "x64" } else { "Win32" })"
+    
+    $QTDIR_BASE = "${CheckoutDir}/../../../Programs/Qt/5.15.2/"
+    $QTDIR = "${QTDIR_BASE}$(if (${BuildArch} -eq "x64") { "msvc2019_64" } else { "msvc2019" })"
 
     $CmakeCommand = @(
         "-G", ${CmakeGenerator}
@@ -69,11 +72,12 @@ function Configure-OBS {
         "-DCMAKE_SYSTEM_VERSION=`"${CmakeSystemVersion}`"",
         "-DCMAKE_PREFIX_PATH:PATH=`"${CmakePrefixPath}`"",
         "-DCEF_ROOT_DIR:PATH=`"${CefDirectory}`"",
+        "-DQTDIR:PATH=`"${QTDIR}`"",
         "-DENABLE_BROWSER=ON",
         "-DVLC_PATH:PATH=`"${CheckoutDir}/../obs-build-dependencies/vlc-${WindowsVlcVersion}`"",
         "-DENABLE_VLC=ON",
         "-DCMAKE_INSTALL_PREFIX=`"${BuildDirectoryActual}/install`"",
-        "-DVIRTUALCAM_GUID=`"${Env:VIRTUALCAM-GUID}`"",
+        "-DVIRTUALCAM_GUID=8FE9EACA-1950-11ED-861D-0242AC120002",
         "-DTWITCH_CLIENTID=`"${Env:TWITCH_CLIENTID}`"",
         "-DTWITCH_HASH=`"${Env:TWITCH_HASH}`"",
         "-DRESTREAM_CLIENTID=`"${Env:RESTREAM_CLIENTID}`"",
