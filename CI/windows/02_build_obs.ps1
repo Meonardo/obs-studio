@@ -38,12 +38,18 @@ function Build-OBS {
 
     Configure-OBS
 
-    Ensure-Directory ${CheckoutDir}
-    Write-Step "Build OBS targets..."
-
     $BuildDirectoryActual = "${BuildDirectory}$(if (${BuildArch} -eq "x64") { "64" } else { "32" })"
 
-    Invoke-External cmake --build "${BuildDirectoryActual}" --config ${BuildConfiguration}
+    if ( $ConfigureOnly.isPresent ) {
+        Write-Step "Done with generating solution file, please open sln file and build."
+
+        Invoke-External explorer "${BuildDirectoryActual}"
+    } else {
+        Ensure-Directory ${CheckoutDir}
+        Write-Step "Build OBS targets..."
+
+        Invoke-External cmake --build "${BuildDirectoryActual}" --config ${BuildConfiguration}
+    }
 }
 
 function Configure-OBS {

@@ -6,6 +6,7 @@ Param(
     [Switch]$SkipDependencyChecks,
     [Switch]$BuildInstaller,
     [Switch]$CombinedArchs,
+    [Switch]$ConfigureOnly,
     [String]$BuildDirectory = "build",
     [ValidateSet('x86', 'x64')]
     [String]$BuildArch = ('x86', 'x64')[[System.Environment]::Is64BitOperatingSystem],
@@ -120,6 +121,7 @@ function Print-Usage {
         "-Verbose                 : Enable more verbose build process output"
         "-SkipDependencyChecks    : Skip dependency checks - Default: off",
         "-BuildDirectory          : Directory to use for builds - Default: build64 on 64-bit systems, build32 on 32-bit systems",
+        "-ConfigureOnly           : Config & gen solution file only (Not build anything)",
         "-BuildArch               : Build architecture to use (x86 or x64) - Default: local architecture",
         "-BuildConfiguration      : Build configuration to use - Default: RelWithDebInfo",
         "-CombinedArchs           : Create combined packages and installer (64-bit and 32-bit) - Default: off"
