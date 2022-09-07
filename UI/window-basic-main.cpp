@@ -2111,6 +2111,14 @@ void OBSBasic::OBSInit(bool forceHide)
 		OBSMessageBox::warning(this, QTStr("PluginsFailedToLoad.Title"),
 				       failed_msg);
 	}
+
+	// this will hide all the docks. 
+	ui->toggleScenes->setChecked(false);
+	ui->toggleSources->setChecked(false);
+	ui->toggleMixer->setChecked(false);
+	ui->toggleTransitions->setChecked(false);
+	ui->toggleControls->setChecked(false);
+	ui->toggleStats->setChecked(false);
 }
 
 void OBSBasic::OnFirstLoad()
