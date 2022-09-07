@@ -42,7 +42,7 @@
 #define NUM_TEXTURES 2
 #define NUM_CHANNELS 3
 #define MICROSECOND_DEN 1000000
-#define NUM_ENCODE_TEXTURES 3
+#define NUM_ENCODE_TEXTURES 10
 #define NUM_ENCODE_TEXTURE_FRAMES_TO_WAIT 1
 
 static inline int64_t packet_dts_usec(struct encoder_packet *packet)
@@ -213,6 +213,7 @@ struct obs_display {
 	pthread_mutex_t draw_callbacks_mutex;
 	pthread_mutex_t draw_info_mutex;
 	DARRAY(struct draw_callback) draw_callbacks;
+	bool use_clear_workaround;
 
 	struct obs_display *next;
 	struct obs_display **prev_next;
@@ -294,8 +295,8 @@ struct obs_core_video_mix {
 	enum obs_scale_type scale_type;
 };
 
-extern int obs_init_video_mix(struct obs_video_info *ovi,
-			      struct obs_core_video_mix *video);
+extern struct obs_core_video_mix *
+obs_create_video_mix(struct obs_video_info *ovi);
 extern void obs_free_video_mix(struct obs_core_video_mix *video);
 
 struct obs_core_video {
@@ -345,7 +346,7 @@ struct obs_core_video {
 	struct circlebuf tasks;
 
 	pthread_mutex_t mixes_mutex;
-	DARRAY(struct obs_core_video_mix) mixes;
+	DARRAY(struct obs_core_video_mix *) mixes;
 	struct obs_core_video_mix *main_mix;
 };
 

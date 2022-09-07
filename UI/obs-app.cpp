@@ -552,12 +552,12 @@ static bool MakeUserDirs()
 		return false;
 	if (!do_mkdir(path))
 		return false;
+#endif
 
 	if (GetConfigPath(path, sizeof(path), "accrecorder/updates") <= 0)
 		return false;
 	if (!do_mkdir(path))
 		return false;
-#endif
 
 	if (GetConfigPath(path, sizeof(path), "accrecorder/plugin_config") <= 0)
 		return false;
@@ -1205,7 +1205,9 @@ bool OBSApp::SetTheme(std::string name, std::string path)
 	if (path.empty())
 		return false;
 
-	themeMeta = ParseThemeMeta(path.c_str());
+	setStyleSheet("");
+	unique_ptr<OBSThemeMeta> themeMeta;
+	themeMeta.reset(ParseThemeMeta(path.c_str()));
 	string parentPath;
 
 	if (themeMeta && !themeMeta->parent.empty()) {
@@ -1221,7 +1223,6 @@ bool OBSApp::SetTheme(std::string name, std::string path)
 
 	QString mpath = QString("file:///") + lpath.c_str();
 	ParseExtraThemeData(path.c_str());
-	setStyle(new OBSIgnoreWheelProxyStyle);
 	setStyleSheet(mpath);
 	if (themeMeta) {
 		themeDarkMode = themeMeta->dark;
@@ -1237,6 +1238,7 @@ bool OBSApp::SetTheme(std::string name, std::string path)
 bool OBSApp::InitTheme()
 {
 	defaultPalette = palette();
+	setStyle(new OBSIgnoreWheelProxyStyle());
 
 	const char *themeName =
 		config_get_string(globalConfig, "General", "CurrentTheme3");
@@ -1511,7 +1513,7 @@ bool OBSApp::OBSInit()
 	setAttribute(Qt::AA_UseHighDpiPixmaps);
 #endif
 
-	qRegisterMetaType<VoidFunc>();
+	qRegisterMetaType<VoidFunc>("VoidFunc");
 
 #if !defined(_WIN32) && !defined(__APPLE__)
 	if (QApplication::platformName() == "xcb") {
@@ -1723,7 +1725,9 @@ QString OBSTranslator::translate(const char *context, const char *sourceText,
 				 const char *disambiguation, int n) const
 {
 	const char *out = nullptr;
-	if (!App()->TranslateString(sourceText, &out))
+	QString str(sourceText);
+	str.replace(" ", "");
+	if (!App()->TranslateString(QT_TO_UTF8(str), &out))
 		return QString(sourceText);
 
 	UNUSED_PARAMETER(context);
