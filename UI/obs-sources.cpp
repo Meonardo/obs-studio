@@ -144,23 +144,148 @@ obs_data_t *ScreenSceneItem::Properties() const
 	return data;
 }
 
-bool ScreenSceneItem::ApplyPropertyUpdate()
+#pragma endregion sceen item
+IPCameraSceneItem::IPCameraSceneItem(std::string &name, std::string &url, bool stopOnHide)
+	: name_(name), url_(url), stop_on_hide_(stopOnHide), should_apply_changes_(false)
 {
-	OBSSourceAutoRelease src = obs_get_source_by_name(name_.c_str());
-	if (src != nullptr) {
-		blog(LOG_ERROR,
-		     "can not update settings without attach the item to the scene!");
-		return false;
-	}
-	OBSDataAutoRelease inputSettings = Properties();
-	// apply settings
-	obs_source_reset_settings(src, inputSettings);
-	// refresh UI element
-	obs_source_update_properties(src);
-	return true;
+	settings_.lock = false;
+	settings_.pos.x = 0;
+	settings_.pos.y = 0;
+	settings_.hidden = false;
+	settings_.scale.x = 1.0f;
+	settings_.scale.y = 1.0f;
 }
 
-#pragma endregion sceen item
+IPCameraSceneItem::~IPCameraSceneItem() {}
+
+uint64_t IPCameraSceneItem::SceneID() const
+{
+	return scene_id_;
+}
+
+void IPCameraSceneItem::SetSceneID(uint64_t id)
+{
+	scene_id_ = id;
+}
+
+std::string IPCameraSceneItem::Name() const
+{
+	return name_;
+}
+
+void IPCameraSceneItem::SetName(std::string &name)
+{
+	if (name == name_)
+		return;
+	name_ = name;
+}
+
+std::string IPCameraSceneItem::Kind() const
+{
+	return "gstreamer-source";
+}
+
+SceneItem::Type IPCameraSceneItem::type() const
+{
+	return kIPCamera;
+}
+
+Scene *IPCameraSceneItem::scene() const
+{
+	return nullptr;
+}
+
+SceneItem::Settings IPCameraSceneItem::GetSettings() const
+{
+	return settings_;
+}
+
+void IPCameraSceneItem::UpdateSettings(SceneItem::Settings settings)
+{
+	vec2_copy(&settings_.pos, &settings.pos);
+	vec2_copy(&settings_.scale, &settings.scale);
+	settings_.hidden = settings.hidden;
+	settings_.lock = settings.lock;
+
+	should_apply_changes_ = true;
+}
+
+void IPCameraSceneItem::Hide(bool hidden)
+{
+	if (hidden == settings_.hidden)
+		return;
+	settings_.hidden = hidden;
+	should_apply_changes_ = true;
+}
+
+void IPCameraSceneItem::Lock(bool lock)
+{
+	if (lock == settings_.lock)
+		return;
+	settings_.lock = lock;
+	should_apply_changes_ = true;
+}
+
+void IPCameraSceneItem::UpdateScale(vec2 scale)
+{
+	if (scale.x == settings_.scale.x && scale.y == settings_.scale.y) {
+		return;
+	}
+	vec2_copy(&settings_.scale, &scale);
+	should_apply_changes_ = true;
+}
+
+void IPCameraSceneItem::UpdatePosition(vec2 pos)
+{
+	if (pos.x == settings_.pos.x && pos.y == settings_.pos.y) {
+		return;
+	}
+	vec2_copy(&settings_.scale, &pos);
+	should_apply_changes_ = true;
+}
+
+void IPCameraSceneItem::UpdateURL(std::string &url)
+{
+	if (url.empty() || url == url_) {
+		return;
+	}
+	url_ = url;
+	should_apply_changes_ = true;
+}
+
+void IPCameraSceneItem::UpdateStopOnHide(bool state)
+{
+	if (stop_on_hide_ == state)
+		return;
+	stop_on_hide_ = state;
+	should_apply_changes_ = true;
+}
+
+bool IPCameraSceneItem::ShouldApplyAnyUpdates() const
+{
+	return should_apply_changes_;
+}
+
+obs_data_t *IPCameraSceneItem::Properties() const
+{
+	obs_data_t *data = obs_data_create();
+	const size_t count = 512;
+	char pipeline[count];
+	snprintf(pipeline, count,
+		 "uridecodebin uri=%s name=bin ! queue ! video.", url_.c_str());
+	
+	obs_data_set_string(data, "pipeline", pipeline);
+	obs_data_set_bool(data, "sync_appsink_audio", false);
+	obs_data_set_bool(data, "sync_appsink_video", false);
+	obs_data_set_bool(data, "disable_async_appsink_video", true);
+	obs_data_set_bool(data, "disable_async_appsink_audio", true);
+	obs_data_set_bool(data, "stop_on_hide", stop_on_hide_);
+
+	return data;
+}
+#pragma region IPCamera item
+
+#pragma endregion IPCamera item
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////

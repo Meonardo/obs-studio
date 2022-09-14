@@ -55,8 +55,6 @@ public:
 
 	// get item properties
 	virtual obs_data_t *Properties() const = 0;
-	// apply settings & refresh UI
-	virtual bool ApplyPropertyUpdate() = 0;
 
 	// should apply any changes(properties or settings)
 	virtual bool ShouldApplyAnyUpdates() const = 0;
@@ -87,8 +85,6 @@ public:
 	virtual void UpdatePosition(vec2 pos) override;
 
 	virtual obs_data_t *Properties() const override;
-	virtual bool ApplyPropertyUpdate() override;
-
 	virtual bool ShouldApplyAnyUpdates() const override;
 
 	// screen index(all screens are identified by this property)
@@ -107,6 +103,42 @@ private:
 	Settings settings_;
 	uint64_t scene_id_;
 	bool should_apply_changes_;
+};
+
+class IPCameraSceneItem : public SceneItem {
+public:
+	IPCameraSceneItem(std::string &name, std::string &url, bool stopOnHide);
+	~IPCameraSceneItem();
+
+	virtual uint64_t SceneID() const override;
+	virtual void SetSceneID(uint64_t id) override;
+	virtual std::string Name() const override;
+	virtual void SetName(std::string &name) override;
+	virtual std::string Kind() const override;
+	virtual Type type() const override;
+	virtual Settings GetSettings() const override;
+	virtual void UpdateSettings(Settings b) override;
+	virtual void Hide(bool hidden) override;
+	virtual void Lock(bool lock) override;
+	virtual void UpdateScale(vec2 sacle) override;
+	virtual void UpdatePosition(vec2 pos) override;
+	virtual obs_data_t *Properties() const override;
+	virtual bool ShouldApplyAnyUpdates() const override;
+
+	void UpdateURL(std::string &url);
+	void UpdateStopOnHide(bool state);
+
+protected:
+	virtual Scene *scene() const override;
+
+private:
+	std::string name_;
+	Type type_;
+	Settings settings_;
+	uint64_t scene_id_;
+	bool should_apply_changes_;
+	std::string url_;
+	bool stop_on_hide_;
 };
 
 class Scene {
