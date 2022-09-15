@@ -23,8 +23,7 @@ static void CreateSceneItemHelper(void *_data, obs_scene_t *scene)
 	obs_sceneitem_set_visible(data->sceneItem, data->sceneItemEnabled);
 }
 
-namespace accrecorder {
-namespace source {
+namespace accrecorder::source {
 
 #pragma region Screen scene item
 ScreenSceneItem::ScreenSceneItem(std::string &name)
@@ -709,5 +708,4 @@ obs_sceneitem_t* Scene::CreateSceneItem(obs_source_t *source, obs_scene_t *scene
 	return data.sceneItem;
 }
 
-} // namespace source
-} // namespace accrecorder
+} // namespace accrecorder::source

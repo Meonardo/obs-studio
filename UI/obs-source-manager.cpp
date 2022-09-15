@@ -3,16 +3,14 @@
 #include <chrono>
 #include <thread>
 
-namespace accrecorder {	
-namespace manager {
-
+namespace accrecorder::manager {
 OBSSourceManager::OBSSourceManager() : main_scene_(nullptr)
 {
 	std::string sceneName(kMainScene);
 	// remove old scene first.
 	RemoveScene(sceneName);
 
-	// !!!warnning: remove scene will take time, the create active may fail, so there is a sleep(300ms)
+	// !!!warnning: remove scene will take time, the create action may fail, so there is a sleep(300ms)
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 	// then create new one.
@@ -24,8 +22,10 @@ OBSSourceManager::OBSSourceManager() : main_scene_(nullptr)
 	main_scene_ = new source::Scene(sceneName, scene);
 
 	// make current
-	auto createdScene = ValidateScene(sceneName);
-	obs_frontend_set_current_scene(createdScene);
+	OBSSourceAutoRelease createdScene = ValidateScene(sceneName);
+	if (createdScene != nullptr) {
+		obs_frontend_set_current_scene(createdScene);
+	}
 }
 
 OBSSourceManager::~OBSSourceManager()
@@ -357,5 +357,118 @@ void OBSSourceManager::ListAudioItems(
 	obs_properties_destroy(props);
 }
 
-} //namespace manager 
-} //namespace accrecorder
+bool OBSSourceManager::VirtualCamAvailable()
+{
+	OBSDataAutoRelease privateData = obs_get_private_data();
+	if (!privateData)
+		return false;
+
+	return obs_data_get_bool(privateData, "vcamEnabled");
+}
+
+bool OBSSourceManager::StartVirtualCamera()
+{
+	if (!VirtualCamAvailable()) {
+		blog(LOG_ERROR, "Amdox virtual camera is not available.");
+		return false;
+	}
+
+	if (obs_frontend_virtualcam_active()) {
+		blog(LOG_INFO, "Amdox virtual camera was already running.");
+		return false;
+	}
+
+	obs_frontend_start_virtualcam();
+
+	return false;
+}
+
+bool OBSSourceManager::StopVirtualCamera()
+{
+	if (!VirtualCamAvailable()) {
+		blog(LOG_ERROR, "Amdox virtual camera is not available.");
+		return false;
+	}
+
+	if (!obs_frontend_virtualcam_active()) {
+		blog(LOG_INFO, "Amdox virtual camera not started yet.");
+		return false;
+	}
+
+	obs_frontend_stop_virtualcam();
+
+	return true;
+}
+
+bool OBSSourceManager::SetStreamAddress(std::string &addr,
+					std::string &username,
+					std::string &passwd)
+{
+	if (addr.empty()) {
+		blog(LOG_ERROR, "stream address invalide");
+		return false;
+	}
+
+	OBSDataAutoRelease settings = obs_data_create();
+	obs_data_set_string(settings, "server", addr.c_str());
+	if (!username.empty() && !passwd.empty()) {
+		obs_data_set_string(settings, "username", username.c_str());
+		obs_data_set_string(settings, "password", passwd.c_str());
+	}
+
+	const std::string streamType = "rtmp_custom";
+
+	OBSService currentStreamService = obs_frontend_get_streaming_service();
+	std::string streamServiceType =
+		obs_service_get_type(currentStreamService);
+	if (streamServiceType != streamType) {
+		// create new server
+		OBSService newStreamService = obs_service_create(streamType.c_str(),
+			"amdox_custom_service", settings, nullptr);
+		if (!newStreamService) {
+			blog(LOG_ERROR, "can not create stream server");
+			return false;
+		}
+
+		obs_frontend_set_streaming_service(newStreamService);
+	} else {
+		// update server info
+		OBSDataAutoRelease currentStreamServiceSettings = obs_service_get_settings(currentStreamService);
+		OBSDataAutoRelease newStreamServiceSettings = obs_data_create();
+		obs_data_apply(newStreamServiceSettings, currentStreamServiceSettings);
+		obs_data_apply(newStreamServiceSettings, settings);
+
+		obs_service_update(currentStreamService, newStreamServiceSettings);
+	}
+
+	// save the server
+	obs_frontend_save_streaming_service();
+
+	return true;
+}
+
+bool OBSSourceManager::StartStreaming()
+{
+	if (obs_frontend_streaming_active()) {
+		blog(LOG_INFO, "already running streaming");
+		return false;
+	}
+
+	obs_frontend_streaming_start();
+
+	return true;
+}
+
+bool OBSSourceManager::StopStreaming()
+{
+	if (!obs_frontend_streaming_active()) {
+		blog(LOG_INFO, "streaming not started yet");
+		return false;
+	}
+
+	obs_frontend_streaming_stop();
+
+	return true;
+}
+
+} //namespace accrecorder::manager 

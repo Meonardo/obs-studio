@@ -2,9 +2,7 @@
 
 #include "obs-sources.h"
 
-namespace accrecorder {
-namespace manager {
-
+namespace accrecorder::manager {
 class OBSSourceManager {
 public:
 	OBSSourceManager();
@@ -36,15 +34,27 @@ public:
 		std::vector<std::shared_ptr<source::AudioSceneItem>> &items,
 		bool input = true);
 
+	// start virtual camera
+	bool StartVirtualCamera();
+	// stop virtual camera
+	bool StopVirtualCamera();
+	// set stream address, like: rtmp://192.168.99.135
+	bool SetStreamAddress(std::string &addr, std::string &username,
+			      std::string &passwd);
+	// start streaming
+	bool StartStreaming();
+	// stop streaming
+	bool StopStreaming();
+
 private:
 	void RemoveScene(std::string& name);
 	obs_scene_t* CreateScene(std::string& name);
 
 	static obs_source_t *ValidateScene(std::string &name);
 	static obs_source_t *ValidateInput(std::string &name);
+	static bool VirtualCamAvailable();
 
 	source::Scene* main_scene_;
 };
 
-}; //namespace manager
-}; //namespace accrecorder
+} //namespace accrecorder::manager

@@ -12,8 +12,7 @@ namespace accrecorder::manager {
 class OBSSourceManager;
 }
 
-namespace accrecorder {
-namespace source {
+namespace accrecorder::source {
 
 class Scene;
 class SceneItem {
@@ -223,7 +222,7 @@ public:
 
 protected:
 	AudioSceneItem(std::string &name);
-	~AudioSceneItem();
+	virtual ~AudioSceneItem();
 
 	virtual Scene *scene() const override;
 
@@ -242,7 +241,7 @@ protected:
 class AudioInputItem : public AudioSceneItem {
 public:
 	AudioInputItem(std::string &name);
-	~AudioInputItem();
+	virtual ~AudioInputItem();
 
 	virtual std::string Kind() const override;
 	virtual Type type() const override;
@@ -251,7 +250,7 @@ public:
 class AudioOutputItem : public AudioSceneItem {
 public:
 	AudioOutputItem(std::string &name);
-	~AudioOutputItem();
+	virtual ~AudioOutputItem();
 
 	virtual std::string Kind() const override;
 	virtual Type type() const override;
@@ -279,5 +278,4 @@ private:
 					 obs_sceneitem_crop *sceneItemCrop);
 };
 
-}// namespace source
-}// namespace accrecorder
+}// namespace accrecorder::source
