@@ -134,6 +134,11 @@ bool ScreenSceneItem::ShouldApplyAnyUpdates() const
 	return should_apply_changes_;
 }
 
+void ScreenSceneItem::MarkUpdateCompleted()
+{
+	should_apply_changes_ = false;
+}
+
 obs_data_t *ScreenSceneItem::Properties() const
 {
 	obs_data_t *data = obs_data_create();
@@ -268,6 +273,11 @@ bool IPCameraSceneItem::ShouldApplyAnyUpdates() const
 	return should_apply_changes_;
 }
 
+void IPCameraSceneItem::MarkUpdateCompleted()
+{
+	should_apply_changes_ = false;
+}
+
 obs_data_t *IPCameraSceneItem::Properties() const
 {
 	obs_data_t *data = obs_data_create();
@@ -391,6 +401,11 @@ void CameraSceneItem::UpdatePosition(vec2 pos)
 bool CameraSceneItem::ShouldApplyAnyUpdates() const
 {
 	return should_apply_changes_;
+}
+
+void CameraSceneItem::MarkUpdateCompleted()
+{
+	should_apply_changes_ = false;
 }
 
 bool CameraSceneItem::SelectResolution(uint32_t idx)
@@ -535,6 +550,9 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 	// lock
 	obs_sceneitem_set_locked(sceneItem, item->GetSettings().lock);
 	obs_sceneitem_defer_update_end(sceneItem);
+
+	// mark updates completed
+	item->MarkUpdateCompleted();
 
 	return true;
 }

@@ -62,6 +62,8 @@ public:
 
 	// should apply any changes(properties or settings)
 	virtual bool ShouldApplyAnyUpdates() const = 0;
+	// mark the update completed
+	virtual void MarkUpdateCompleted() = 0;
 
 protected:
 	virtual Scene *scene() const = 0;
@@ -90,6 +92,7 @@ public:
 
 	virtual obs_data_t *Properties() const override;
 	virtual bool ShouldApplyAnyUpdates() const override;
+	virtual void MarkUpdateCompleted() override;
 
 	// screen index(all screens are identified by this property)
 	int index;
@@ -128,6 +131,7 @@ public:
 	virtual void UpdatePosition(vec2 pos) override;
 	virtual obs_data_t *Properties() const override;
 	virtual bool ShouldApplyAnyUpdates() const override;
+	virtual void MarkUpdateCompleted() override;
 
 	void UpdateURL(std::string &url);
 	void UpdateStopOnHide(bool state);
@@ -164,6 +168,7 @@ public:
 	virtual void UpdatePosition(vec2 pos) override;
 	virtual obs_data_t *Properties() const override;
 	virtual bool ShouldApplyAnyUpdates() const override;
+	virtual void MarkUpdateCompleted() override;
 
 	// get a list of available res & fps
 	void GetAvailableResolutions(std::vector<std::string> &res) const;
