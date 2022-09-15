@@ -31,6 +31,11 @@ public:
 	void ListCameraItems(
 		std::vector<std::shared_ptr<source::CameraSceneItem>> &items);
 
+	// list all AudioInputDevices & AudioOutputDevices
+	void ListAudioItems(
+		std::vector<std::shared_ptr<source::AudioSceneItem>> &items,
+		bool input = true);
+
 private:
 	void RemoveScene(std::string& name);
 	obs_scene_t* CreateScene(std::string& name);

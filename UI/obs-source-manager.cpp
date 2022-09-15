@@ -1,5 +1,8 @@
 #include "obs-source-manager.h"
 
+#include <chrono>
+#include <thread>
+
 namespace accrecorder {	
 namespace manager {
 
@@ -8,6 +11,10 @@ OBSSourceManager::OBSSourceManager() : main_scene_(nullptr)
 	std::string sceneName(kMainScene);
 	// remove old scene first.
 	RemoveScene(sceneName);
+
+	// !!!warnning: remove scene will take time, the create active may fail, so there is a sleep(300ms)
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
 	// then create new one.
 	obs_scene_t* scene = CreateScene(sceneName);
 	if (scene == nullptr) {
@@ -15,6 +22,10 @@ OBSSourceManager::OBSSourceManager() : main_scene_(nullptr)
 	}
 	// save it.
 	main_scene_ = new source::Scene(sceneName, scene);
+
+	// make current
+	auto createdScene = ValidateScene(sceneName);
+	obs_frontend_set_current_scene(createdScene);
 }
 
 OBSSourceManager::~OBSSourceManager()
@@ -288,6 +299,58 @@ void OBSSourceManager::ListCameraItems(
 		obs_data_release(data);
 
 		items.push_back(item);
+	}
+
+	// release properties for enum device list.
+	obs_properties_destroy(props);
+}
+
+void OBSSourceManager::ListAudioItems(
+	std::vector<std::shared_ptr<source::AudioSceneItem>> &items, bool input)
+{
+	const char *tmpName = "tmpAudio";
+	const char *prop_name = "device_id";
+	char *kind = "wasapi_input_capture";
+	if (input) {
+		kind = "wasapi_output_capture";
+	}
+
+	OBSSourceAutoRelease source = obs_get_source_by_name(tmpName);
+	if (source != nullptr) {
+		blog(LOG_ERROR, "can not enum audio item list.");
+		return;
+	}
+
+	// create tmp source
+	source = obs_source_create(kind, tmpName, NULL, nullptr);
+
+	// get properties
+	obs_properties_t *props = obs_source_properties(source);
+	// get detail
+	obs_property_t *p = obs_properties_get(props, prop_name);
+	size_t count = obs_property_list_item_count(p);
+
+	for (size_t i = 0; i < count; i++) {
+		const char *name = obs_property_list_item_name(p, i);
+		const char *id = obs_property_list_item_string(p, i);
+		blog(LOG_ERROR, "enum audio device(%s): %s, id=%s",
+		     input ? "input" : "output", name, id);
+
+		std::string s_name(name);
+		// do not show default device for now
+		if (s_name == "default")
+			continue;
+		if (input) {
+			auto item = std::make_shared<source::AudioInputItem>(
+				std::string(name));
+			item->device_id_ = id;
+			items.push_back(item);
+		} else {
+			auto item = std::make_shared<source::AudioOutputItem>(
+				std::string(name));
+			item->device_id_ = id;
+			items.push_back(item);
+		}
 	}
 
 	// release properties for enum device list.

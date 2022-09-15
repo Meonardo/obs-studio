@@ -200,6 +200,63 @@ private:
 	friend class manager::OBSSourceManager;
 };
 
+class AudioSceneItem : public SceneItem {
+public:
+	AudioSceneItem() = delete;
+
+	virtual uint64_t SceneID() const override;
+	virtual void SetSceneID(uint64_t id) override;
+	virtual std::string Name() const override;
+	virtual void SetName(std::string &name) override;
+	virtual Settings GetSettings() const override;
+	virtual void UpdateSettings(Settings b) override;
+	virtual void Hide(bool hidden) override;
+	virtual void Lock(bool lock) override;
+	virtual void UpdateScale(vec2 sacle) override{};
+	virtual void UpdatePosition(vec2 pos) override{};
+	virtual bool ShouldApplyAnyUpdates() const override;
+	virtual void MarkUpdateCompleted() override;
+	virtual obs_data_t *Properties() const override;
+
+	virtual std::string Kind() const = 0;
+	virtual Type type() const = 0;
+
+protected:
+	AudioSceneItem(std::string &name);
+	~AudioSceneItem();
+
+	virtual Scene *scene() const override;
+
+	std::string name_;
+	Type type_;
+	Settings settings_;
+	uint64_t scene_id_;
+	bool should_apply_changes_;
+
+	// device id
+	std::string device_id_;
+
+	friend class manager::OBSSourceManager;
+};
+
+class AudioInputItem : public AudioSceneItem {
+public:
+	AudioInputItem(std::string &name);
+	~AudioInputItem();
+
+	virtual std::string Kind() const override;
+	virtual Type type() const override;
+};
+
+class AudioOutputItem : public AudioSceneItem {
+public:
+	AudioOutputItem(std::string &name);
+	~AudioOutputItem();
+
+	virtual std::string Kind() const override;
+	virtual Type type() const override;
+};
+
 class Scene {
 public:
 	Scene(std::string &name, obs_scene_t *src);

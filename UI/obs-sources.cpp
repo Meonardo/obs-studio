@@ -394,7 +394,7 @@ void CameraSceneItem::UpdatePosition(vec2 pos)
 	if (pos.x == settings_.pos.x && pos.y == settings_.pos.y) {
 		return;
 	}
-	vec2_copy(&settings_.scale, &pos);
+	vec2_copy(&settings_.pos, &pos);
 	should_apply_changes_ = true;
 }
 
@@ -462,6 +462,133 @@ obs_data_t *CameraSceneItem::Properties() const
 	return data;
 }
 #pragma endregion Camera item
+
+#pragma region Audio item
+AudioSceneItem::AudioSceneItem(std::string &name)
+	: name_(name), should_apply_changes_(false)
+{
+	settings_.lock = false;
+	settings_.pos.x = 0;
+	settings_.pos.y = 0;
+	settings_.hidden = false;
+	settings_.scale.x = 0.f;
+	settings_.scale.y = 0.f;
+}
+
+AudioSceneItem::~AudioSceneItem() {}
+
+uint64_t AudioSceneItem::SceneID() const
+{
+	return scene_id_;
+}
+
+void AudioSceneItem::SetSceneID(uint64_t id)
+{
+	scene_id_ = id;
+}
+
+std::string AudioSceneItem::Name() const
+{
+	return name_;
+}
+
+void AudioSceneItem::SetName(std::string &name)
+{
+	if (name == name_)
+		return;
+	name_ = name;
+}
+
+Scene *AudioSceneItem::scene() const
+{
+	return nullptr;
+}
+
+SceneItem::Settings AudioSceneItem::GetSettings() const
+{
+	return settings_;
+}
+
+void AudioSceneItem::UpdateSettings(SceneItem::Settings settings)
+{
+	settings_.hidden = settings.hidden;
+	settings_.lock = settings.lock;
+
+	should_apply_changes_ = true;
+}
+
+void AudioSceneItem::Hide(bool hidden)
+{
+	if (hidden == settings_.hidden)
+		return;
+	settings_.hidden = hidden;
+	should_apply_changes_ = true;
+}
+
+void AudioSceneItem::Lock(bool lock)
+{
+	if (lock == settings_.lock)
+		return;
+	settings_.lock = lock;
+	should_apply_changes_ = true;
+}
+
+bool AudioSceneItem::ShouldApplyAnyUpdates() const
+{
+	return should_apply_changes_;
+}
+
+void AudioSceneItem::MarkUpdateCompleted()
+{
+	should_apply_changes_ = false;
+}
+
+obs_data_t *AudioSceneItem::Properties() const
+{
+	obs_data_t *data = obs_data_create();
+	obs_data_set_string(data, "device_id", device_id_.c_str());
+	return data;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// AudioInputItem subclass of AudioSceneItem
+AudioInputItem::AudioInputItem(std::string &name) :
+	AudioSceneItem(name)
+{
+}
+
+AudioInputItem::~AudioInputItem() {}
+
+std::string AudioInputItem::Kind() const
+{
+	return "wasapi_input_capture";
+}
+
+SceneItem::Type AudioInputItem::type() const
+{
+	return kAudioInput;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// AudioOutputItem subclass of AudioSceneItem
+AudioOutputItem::AudioOutputItem(std::string &name)
+	: AudioSceneItem(name)
+{
+}
+
+AudioOutputItem::~AudioOutputItem() {}
+
+std::string AudioOutputItem::Kind() const
+{
+	return "wasapi_output_capture";
+}
+
+SceneItem::Type AudioOutputItem::type() const
+{
+	return kAudioOutput;
+}
+
+#pragma endregion Audio item
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////

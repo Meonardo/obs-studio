@@ -104,6 +104,7 @@ using namespace std;
 #endif
 
 #include "ui-config.h"
+#include "obs-source-manager.h"
 
 struct QCef;
 struct QCefCookieManager;
@@ -2113,12 +2114,74 @@ void OBSBasic::OBSInit(bool forceHide)
 	}
 
 	// this will hide all the docks. 
-	ui->toggleScenes->setChecked(false);
-	ui->toggleSources->setChecked(false);
-	ui->toggleMixer->setChecked(false);
-	ui->toggleTransitions->setChecked(false);
-	ui->toggleControls->setChecked(false);
+	ui->toggleScenes->setChecked(true);
+	ui->toggleSources->setChecked(true);
+	ui->toggleMixer->setChecked(true);
+	ui->toggleTransitions->setChecked(true);
+	ui->toggleControls->setChecked(true);
 	ui->toggleStats->setChecked(false);
+
+	//// OBSSourceManager tests
+	//accrecorder::manager::OBSSourceManager manager;
+
+	//// screen items
+	//auto items = std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
+	//manager.ListScreenItems(items);
+	//auto screen = items.back().get();
+	//if (manager.AttachSceneItem(screen)) {
+	//	//manager.ApplySceneItemPropertiesUpdate(screen);
+	//	screen->UpdateScale({0.5, 0.5});
+	//	manager.ApplySceneItemSettingsUpdate(screen);
+	//}
+	//// rename usecase
+	//std::string newName("Chunchun");
+	//manager.Rename(screen, newName);
+
+	//// rtsp camera item
+	//std::string cameraName("Baobao");
+	//std::string cameraURL("rtsp://192.168.99.169/1");
+	//auto ipCameraItem = manager.CreateIPCameraItem(cameraName, cameraURL);
+	//if (manager.AttachSceneItem(ipCameraItem.get())) {
+	//	ipCameraItem->UpdateScale({0.3f, 0.3f});
+	//	manager.ApplySceneItemSettingsUpdate(ipCameraItem.get());
+	//}
+
+	//// usb camera items
+	//auto cameraItems = std::vector<
+	//	std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+	//manager.ListCameraItems(cameraItems);
+	//auto camera = cameraItems.front().get();
+	//if (manager.AttachSceneItem(camera)) {
+	//	camera->UpdateScale({0.5, 0.5});
+	//	camera->UpdatePosition({0, 300});
+	//	manager.ApplySceneItemSettingsUpdate(camera);
+
+	//	// select resolution & fps test case
+	//	camera->SelectResolution(3);
+	//	camera->SelectFps(3);
+	//	manager.ApplySceneItemPropertiesUpdate(camera);
+
+	//	std::vector<std::string> res;
+	//	camera->GetAvailableResolutions(res);
+	//	std::vector<std::tuple<std::string, int64_t>> fps;
+	//	camera->GetAvailableFps(fps);
+	//}
+
+	//// audio input & output item
+	//auto audioInputItem =
+	//	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+	//manager.ListAudioItems(audioInputItem);
+	//auto input = audioInputItem[1].get();
+	//if (manager.AttachSceneItem(input)) {
+	//	// success
+	//}
+	//auto audioOutputItem = std::vector<
+	//	std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+	//manager.ListAudioItems(audioOutputItem, false);
+	//auto output = audioOutputItem[2].get();
+	//if (manager.AttachSceneItem(output)) {
+	//	// success
+	//}
 }
 
 void OBSBasic::OnFirstLoad()
