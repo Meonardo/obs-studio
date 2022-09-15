@@ -26,7 +26,7 @@ static void CreateSceneItemHelper(void *_data, obs_scene_t *scene)
 namespace accrecorder {
 namespace source {
 
-#pragma region screen scene item
+#pragma region Screen scene item
 ScreenSceneItem::ScreenSceneItem(std::string &name)
 	: name_(name),
 	  index(0),
@@ -144,7 +144,9 @@ obs_data_t *ScreenSceneItem::Properties() const
 	return data;
 }
 
-#pragma endregion sceen item
+#pragma endregion Sceen item
+
+#pragma region IPCamera item
 IPCameraSceneItem::IPCameraSceneItem(std::string &name, std::string &url, bool stopOnHide)
 	: name_(name), url_(url), stop_on_hide_(stopOnHide), should_apply_changes_(false)
 {
@@ -283,9 +285,168 @@ obs_data_t *IPCameraSceneItem::Properties() const
 
 	return data;
 }
-#pragma region IPCamera item
-
 #pragma endregion IPCamera item
+
+#pragma region Camera item
+CameraSceneItem::CameraSceneItem(std::string &name)
+	: name_(name),
+	  should_apply_changes_(false)
+{
+	settings_.lock = false;
+	settings_.pos.x = 0;
+	settings_.pos.y = 0;
+	settings_.hidden = false;
+	settings_.scale.x = 1.0f;
+	settings_.scale.y = 1.0f;
+}
+
+CameraSceneItem::~CameraSceneItem() {}
+
+uint64_t CameraSceneItem::SceneID() const
+{
+	return scene_id_;
+}
+
+void CameraSceneItem::SetSceneID(uint64_t id)
+{
+	scene_id_ = id;
+}
+
+std::string CameraSceneItem::Name() const
+{
+	return name_;
+}
+
+void CameraSceneItem::SetName(std::string &name)
+{
+	if (name == name_)
+		return;
+	name_ = name;
+}
+
+std::string CameraSceneItem::Kind() const
+{
+	return "dshow_input";
+}
+
+SceneItem::Type CameraSceneItem::type() const
+{
+	return kCamera;
+}
+
+Scene *CameraSceneItem::scene() const
+{
+	return nullptr;
+}
+
+SceneItem::Settings CameraSceneItem::GetSettings() const
+{
+	return settings_;
+}
+
+void CameraSceneItem::UpdateSettings(SceneItem::Settings settings)
+{
+	vec2_copy(&settings_.pos, &settings.pos);
+	vec2_copy(&settings_.scale, &settings.scale);
+	settings_.hidden = settings.hidden;
+	settings_.lock = settings.lock;
+
+	should_apply_changes_ = true;
+}
+
+void CameraSceneItem::Hide(bool hidden)
+{
+	if (hidden == settings_.hidden)
+		return;
+	settings_.hidden = hidden;
+	should_apply_changes_ = true;
+}
+
+void CameraSceneItem::Lock(bool lock)
+{
+	if (lock == settings_.lock)
+		return;
+	settings_.lock = lock;
+	should_apply_changes_ = true;
+}
+
+void CameraSceneItem::UpdateScale(vec2 scale)
+{
+	if (scale.x == settings_.scale.x && scale.y == settings_.scale.y) {
+		return;
+	}
+	vec2_copy(&settings_.scale, &scale);
+	should_apply_changes_ = true;
+}
+
+void CameraSceneItem::UpdatePosition(vec2 pos)
+{
+	if (pos.x == settings_.pos.x && pos.y == settings_.pos.y) {
+		return;
+	}
+	vec2_copy(&settings_.scale, &pos);
+	should_apply_changes_ = true;
+}
+
+bool CameraSceneItem::ShouldApplyAnyUpdates() const
+{
+	return should_apply_changes_;
+}
+
+bool CameraSceneItem::SelectResolution(uint32_t idx)
+{
+	if (idx >= resolutions_.size()) {
+		return false;
+	}
+	selected_res_ = resolutions_[idx];
+
+	return true;
+}
+
+bool CameraSceneItem::SelectFps(uint32_t idx)
+{
+	if (idx >= fps_.size()) {
+		return false;
+	}
+	selected_fps_ = fps_[idx];
+
+	return true;
+}
+
+void CameraSceneItem::GetAvailableResolutions(std::vector<std::string> &res) const
+{
+	// make copy of the resolutions_
+	for (auto r : resolutions_) {
+		res.emplace_back(std::move(r));
+	}
+} 
+
+void CameraSceneItem::GetAvailableFps(
+	std::vector<std::tuple<std::string, int64_t>> &fps) const
+{
+	// make copy of the fps_
+	for (auto r : fps_) {
+		fps.emplace_back(std::move(r));
+	}
+}
+
+obs_data_t *CameraSceneItem::Properties() const
+{
+	obs_data_t *data = obs_data_create();
+	obs_data_set_string(data, "video_device_id", device_id_.c_str());
+	//resolution
+	obs_data_set_string(data, "resolution", selected_res_.c_str());
+	// res_type
+	obs_data_set_int(data, "res_type", 1);
+	// must set last-device/id
+	obs_data_set_string(data, "last_resolution", selected_res_.c_str());
+	obs_data_set_string(data, "last_video_device_id", device_id_.c_str());
+	// frame_interval
+	obs_data_set_int(data, "frame_interval", std::get<1>(selected_fps_));
+
+	return data;
+}
+#pragma endregion Camera item
 
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -352,6 +513,8 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 		blog(LOG_INFO, "nothing changed, no need to update.");
 		return false;
 	}
+
+	// dont use autorelease!!!
 	obs_sceneitem_t* sceneItem =
 		obs_scene_find_sceneitem_by_id(scene_, item->SceneID());
 	if (sceneItem == nullptr) {

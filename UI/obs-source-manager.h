@@ -22,9 +22,14 @@ public:
 	// list all the screens
 	void ListScreenItems(
 		std::vector<std::shared_ptr<source::ScreenSceneItem>> &items);
+
 	// create a IPCamera scene item
 	std::shared_ptr<source::IPCameraSceneItem>
 	CreateIPCameraItem(std::string &name, std::string &url);
+
+	// list all usb cameras
+	void ListCameraItems(
+		std::vector<std::shared_ptr<source::CameraSceneItem>> &items);
 
 private:
 	void RemoveScene(std::string& name);

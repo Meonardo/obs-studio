@@ -105,7 +105,7 @@ bool OBSSourceManager::ApplySceneItemPropertiesUpdate(source::SceneItem *item)
 		return false;
 	}
 	OBSSourceAutoRelease src = obs_get_source_by_name(item->Name().c_str());
-	if (src != nullptr) {
+	if (src == nullptr) {
 		blog(LOG_ERROR,
 		     "can not update settings without attach the item to the scene!");
 		return false;
@@ -173,10 +173,6 @@ void OBSSourceManager::ListScreenItems(
 
 	// get properties
 	obs_properties_t *props = obs_source_properties(source);
-	OBSDataAutoRelease settings = obs_source_get_settings(source);
-	std::string cur_id =
-		std::to_string(obs_data_get_int(settings, prop_name));
-
 	// get detail
 	obs_property_t *p = obs_properties_get(props, prop_name);
 	size_t count = obs_property_list_item_count(p);
@@ -184,13 +180,16 @@ void OBSSourceManager::ListScreenItems(
 	for (size_t i = 0; i < count; i++) {
 		const char *name = obs_property_list_item_name(p, i);
 		int id = (int)obs_property_list_item_int(p, i);
-		blog(LOG_ERROR, "Enum monitor: %s, id=%d", name, id);
+		blog(LOG_ERROR, "enum monitor: %s, id=%d", name, id);
 		auto item =
 			std::make_shared<source::ScreenSceneItem>(
 				std::string(name));
 		item->index = id;
 		items.push_back(item);
 	}
+
+	// release properties for enum device list.
+	obs_properties_destroy(props);
 }
 
 std::shared_ptr<source::IPCameraSceneItem>
@@ -198,6 +197,101 @@ OBSSourceManager::CreateIPCameraItem(std::string &name,
 							      std::string &url)
 {
 	return std::make_shared<source::IPCameraSceneItem>(name, url, false);
+}
+
+void OBSSourceManager::ListCameraItems(
+	std::vector<std::shared_ptr<source::CameraSceneItem>> &items)
+{
+	const char *tmpName = "tmpUSBCam";
+	const char *kind = "dshow_input";
+	const char *prop_name = "video_device_id";
+	const char *resolution_p_name = "resolution";
+	const char *fps_p_name = "frame_interval";
+	OBSSourceAutoRelease source = obs_get_source_by_name(tmpName);
+	if (source != nullptr) {
+		blog(LOG_ERROR, "can not enum camera list.");
+		return;
+	}
+	// create tmp source
+	source = obs_source_create(kind, tmpName, NULL, nullptr);
+
+	// get properties
+	obs_properties_t *props = obs_source_properties(source);
+	// get detail
+	obs_property_t *p = obs_properties_get(props, prop_name);
+	size_t count = obs_property_list_item_count(p);
+
+	for (size_t i = 0; i < count; i++) {
+		const char *name = obs_property_list_item_name(p, i);
+		const char* id = obs_property_list_item_string(p, i);
+		blog(LOG_ERROR, "enum device id: %s, id=%s", name, id);
+
+		auto item = std::make_shared<source::CameraSceneItem>(
+			std::string(name));
+		item->device_id_ = std::string(id);
+
+		// make a fake selection in order to get resolution properties
+		obs_data_t *data = obs_data_create();
+		obs_data_set_string(data, prop_name, id);
+		obs_source_reset_settings(source, data);
+		obs_source_update_properties(source);
+		// get properties again
+		obs_properties_t *props1 = obs_source_properties(source);
+		obs_property_t *p_res =
+			obs_properties_get(props1, resolution_p_name);
+		size_t count_res = obs_property_list_item_count(p_res);
+
+		item->resolutions_.reserve(count_res);
+		for (size_t j = 0; j < count_res; j++) {
+			const char *res =
+				obs_property_list_item_name(p_res, j);
+			blog(LOG_ERROR, "enum device(%s), resolution=%s", name,
+			     res);
+			item->resolutions_.emplace_back(res);
+		}
+
+		if (count_res > 0) {
+			// set default resolution value
+			item->SelectResolution(0);
+
+			// make a fake resolution selection
+			obs_data_set_string(data, resolution_p_name, item->selected_res_.c_str());
+			obs_data_set_int(data, "res_type", 1);
+			obs_source_reset_settings(source, data);
+			obs_source_update_properties(source);
+			// get properties again
+			obs_properties_t *props2 =
+				obs_source_properties(source);
+			// get all fps
+			obs_property_t *p_fps =
+				obs_properties_get(props2, fps_p_name);
+			size_t count_fps = obs_property_list_item_count(p_fps);
+
+			item->fps_.reserve(count_fps);
+			for (size_t k = 0; k < count_fps; k++) {
+				const char *fps_desc =
+					obs_property_list_item_name(p_fps, k);
+				int64_t fps =
+					obs_property_list_item_int(p_fps, k);
+				blog(LOG_ERROR, "enum device(%s), fps desc=%s, value=%d", name,
+				     fps_desc, fps);
+				item->fps_.emplace_back(
+					std::make_tuple(std::string(fps_desc), fps));
+			}
+
+			// set default fps value(match the output of the obs)
+			item->SelectFps(0);
+		}
+
+		// release anything just created for tmp using.
+		obs_properties_destroy(props1);
+		obs_data_release(data);
+
+		items.push_back(item);
+	}
+
+	// release properties for enum device list.
+	obs_properties_destroy(props);
 }
 
 } //namespace manager 

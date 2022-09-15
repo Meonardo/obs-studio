@@ -8,6 +8,10 @@
 
 #define kMainScene "MainScene"
 
+namespace accrecorder::manager {
+class OBSSourceManager;
+}
+
 namespace accrecorder {
 namespace source {
 
@@ -139,6 +143,56 @@ private:
 	bool should_apply_changes_;
 	std::string url_;
 	bool stop_on_hide_;
+};
+
+class CameraSceneItem : public SceneItem {
+public:
+	CameraSceneItem(std::string &name);
+	~CameraSceneItem();
+
+	virtual uint64_t SceneID() const override;
+	virtual void SetSceneID(uint64_t id) override;
+	virtual std::string Name() const override;
+	virtual void SetName(std::string &name) override;
+	virtual std::string Kind() const override;
+	virtual Type type() const override;
+	virtual Settings GetSettings() const override;
+	virtual void UpdateSettings(Settings b) override;
+	virtual void Hide(bool hidden) override;
+	virtual void Lock(bool lock) override;
+	virtual void UpdateScale(vec2 sacle) override;
+	virtual void UpdatePosition(vec2 pos) override;
+	virtual obs_data_t *Properties() const override;
+	virtual bool ShouldApplyAnyUpdates() const override;
+
+	// get a list of available res & fps
+	void GetAvailableResolutions(std::vector<std::string> &res) const;
+	void GetAvailableFps(
+		std::vector<std::tuple<std::string, int64_t>> &fps) const;
+	// select resolution & fps
+	bool SelectResolution(uint32_t idx);
+	bool SelectFps(uint32_t idx);
+
+protected:
+	virtual Scene *scene() const override;
+
+private:
+	std::string name_;
+	Type type_;
+	Settings settings_;
+	uint64_t scene_id_;
+	bool should_apply_changes_;
+
+	// device id
+	std::string device_id_;
+	std::vector<std::string> resolutions_;
+	// current selected resolution(default is the first element in the vector(resolutions_))
+	std::string selected_res_;
+	// all available fps, for example: (Match Output FPS, -1), (Highest FPS, 0), (30, 333333)....
+	std::vector<std::tuple<std::string, int64_t>> fps_;
+	std::tuple<std::string, int64_t> selected_fps_;
+
+	friend class manager::OBSSourceManager;
 };
 
 class Scene {
