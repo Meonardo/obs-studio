@@ -48,7 +48,8 @@ uint64_t ScreenSceneItem::SceneID() const
 	return scene_id_;
 }
 
-void ScreenSceneItem::SetSceneID(uint64_t id) {
+void ScreenSceneItem::SetSceneID(uint64_t id)
+{
 	scene_id_ = id;
 }
 
@@ -144,15 +145,19 @@ obs_data_t *ScreenSceneItem::Properties() const
 	obs_data_set_int(data, "monitor", index);
 	obs_data_set_int(data, "method", 0);
 	obs_data_set_bool(data, "cursor", show_cursor);
-	
+
 	return data;
 }
 
 #pragma endregion Sceen item
 
 #pragma region IPCamera item
-IPCameraSceneItem::IPCameraSceneItem(std::string &name, std::string &url, bool stopOnHide)
-	: name_(name), url_(url), stop_on_hide_(stopOnHide), should_apply_changes_(false)
+IPCameraSceneItem::IPCameraSceneItem(std::string &name, std::string &url,
+				     bool stopOnHide)
+	: name_(name),
+	  url_(url),
+	  stop_on_hide_(stopOnHide),
+	  should_apply_changes_(false)
 {
 	settings_.lock = false;
 	settings_.pos.x = 0;
@@ -284,7 +289,7 @@ obs_data_t *IPCameraSceneItem::Properties() const
 	char pipeline[count];
 	snprintf(pipeline, count,
 		 "uridecodebin uri=%s name=bin ! queue ! video.", url_.c_str());
-	
+
 	obs_data_set_string(data, "pipeline", pipeline);
 	obs_data_set_bool(data, "sync_appsink_audio", false);
 	obs_data_set_bool(data, "sync_appsink_video", false);
@@ -298,8 +303,7 @@ obs_data_t *IPCameraSceneItem::Properties() const
 
 #pragma region Camera item
 CameraSceneItem::CameraSceneItem(std::string &name)
-	: name_(name),
-	  should_apply_changes_(false)
+	: name_(name), should_apply_changes_(false)
 {
 	settings_.lock = false;
 	settings_.pos.x = 0;
@@ -427,13 +431,14 @@ bool CameraSceneItem::SelectFps(uint32_t idx)
 	return true;
 }
 
-void CameraSceneItem::GetAvailableResolutions(std::vector<std::string> &res) const
+void CameraSceneItem::GetAvailableResolutions(
+	std::vector<std::string> &res) const
 {
 	// make copy of the resolutions_
 	for (auto r : resolutions_) {
 		res.emplace_back(std::move(r));
 	}
-} 
+}
 
 void CameraSceneItem::GetAvailableFps(
 	std::vector<std::tuple<std::string, int64_t>> &fps) const
@@ -551,10 +556,7 @@ obs_data_t *AudioSceneItem::Properties() const
 
 ////////////////////////////////////////////////////////////////////////////////////
 // AudioInputItem subclass of AudioSceneItem
-AudioInputItem::AudioInputItem(std::string &name) :
-	AudioSceneItem(name)
-{
-}
+AudioInputItem::AudioInputItem(std::string &name) : AudioSceneItem(name) {}
 
 AudioInputItem::~AudioInputItem() {}
 
@@ -570,10 +572,7 @@ SceneItem::Type AudioInputItem::type() const
 
 ////////////////////////////////////////////////////////////////////////////////////
 // AudioOutputItem subclass of AudioSceneItem
-AudioOutputItem::AudioOutputItem(std::string &name)
-	: AudioSceneItem(name)
-{
-}
+AudioOutputItem::AudioOutputItem(std::string &name) : AudioSceneItem(name) {}
 
 AudioOutputItem::~AudioOutputItem() {}
 
@@ -617,10 +616,9 @@ bool Scene::Attach(SceneItem *item)
 
 	OBSDataAutoRelease inputSettings = item->Properties();
 	// create the input source
-	OBSSourceAutoRelease input = obs_source_create(
-		item->Kind().c_str(),
-		item->Name().c_str(),
-		inputSettings, nullptr);
+	OBSSourceAutoRelease input = obs_source_create(item->Kind().c_str(),
+						       item->Name().c_str(),
+						       inputSettings, nullptr);
 	if (!input) {
 		blog(LOG_ERROR, "create scene source failed!");
 		return false;
@@ -632,8 +630,8 @@ bool Scene::Attach(SceneItem *item)
 			input, OBS_MONITORING_TYPE_MONITOR_ONLY);
 
 	// create a scene item for the input
-	OBSSceneItemAutoRelease sceneItem = CreateSceneItem(input, scene_, true,
-							  NULL, NULL);
+	OBSSceneItemAutoRelease sceneItem =
+		CreateSceneItem(input, scene_, true, NULL, NULL);
 	if (sceneItem == nullptr) {
 		blog(LOG_ERROR, "create scene item failed!");
 		return false;
@@ -656,7 +654,7 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 	}
 
 	// dont use autorelease!!!
-	obs_sceneitem_t* sceneItem =
+	obs_sceneitem_t *sceneItem =
 		obs_scene_find_sceneitem_by_id(scene_, item->SceneID());
 	if (sceneItem == nullptr) {
 		blog(LOG_ERROR, "can not find the scene item in the scene!");
@@ -683,10 +681,11 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 	return true;
 }
 
-obs_sceneitem_t* Scene::CreateSceneItem(obs_source_t *source, obs_scene_t *scene,
-				 bool sceneItemEnabled,
-				 obs_transform_info *sceneItemTransform,
-				 obs_sceneitem_crop *sceneItemCrop)
+obs_sceneitem_t *Scene::CreateSceneItem(obs_source_t *source,
+					obs_scene_t *scene,
+					bool sceneItemEnabled,
+					obs_transform_info *sceneItemTransform,
+					obs_sceneitem_crop *sceneItemCrop)
 {
 	if (!(source && scene))
 		return nullptr;

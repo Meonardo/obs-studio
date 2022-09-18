@@ -9,9 +9,9 @@ public:
 	~OBSSourceManager();
 
 	// rename the scene item
-	bool Rename(source::SceneItem *item, std::string& newName);
+	bool Rename(source::SceneItem *item, std::string &newName);
 	// attach the scene item to the main scene
-	bool AttachSceneItem(source::SceneItem* item);
+	bool AttachSceneItem(source::SceneItem *item);
 	// apply scene item properties settings(internal settings)
 	bool ApplySceneItemPropertiesUpdate(source::SceneItem *item);
 	// apply scene item settings update(in the scene)
@@ -47,14 +47,14 @@ public:
 	bool StopStreaming();
 
 private:
-	void RemoveScene(std::string& name);
-	obs_scene_t* CreateScene(std::string& name);
+	void RemoveScene(std::string &name);
+	obs_scene_t *CreateScene(std::string &name);
 
 	static obs_source_t *ValidateScene(std::string &name);
 	static obs_source_t *ValidateInput(std::string &name);
 	static bool VirtualCamAvailable();
 
-	source::Scene* main_scene_;
+	source::Scene *main_scene_;
 };
 
 } //namespace accrecorder::manager

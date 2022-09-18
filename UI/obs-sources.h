@@ -278,4 +278,4 @@ private:
 					 obs_sceneitem_crop *sceneItemCrop);
 };
 
-}// namespace accrecorder::source
+} // namespace accrecorder::source

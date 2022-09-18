@@ -14,9 +14,10 @@ OBSSourceManager::OBSSourceManager() : main_scene_(nullptr)
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 	// then create new one.
-	obs_scene_t* scene = CreateScene(sceneName);
+	obs_scene_t *scene = CreateScene(sceneName);
 	if (scene == nullptr) {
-		blog(LOG_ERROR, "can not create scene(%s)\n", sceneName.c_str());
+		blog(LOG_ERROR, "can not create scene(%s)\n",
+		     sceneName.c_str());
 	}
 	// save it.
 	main_scene_ = new source::Scene(sceneName, scene);
@@ -36,7 +37,7 @@ OBSSourceManager::~OBSSourceManager()
 	}
 }
 
-void OBSSourceManager::RemoveScene(std::string& name)
+void OBSSourceManager::RemoveScene(std::string &name)
 {
 	OBSSourceAutoRelease scene = ValidateScene(name);
 	if (!scene) {
@@ -46,7 +47,7 @@ void OBSSourceManager::RemoveScene(std::string& name)
 	blog(LOG_INFO, "scene(%s) removed!", name.c_str());
 }
 
-obs_scene_t* OBSSourceManager::CreateScene(std::string& sceneName)
+obs_scene_t *OBSSourceManager::CreateScene(std::string &sceneName)
 {
 	if (sceneName.empty())
 		return nullptr;
@@ -56,16 +57,17 @@ obs_scene_t* OBSSourceManager::CreateScene(std::string& sceneName)
 		     sceneName.c_str());
 		return nullptr;
 	}
-	obs_scene_t* createdScene = obs_scene_create(sceneName.c_str());
+	obs_scene_t *createdScene = obs_scene_create(sceneName.c_str());
 	if (!createdScene) {
-		blog(LOG_ERROR, "create scene(%s) failed!\n", sceneName.c_str());
+		blog(LOG_ERROR, "create scene(%s) failed!\n",
+		     sceneName.c_str());
 		return nullptr;
 	}
 
 	return createdScene;
 }
 
-obs_source_t* OBSSourceManager::ValidateScene(std::string& name)
+obs_source_t *OBSSourceManager::ValidateScene(std::string &name)
 {
 	obs_source_t *ret = obs_get_source_by_name(name.c_str());
 	if (!ret)
@@ -73,7 +75,8 @@ obs_source_t* OBSSourceManager::ValidateScene(std::string& name)
 
 	if (obs_source_get_type(ret) != OBS_SOURCE_TYPE_SCENE) {
 		obs_source_release(ret);
-		blog(LOG_ERROR, "(%s) is not a valid scene source!\n", name.c_str());
+		blog(LOG_ERROR, "(%s) is not a valid scene source!\n",
+		     name.c_str());
 		return nullptr;
 	}
 	return ret;
@@ -142,7 +145,8 @@ bool OBSSourceManager::Rename(source::SceneItem *item, std::string &newName)
 		blog(LOG_INFO, "no source found!");
 		return false;
 	}
-	OBSSourceAutoRelease existingSource = obs_get_source_by_name(newName.c_str());
+	OBSSourceAutoRelease existingSource =
+		obs_get_source_by_name(newName.c_str());
 	if (existingSource != nullptr) {
 		blog(LOG_INFO, "the new name(%s) source already exist!",
 		     newName.c_str());
@@ -192,9 +196,8 @@ void OBSSourceManager::ListScreenItems(
 		const char *name = obs_property_list_item_name(p, i);
 		int id = (int)obs_property_list_item_int(p, i);
 		blog(LOG_ERROR, "enum monitor: %s, id=%d", name, id);
-		auto item =
-			std::make_shared<source::ScreenSceneItem>(
-				std::string(name));
+		auto item = std::make_shared<source::ScreenSceneItem>(
+			std::string(name));
 		item->index = id;
 		items.push_back(item);
 	}
@@ -204,8 +207,7 @@ void OBSSourceManager::ListScreenItems(
 }
 
 std::shared_ptr<source::IPCameraSceneItem>
-OBSSourceManager::CreateIPCameraItem(std::string &name,
-							      std::string &url)
+OBSSourceManager::CreateIPCameraItem(std::string &name, std::string &url)
 {
 	return std::make_shared<source::IPCameraSceneItem>(name, url, false);
 }
@@ -234,7 +236,7 @@ void OBSSourceManager::ListCameraItems(
 
 	for (size_t i = 0; i < count; i++) {
 		const char *name = obs_property_list_item_name(p, i);
-		const char* id = obs_property_list_item_string(p, i);
+		const char *id = obs_property_list_item_string(p, i);
 		blog(LOG_ERROR, "enum device id: %s, id=%s", name, id);
 
 		auto item = std::make_shared<source::CameraSceneItem>(
@@ -254,8 +256,7 @@ void OBSSourceManager::ListCameraItems(
 
 		item->resolutions_.reserve(count_res);
 		for (size_t j = 0; j < count_res; j++) {
-			const char *res =
-				obs_property_list_item_name(p_res, j);
+			const char *res = obs_property_list_item_name(p_res, j);
 			blog(LOG_ERROR, "enum device(%s), resolution=%s", name,
 			     res);
 			item->resolutions_.emplace_back(res);
@@ -266,7 +267,8 @@ void OBSSourceManager::ListCameraItems(
 			item->SelectResolution(0);
 
 			// make a fake resolution selection
-			obs_data_set_string(data, resolution_p_name, item->selected_res_.c_str());
+			obs_data_set_string(data, resolution_p_name,
+					    item->selected_res_.c_str());
 			obs_data_set_int(data, "res_type", 1);
 			obs_source_reset_settings(source, data);
 			obs_source_update_properties(source);
@@ -284,10 +286,11 @@ void OBSSourceManager::ListCameraItems(
 					obs_property_list_item_name(p_fps, k);
 				int64_t fps =
 					obs_property_list_item_int(p_fps, k);
-				blog(LOG_ERROR, "enum device(%s), fps desc=%s, value=%d", name,
-				     fps_desc, fps);
-				item->fps_.emplace_back(
-					std::make_tuple(std::string(fps_desc), fps));
+				blog(LOG_ERROR,
+				     "enum device(%s), fps desc=%s, value=%d",
+				     name, fps_desc, fps);
+				item->fps_.emplace_back(std::make_tuple(
+					std::string(fps_desc), fps));
 			}
 
 			// set default fps value(match the output of the obs)
@@ -423,8 +426,9 @@ bool OBSSourceManager::SetStreamAddress(std::string &addr,
 		obs_service_get_type(currentStreamService);
 	if (streamServiceType != streamType) {
 		// create new server
-		OBSService newStreamService = obs_service_create(streamType.c_str(),
-			"amdox_custom_service", settings, nullptr);
+		OBSService newStreamService = obs_service_create(
+			streamType.c_str(), "amdox_custom_service", settings,
+			nullptr);
 		if (!newStreamService) {
 			blog(LOG_ERROR, "can not create stream server");
 			return false;
@@ -433,12 +437,15 @@ bool OBSSourceManager::SetStreamAddress(std::string &addr,
 		obs_frontend_set_streaming_service(newStreamService);
 	} else {
 		// update server info
-		OBSDataAutoRelease currentStreamServiceSettings = obs_service_get_settings(currentStreamService);
+		OBSDataAutoRelease currentStreamServiceSettings =
+			obs_service_get_settings(currentStreamService);
 		OBSDataAutoRelease newStreamServiceSettings = obs_data_create();
-		obs_data_apply(newStreamServiceSettings, currentStreamServiceSettings);
+		obs_data_apply(newStreamServiceSettings,
+			       currentStreamServiceSettings);
 		obs_data_apply(newStreamServiceSettings, settings);
 
-		obs_service_update(currentStreamService, newStreamServiceSettings);
+		obs_service_update(currentStreamService,
+				   newStreamServiceSettings);
 	}
 
 	// save the server
@@ -471,4 +478,4 @@ bool OBSSourceManager::StopStreaming()
 	return true;
 }
 
-} //namespace accrecorder::manager 
+} //namespace accrecorder::manager
