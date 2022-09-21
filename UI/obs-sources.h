@@ -263,6 +263,7 @@ public:
 	~Scene();
 
 	bool Attach(SceneItem *item);
+	bool Detach(SceneItem *item);
 	bool ApplySceneItemSettingsUpdate(SceneItem *item);
 
 private:

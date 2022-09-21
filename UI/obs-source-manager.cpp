@@ -360,6 +360,18 @@ void OBSSourceManager::ListAudioItems(
 	obs_properties_destroy(props);
 }
 
+bool OBSSourceManager::Remove(source::SceneItem* item) {
+	if (item == nullptr)
+		return false;
+
+	// remove from obs source tree
+	OBSSourceAutoRelease input = ValidateInput(item->Name());
+	obs_source_remove(input);
+
+	// detach from Scene
+	return main_scene_->Detach(item);
+}
+
 bool OBSSourceManager::VirtualCamAvailable()
 {
 	OBSDataAutoRelease privateData = obs_get_private_data();

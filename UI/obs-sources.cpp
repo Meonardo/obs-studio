@@ -646,6 +646,19 @@ bool Scene::Attach(SceneItem *item)
 	return true;
 }
 
+bool Scene::Detach(SceneItem *item)
+{
+	if (item == nullptr)
+		return false;
+
+	items_.erase(std::remove_if(items_.begin(), items_.end(),
+				    [item](const SceneItem *scene_item) {
+					    return scene_item == item;
+				    }),
+		     items_.end());
+	return false;
+}
+
 bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 {
 	if (!item->ShouldApplyAnyUpdates()) {

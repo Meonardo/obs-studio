@@ -34,6 +34,9 @@ public:
 		std::vector<std::shared_ptr<source::AudioSceneItem>> &items,
 		bool input = true);
 
+	// remove scene item
+	bool Remove(source::SceneItem *item);
+
 	// start virtual camera
 	bool StartVirtualCamera();
 	// stop virtual camera

@@ -2182,6 +2182,9 @@ void OBSBasic::OBSInit(bool forceHide)
 	//if (manager.AttachSceneItem(output)) {
 	//	// success
 	//}
+
+	//// test remove scene item
+	//manager.Remove(ipCameraItem.get());
 }
 
 void OBSBasic::OnFirstLoad()
