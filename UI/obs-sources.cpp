@@ -605,6 +605,12 @@ Scene::Scene(std::string &name, obs_scene_t *src) : name_(name), scene_(src) {}
 Scene::~Scene()
 {
 	obs_scene_release(scene_);
+
+	for (auto &item : items_) {
+		delete item;
+		item = nullptr;
+	}
+	items_.clear();
 }
 
 bool Scene::Attach(SceneItem *item)
