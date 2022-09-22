@@ -471,26 +471,26 @@ void AddScenesPanel::initUi()
 			.arg(6 * getScale())
 			.arg(getFontStyle(16)));
 	pBtnCancel->setCheckable(true);
-	TestWidget *frame = new TestWidget(this);
-	frame->setFixedSize(50, 50);
-	frame->move(0, 0);
-	frame->hide();
-	connect(frame, &TestWidget::SignalWidgetHide, this, [=]() {
-		pBtnCancel->setChecked(false);
-	});
+	//TestWidget *frame = new TestWidget(this);
+	//frame->setFixedSize(50, 50);
+	//frame->move(0, 0);
+	//frame->hide();
+	//connect(frame, &TestWidget::SignalWidgetHide, this, [=]() {
+	//	pBtnCancel->setChecked(false);
+	//});
 	connect(pBtnCancel, &QPushButton::clicked, this, [=](bool checked) {
-		if (checked) {
-			qDebug() << "-------" << this->x() << this->y()
-				 << this->mapToGlobal(
-					    QPoint(this->x(), this->y()));
-			frame->move(this->mapToGlobal(
-				QPoint(((QWidget *)this->parent())->x(),
-				       ((QWidget *)this->parent())->y())));
-			frame->show();
-		}else
-			frame->hide();
-		//this->close();
-		//this->deleteLater();
+		//if (checked) {
+		//	qDebug() << "-------" << this->x() << this->y()
+		//		 << this->mapToGlobal(
+		//			    QPoint(this->x(), this->y()));
+		//	frame->move(this->mapToGlobal(
+		//		QPoint(((QWidget *)this->parent())->x(),
+		//		       ((QWidget *)this->parent())->y())));
+		//	frame->show();
+		//}else
+		//	frame->hide();
+		this->close();
+		this->deleteLater();
 	});
 
 	pBtnYes = new QPushButton(this);

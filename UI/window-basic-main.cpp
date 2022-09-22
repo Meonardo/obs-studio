@@ -2129,11 +2129,11 @@ void OBSBasic::OBSInit(bool forceHide)
 	}
 
 	// this will hide all the docks.
-	ui->toggleScenes->setChecked(true);
-	ui->toggleSources->setChecked(true);
-	ui->toggleMixer->setChecked(true);
-	ui->toggleTransitions->setChecked(true);
-	ui->toggleControls->setChecked(true);
+	ui->toggleScenes->setChecked(false);
+	ui->toggleSources->setChecked(false);
+	ui->toggleMixer->setChecked(false);
+	ui->toggleTransitions->setChecked(false);
+	ui->toggleControls->setChecked(false);
 	ui->toggleStats->setChecked(false);
 
 	// tests
@@ -10337,7 +10337,7 @@ void OBSBasic::createUi()
 {
 	this->setFixedWidth(1280 * getScale());
 	this->setFixedHeight(768 * getScale());
-	this->setFixedSize(1280, 768);
+	//this->setFixedSize(1280, 800);
 
 	this->setAttribute(Qt::WA_TranslucentBackground, true);
 	this->setWindowFlags(Qt::FramelessWindowHint);

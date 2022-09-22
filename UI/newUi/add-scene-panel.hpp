@@ -50,6 +50,24 @@ signals:
 	void SignalWidgetHide();
 };
 
+class ComboBox : public QPushButton
+{
+	Q_OBJECT
+public:
+	explicit ComboBox(const QString text = QString(), QWidget *parent = nullptr)
+		: QPushButton(parent)
+	{
+		this->setChecked(true);
+	}
+
+protected:
+	void paintEvent(QPaintEvent *event) {
+	
+	}
+
+
+};
+
 class ItemDelegate : public QAbstractItemDelegate
 {
 	Q_OBJECT
