@@ -114,6 +114,7 @@ using namespace std;
 #endif
 
 #include "ui-config.h"
+#include "obs-source-manager.h"
 
 struct QCef;
 struct QCefCookieManager;
@@ -1490,7 +1491,8 @@ bool OBSBasic::InitBasicConfigDefaults()
 
 	/* use a default scaled resolution that has a pixel count no higher
 	 * than 1280x720  -> 1920x1080*/
-	while (((scale_cx * scale_cy) > (1920 * 1080)) && scaled_vals[i] > 0.0) {
+	while (((scale_cx * scale_cy) > (1920 * 1080)) &&
+	       scaled_vals[i] > 0.0) {
 		double scale = scaled_vals[i++];
 		scale_cx = uint32_t(double(cx) / scale);
 		scale_cy = uint32_t(double(cy) / scale);
@@ -1938,7 +1940,7 @@ void OBSBasic::OBSInit(bool forceHide)
 	} else {
 		show();
 	}
-		
+
 #endif
 
 	bool alwaysOnTop = config_get_bool(App()->GlobalConfig(), "BasicWindow",
@@ -2126,13 +2128,16 @@ void OBSBasic::OBSInit(bool forceHide)
 				       failed_msg);
 	}
 
-	// this will hide all the docks. 
-	ui->toggleScenes->setChecked(false);
-	ui->toggleSources->setChecked(false);
-	ui->toggleMixer->setChecked(false);
-	ui->toggleTransitions->setChecked(false);
-	ui->toggleControls->setChecked(false);
+	// this will hide all the docks.
+	ui->toggleScenes->setChecked(true);
+	ui->toggleSources->setChecked(true);
+	ui->toggleMixer->setChecked(true);
+	ui->toggleTransitions->setChecked(true);
+	ui->toggleControls->setChecked(true);
 	ui->toggleStats->setChecked(false);
+
+	// tests
+	AddTests();
 }
 
 void OBSBasic::OnFirstLoad()
@@ -10238,9 +10243,7 @@ void OBSBasic::SetDisplayAffinity(QWindow *window)
 	if (!SetDisplayAffinitySupported())
 		return;
 
-	bool hideFromCapture = config_get_bool(App()->GlobalConfig(),
-					       "BasicWindow",
-					       "HideOBSWindowsFromCapture");
+	bool hideFromCapture = true;
 
 	// Don't hide projectors, those are designed to be visible / captured
 	if (window->property("isOBSProjectorWindow") == true)
@@ -10329,7 +10332,6 @@ void OBSBasic::ResetProxyStyleSliders()
 
 	UpdateContextBar(true);
 }
-
 
 void OBSBasic::createUi()
 {
@@ -10478,4 +10480,76 @@ bool OBSBasic::eventFilter(QObject *obj, QEvent *event)
 		}
 	}
 	return OBSMainWindow::eventFilter(obj, event);
+}
+
+void OBSBasic::AddTests()
+{
+	// OBSSourceManager tests
+	accrecorder::manager::OBSSourceManager manager;
+
+	if (!manager.IsMainSceneCreated()) {
+		// screen items
+		auto items =
+			std::vector<accrecorder::source::ScreenSceneItem *>();
+		manager.ListScreenItems(items);
+		auto screen = items.back();
+		if (manager.AttachSceneItem(screen)) {
+			//manager.ApplySceneItemPropertiesUpdate(screen);
+			screen->UpdateScale({0.5, 0.5});
+			manager.ApplySceneItemSettingsUpdate(screen);
+		}
+		// rename usecase
+		std::string newName("Chunchun");
+		manager.Rename(screen, newName);
+
+		// rtsp camera item
+		std::string cameraName("Baobao");
+		std::string cameraURL("rtsp://192.168.99.169/1");
+		auto ipCameraItem =
+			manager.CreateIPCameraItem(cameraName, cameraURL);
+		if (manager.AttachSceneItem(ipCameraItem)) {
+			ipCameraItem->UpdateScale({0.3f, 0.3f});
+			manager.ApplySceneItemSettingsUpdate(ipCameraItem);
+		}
+
+		// usb camera items
+		auto cameraItems =
+			std::vector<accrecorder::source::CameraSceneItem *>();
+		manager.ListCameraItems(cameraItems);
+		auto camera = cameraItems.front();
+		if (manager.AttachSceneItem(camera)) {
+			camera->UpdateScale({0.5, 0.5});
+			camera->UpdatePosition({0, 300});
+			manager.ApplySceneItemSettingsUpdate(camera);
+
+			// select resolution & fps test case
+			camera->SelectResolution(3);
+			camera->SelectFps(3);
+			manager.ApplySceneItemPropertiesUpdate(camera);
+
+			std::vector<std::string> res;
+			camera->GetAvailableResolutions(res);
+			std::vector<std::tuple<std::string, int64_t>> fps;
+			camera->GetAvailableFps(fps);
+		}
+
+		// audio input & output item
+		auto audioInputItem =
+			std::vector<accrecorder::source::AudioSceneItem *>();
+		manager.ListAudioItems(audioInputItem);
+		auto input = audioInputItem[1];
+		if (manager.AttachSceneItem(input)) {
+			// success
+		}
+		auto audioOutputItem =
+			std::vector<accrecorder::source::AudioSceneItem *>();
+		manager.ListAudioItems(audioOutputItem, false);
+		auto output = audioOutputItem[2];
+		if (manager.AttachSceneItem(output)) {
+			// success
+		}
+
+		//test remove scene item
+		//manager.Remove(ipCameraItem.get());
+	}
 }

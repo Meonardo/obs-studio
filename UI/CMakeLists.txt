@@ -236,6 +236,10 @@ target_sources(
           window-basic-interaction.hpp
           window-basic-main.cpp
           window-basic-main.hpp
+          obs-sources.h
+          obs-sources.cpp
+          obs-source-manager.h
+          obs-source-manager.cpp
           window-basic-main-browser.cpp
           window-basic-main-dropfiles.cpp
           window-basic-main-icons.cpp
