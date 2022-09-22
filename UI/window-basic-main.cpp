@@ -35,6 +35,15 @@
 #include <QScrollBar>
 #include <QTextStream>
 
+/*add by luoweidong start*/
+#include <qpainter.h>
+#include "newUi/window-toolbar.hpp"
+#include "newUi/window-panel.hpp"
+#include "newUi/window-toolbar.hpp"
+#include "newUi/font.hpp"
+#include "newUi/add-scene-panel.hpp"
+/*add by luoweidong end*/
+
 #include <util/dstr.h>
 #include <util/util.hpp>
 #include <util/platform.h>
@@ -75,6 +84,7 @@
 #include "undo-stack-obs.hpp"
 #include <fstream>
 #include <sstream>
+
 
 #ifdef _WIN32
 #include "win-update/win-update.hpp"
@@ -272,6 +282,10 @@ OBSBasic::OBSBasic(QWidget *parent)
 	ui->previewDisabledWidget->setVisible(false);
 	ui->contextContainer->setStyle(new OBSContextBarProxyStyle);
 	ui->broadcastButton->setVisible(false);
+
+	/* add by luoweidong start*/
+	createUi();
+	/* add by luoweidong end*/
 
 	startingDockLayout = saveState();
 
@@ -10314,4 +10328,154 @@ void OBSBasic::ResetProxyStyleSliders()
 		ActivateAudioSource(source);
 
 	UpdateContextBar(true);
+}
+
+
+void OBSBasic::createUi()
+{
+	this->setFixedWidth(1280 * getScale());
+	this->setFixedHeight(768 * getScale());
+	this->setFixedSize(1280, 768);
+
+	this->setAttribute(Qt::WA_TranslucentBackground, true);
+	this->setWindowFlags(Qt::FramelessWindowHint);
+	
+
+	QVBoxLayout *vlayout = new QVBoxLayout(ui->centralwidget);
+	vlayout->setSpacing(0);
+	vlayout->setMargin(0);
+
+	QFrame *frame = new QFrame(ui->centralwidget);
+	frame->setObjectName("mainframe");
+	frame->setStyleSheet(QString("#mainframe {"
+					 "background-color: '#FFFFFF';"
+				     "border-radius: %1px;"
+				     "}").arg(12 * getScale()));
+	
+	QVBoxLayout *frame_layout = new QVBoxLayout(frame);
+	frame_layout->setSpacing(0);
+	int margin = 8 * getScale();
+	frame_layout->setContentsMargins(margin, 0, margin, margin);
+	
+	auto frame_top = new QFrame(frame);
+	frame_top->setFixedHeight(70 * getScale());
+	frame_top->setStyleSheet("QFrame{ background-color: transparent; }");
+
+	auto label_title = new QLabel(frame_top);
+	label_title->setText(tr("导播设置"));
+	label_title->setStyleSheet(QString("QLabel{ color: '#222222'; %1}").arg(getFontStyle(22, FontWeight::Blod)));
+
+	auto pBtn_fullScreen = new QLabel(frame_top);
+	pBtn_fullScreen->setFixedSize(36 * getScale(), 36 * getScale());
+	pBtn_fullScreen->setStyleSheet("QLabel{border-image: url(':/res/images/newUi/fullscreen@2x.png'); }");
+
+	pBtn_close = new QLabel(frame_top);
+	pBtn_close->setFixedSize(36 * getScale(), 36 * getScale());
+	pBtn_close->setStyleSheet("QLabel{border-image: url(':/res/images/newUi/close@2x.png');}");
+	pBtn_close->installEventFilter(this);
+
+	auto layout_top = new QHBoxLayout(frame_top);
+	layout_top->setSpacing(18 * getScale());
+	layout_top->setContentsMargins(22 * getScale(), 0, 14 * getScale(), 0);
+	layout_top->addWidget(label_title);
+	layout_top->addWidget(pBtn_fullScreen);
+	layout_top->addWidget(pBtn_close);
+
+	auto frame_bottom = new QFrame(frame);
+	frame_bottom->setStyleSheet("QFrame{background-color: '#222222';}");
+
+	auto layout_bottom = new QVBoxLayout(frame_bottom);
+	margin = 4 * getScale();
+	layout_bottom->setContentsMargins(margin, margin, margin, margin);
+	layout_bottom->setSpacing(1 * getScale());
+
+	auto label_inTop = new QLabel(frame_bottom);
+	label_inTop->setContentsMargins(16 * getScale(), 0, 0, 0);
+	label_inTop->setFixedHeight(40 * getScale());
+	label_inTop->setText(tr("直播窗口"));
+	label_inTop->setStyleSheet(QString("QLabel{ background-color: '#444444'; color: '#FFFFFF';  %1}").arg(getFontStyle(14)));
+
+	auto frame_inMid = new QFrame(frame_bottom);
+	frame_inMid->setStyleSheet("QFrame{background-color: '#444444';}");
+
+	ui->previewDisabledWidget->setStyleSheet(
+		"#previewDisabledWidget{background-color: '#222222';}");
+	ui->previewDisabledWidget->setParent(frame_inMid);
+	ui->preview->setParent(frame_inMid);
+	ui->preview->hide();
+	ui->previewLabel->setParent(frame_inMid);
+	ui->previewLabel->hide();
+
+	auto frame_inBottom = new QFrame(frame_bottom);
+	frame_inBottom->setFixedHeight(284 * getScale());
+	frame_inBottom->setStyleSheet("QFrame{background-color: transparent;}");
+
+	layout_bottom->addWidget(label_inTop, 0);
+	layout_bottom->addWidget(frame_inMid, 1);
+	layout_bottom->addWidget(frame_inBottom, 0);
+
+	ui->horizontalLayout_2->setContentsMargins(margin, margin, margin, margin);
+	frame_inMid->setLayout(ui->horizontalLayout_2);
+
+	frame_layout->addWidget(frame_top, 0);
+	frame_layout->addWidget(frame_bottom, 1);
+
+	ui->contextContainer->setVisible(false);
+
+	vlayout->addWidget(frame);
+
+	auto toolbar = new OBSToolbar(frame_inBottom);
+	toolbar->setFixedHeight(40 * getScale());
+	//frame_toolBar->setStyleSheet("QFrame{background-color: '#444444';}");
+
+	auto frame_panel = new QFrame(frame_inBottom);
+	frame_panel->setStyleSheet("QFrame{background-color: transparent;}");
+
+	auto layout_inBottom = new QVBoxLayout(frame_inBottom);
+	layout_inBottom->setSpacing(4 * getScale());
+	layout_inBottom->setContentsMargins(0, 0, 0, 0);
+	layout_inBottom->addWidget(toolbar, 0);
+	layout_inBottom->addWidget(frame_panel, 1);
+
+	auto panel1 = new OBSPanel(tr("Main Scene"), frame_panel);
+	panel1->setFixedWidth(416 * getScale());
+	connect(panel1, &OBSPanel::addNewScene, this,
+		&OBSBasic::showAddScenePanel);
+
+	auto panel2 = new OBSPanel(tr("Sub Scene"), frame_panel);
+	panel2->setFixedWidth(416 * getScale());
+	connect(panel2, &OBSPanel::addNewScene, this,
+		&OBSBasic::showAddScenePanel);
+
+	auto panel3 = new OBSPanel(tr("Audio"), frame_panel);
+	panel3->setFixedWidth(416 * getScale());
+	connect(panel3, &OBSPanel::addNewScene, this,
+		&OBSBasic::showAddScenePanel);
+
+	auto layout_panel = new QHBoxLayout(frame_panel);
+	layout_panel->setSpacing(6 * getScale());
+	layout_panel->setContentsMargins(0, 0, 0, 0);
+	layout_panel->addWidget(panel1);
+	layout_panel->addWidget(panel2);
+	layout_panel->addWidget(panel3);
+}
+
+void OBSBasic::showAddScenePanel()
+{
+	auto panel = new AddScenesPanel(ui->centralwidget);
+	panel->setFixedSize(612 * getScale(), 496 * getScale());
+	panel->move((this->width() - panel->width()) / 2, (this->height() - panel->height())/2);
+	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
+	panel->show();
+}
+
+bool OBSBasic::eventFilter(QObject *obj, QEvent *event)
+{
+	if (obj == pBtn_close && event->type() == QEvent::MouseButtonRelease) {
+		QMouseEvent *mouseevent = static_cast<QMouseEvent *>(event);
+		if (mouseevent->button() == Qt::LeftButton) {
+			qApp->exit();
+		}
+	}
+	return OBSMainWindow::eventFilter(obj, event);
 }

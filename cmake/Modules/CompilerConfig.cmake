@@ -54,7 +54,6 @@ if(OS_WINDOWS AND MSVC)
   add_compile_options(
     /MP
     /W3
-    /WX
     /wd4127
     /wd4201
     /wd4456

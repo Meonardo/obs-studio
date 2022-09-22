@@ -281,6 +281,24 @@ target_sources(
 
 target_sources(
   obs
+  PRIVATE
+    newUi/font.hpp
+    newUi/window-toolbar.hpp
+    newUi/window-toolbar.cpp
+    newUi/window-panel.hpp
+    newUi/window-panel.cpp
+    newUi/window-mode-checkbutton.hpp
+    newUi/window-mode-checkbutton.cpp
+    newUi/window-ai-checkbutton.hpp
+    newUi/window-ai-checkbutton.cpp
+    newUi/m-scene-tree.hpp
+    newUi/m-scene-tree.cpp
+    newUi/add-scene-panel.hpp
+    newUi/add-scene-panel.cpp)
+
+
+target_sources(
+  obs
   PRIVATE importers/importers.cpp importers/importers.hpp importers/classic.cpp
           importers/sl.cpp importers/studio.cpp importers/xsplit.cpp)
 
@@ -507,6 +525,7 @@ source_group(
   FILES ${_UI})
 unset(_SOURCES)
 unset(_UI)
+
 
 define_graphic_modules(obs)
 setup_obs_app(obs)

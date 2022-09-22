@@ -846,6 +846,18 @@ private:
 
 	float dpi = 1.0;
 
+	/*add by luoweidong -- start*/
+	QLabel* pBtn_close;
+
+	void createUi();
+
+private slots:
+	void showAddScenePanel();	
+
+protected:
+	virtual bool eventFilter(QObject *obj, QEvent *event) override;
+	/*add by luoweidong -- end*/
+
 public:
 	OBSSource GetProgramSource();
 	OBSScene GetCurrentScene();
