@@ -295,6 +295,8 @@ obs_data_t *IPCameraSceneItem::Properties() const
 	obs_data_set_bool(data, "sync_appsink_video", false);
 	obs_data_set_bool(data, "disable_async_appsink_video", true);
 	obs_data_set_bool(data, "disable_async_appsink_audio", true);
+	obs_data_set_bool(data, "use_timestamps_audio", false);
+	obs_data_set_bool(data, "use_timestamps_video", false);
 	obs_data_set_bool(data, "stop_on_hide", stop_on_hide_);
 
 	return data;
@@ -646,7 +648,7 @@ bool Scene::Attach(SceneItem *item)
 	return true;
 }
 
-bool Scene::Detach(SceneItem *item)
+bool Scene::Detach(SceneItem *item, bool deleteIt)
 {
 	if (item == nullptr)
 		return false;
@@ -656,6 +658,10 @@ bool Scene::Detach(SceneItem *item)
 					    return scene_item == item;
 				    }),
 		     items_.end());
+	if (deleteIt) {
+		delete item;
+		item = nullptr;
+	}
 	return false;
 }
 

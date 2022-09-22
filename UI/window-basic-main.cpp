@@ -10229,9 +10229,7 @@ void OBSBasic::SetDisplayAffinity(QWindow *window)
 	if (!SetDisplayAffinitySupported())
 		return;
 
-	bool hideFromCapture = config_get_bool(App()->GlobalConfig(),
-					       "BasicWindow",
-					       "HideOBSWindowsFromCapture");
+	bool hideFromCapture = true;
 
 	// Don't hide projectors, those are designed to be visible / captured
 	if (window->property("isOBSProjectorWindow") == true)
