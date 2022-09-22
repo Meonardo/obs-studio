@@ -3,29 +3,44 @@
 #include <chrono>
 #include <thread>
 
+static void SplitString(std::string &source, std::string &&token,
+			std::vector<std::string> &result)
+{
+	size_t start = 0;
+	size_t end = source.find(token);
+	while (end != std::string::npos) {
+		result.emplace_back(source.substr(start, end - start));
+		start = end + token.length();
+		end = source.find(token, start);
+	}
+}
+
 namespace accrecorder::manager {
 OBSSourceManager::OBSSourceManager() : main_scene_(nullptr)
 {
 	std::string sceneName(kMainScene);
-	// remove old scene first.
-	RemoveScene(sceneName);
-
-	// !!!warnning: remove scene will take time, the create action may fail, so there is a sleep(300ms)
-	std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-	// then create new one.
-	obs_scene_t *scene = CreateScene(sceneName);
-	if (scene == nullptr) {
-		blog(LOG_ERROR, "can not create scene(%s)\n",
-		     sceneName.c_str());
+	obs_source_t *scene = ValidateScene(sceneName);
+	if (scene != nullptr) {
+		// save it.
+		main_scene_ = new source::Scene(sceneName,
+						obs_scene_from_source(scene));
+		// load scene from the scene
+		LoadSceneItemFromScene(sceneName);
+	} else {
+		// create new one.
+		obs_scene_t *newScene = CreateScene(sceneName);
+		if (newScene == nullptr) {
+			blog(LOG_ERROR, "can not create scene(%s)\n",
+			     sceneName.c_str());
+		}
+		// save it.
+		main_scene_ = new source::Scene(sceneName, newScene);
 	}
-	// save it.
-	main_scene_ = new source::Scene(sceneName, scene);
 
 	// make current
-	OBSSourceAutoRelease createdScene = ValidateScene(sceneName);
-	if (createdScene != nullptr) {
-		obs_frontend_set_current_scene(createdScene);
+	OBSSourceAutoRelease mainScene = ValidateScene(sceneName);
+	if (mainScene != nullptr) {
+		obs_frontend_set_current_scene(mainScene);
 	}
 }
 
@@ -37,12 +52,166 @@ OBSSourceManager::~OBSSourceManager()
 	}
 }
 
+bool OBSSourceManager::IsMainSceneCreated() const {
+	return main_scene_ != nullptr && main_scene_->items_.size() > 0;
+}
+
+void OBSSourceManager::LoadSceneItemFromScene(std::string &sceneName)
+{
+	OBSSourceAutoRelease scene = ValidateScene(sceneName);
+	if (!scene) {
+		blog(LOG_ERROR, "remove scene(%s) failed!\n",
+		     sceneName.c_str());
+	}
+
+	blog(LOG_INFO, "enum scene item in the scene");
+	auto cb = [](obs_scene_t *, obs_sceneitem_t *sceneItem, void *param) {
+		auto enumData =
+			static_cast<std::vector<source::SceneItem *> *>(param);
+		// get scene item
+		OBSSource itemSource = obs_sceneitem_get_source(sceneItem);
+		// get settings
+		obs_data_t *settings = obs_source_get_settings(itemSource);
+		// get name
+		std::string name(obs_source_get_name(itemSource));
+		// get id
+		uint64_t sceneItemId = obs_sceneitem_get_id(sceneItem);
+
+		if (obs_source_get_type(itemSource) == OBS_SOURCE_TYPE_INPUT) {
+			const char *sourceType = obs_source_get_id(itemSource);
+			std::string inputType(sourceType);
+
+			if (inputType == "monitor_capture") {
+				// screen scene item
+				auto item = new source::ScreenSceneItem(name);
+				item->SetSceneID(sceneItemId);
+				enumData->push_back(item);
+				item->type_ = source::SceneItem::Type::kScreen;
+				// get settings
+				GetSettingValueWithName<int>(
+					settings, "monitor", item->index);
+				GetSettingValueWithName<int>(
+					settings, "method",
+					item->capture_method);
+				GetSettingValueWithName<bool>(
+					settings, "cursor", item->show_cursor);
+
+			} else if (inputType == "gstreamer-source") {
+				// gst source(IPCamera)
+				std::string pipeline = "";
+				auto item = new source::IPCameraSceneItem(
+					name, pipeline, false);
+				item->type_ =
+					source::SceneItem::Type::kIPCamera;
+				item->SetSceneID(sceneItemId);
+				enumData->push_back(item);
+				// get settings
+				GetSettingValueWithName(settings, "pipeline",
+							pipeline);
+				auto results = std::vector<std::string>();
+				SplitString(pipeline, "=", results);
+				if (results.size() > 1) {
+					auto tmp = results[1];
+					auto uri =
+						tmp.substr(0, tmp.length() - 5);
+					item->UpdateURL(uri);
+				}
+				GetSettingValueWithName<bool>(
+					settings, "stop_on_hide",
+					item->stop_on_hide_);
+
+			} else if (inputType == "dshow_input") {
+				// usb cameras scene item
+				auto item = new source::CameraSceneItem(name);
+				item->SetSceneID(sceneItemId);
+				enumData->push_back(item);
+				item->type_ = source::SceneItem::Type::kCamera;
+				// get settings
+				GetSettingValueWithName(settings,
+							"video_device_id",
+							item->device_id_);
+				GetSettingValueWithName(settings, "resolution",
+							item->selected_res_);
+				/*int fps = 0;
+				GetSettingValueWithName<int>(
+					settings, "frame_interval", fps);*/
+
+			} else if (inputType == "wasapi_output_capture") {
+				// speakers
+				auto item = new source::AudioOutputItem(name);
+				item->SetSceneID(sceneItemId);
+				enumData->push_back(item);
+				item->type_ =
+					source::SceneItem::Type::kAudioOutput;
+				// get settings
+				GetSettingValueWithName(settings, "device_id",
+							item->device_id_);
+			} else if (inputType == "wasapi_input_capture") {
+				// microphones
+				auto item = new source::AudioInputItem(name);
+				item->SetSceneID(sceneItemId);
+				enumData->push_back(item);
+				item->type_ =
+					source::SceneItem::Type::kAudioInput;
+				// get settings
+				GetSettingValueWithName(settings, "device_id",
+							item->device_id_);
+			}
+		}
+
+		return true;
+	};
+
+	// enum scene item and save it to the scene object.
+	obs_scene_enum_items(obs_scene_from_source(scene), cb,
+			     &main_scene_->items_);
+
+	// for now tmp enum all the cameras & filter the target camera then restore the st
+	std::vector<std::shared_ptr<source::CameraSceneItem>> cameras;
+	ListCameraItems(cameras);
+	for (auto &item : main_scene_->items_) {
+		if (item->type() == source::SceneItem::Type::kCamera) {
+			auto target =
+				reinterpret_cast<source::CameraSceneItem *>(item);
+			for (auto &camera : cameras) {
+				if (target->device_id_ == camera->device_id_) {
+					target->fps_ = camera->fps_;
+					target->resolutions_ =
+						camera->resolutions_;
+					break;
+				}
+			}
+		}
+	}
+
+	blog(LOG_INFO, "done with enum all the scene item in the scene");
+}
+
 void OBSSourceManager::RemoveScene(std::string &name)
 {
 	OBSSourceAutoRelease scene = ValidateScene(name);
 	if (!scene) {
 		blog(LOG_ERROR, "remove scene(%s) failed!\n", name.c_str());
 	}
+
+	blog(LOG_INFO, "enum scene item in the scene");
+	std::vector<std::string> sceneItemNames;
+	auto cb = [](obs_scene_t *, obs_sceneitem_t *sceneItem, void *param) {
+		auto enumData = static_cast<std::vector<std::string> *>(param);
+		OBSSource itemSource = obs_sceneitem_get_source(sceneItem);
+		std::string name(obs_source_get_name(itemSource));
+		enumData->push_back(name);
+		return true;
+	};
+	obs_scene_enum_items(obs_scene_from_source(scene), cb, &sceneItemNames);
+
+	// remove all the item in the scene
+	for (auto &name : sceneItemNames) {
+		blog(LOG_INFO, "remove scene item name: %s", name.c_str());
+		OBSSourceAutoRelease input = ValidateInput(name);
+		obs_source_remove(input);
+	}
+
 	obs_source_remove(scene);
 	blog(LOG_INFO, "scene(%s) removed!", name.c_str());
 }
@@ -360,7 +529,8 @@ void OBSSourceManager::ListAudioItems(
 	obs_properties_destroy(props);
 }
 
-bool OBSSourceManager::Remove(source::SceneItem* item) {
+bool OBSSourceManager::Remove(source::SceneItem *item)
+{
 	if (item == nullptr)
 		return false;
 
@@ -370,6 +540,55 @@ bool OBSSourceManager::Remove(source::SceneItem* item) {
 
 	// detach from Scene
 	return main_scene_->Detach(item);
+}
+
+template<typename T>
+void OBSSourceManager::GetSettingValueWithName(obs_data_t *d,
+					       const char *settingName,
+					       T &result)
+{
+	obs_data_item_t *item = nullptr;
+
+	for (item = obs_data_first(d); item; obs_data_item_next(&item)) {
+		enum obs_data_type type = obs_data_item_gettype(item);
+		const char *name = obs_data_item_get_name(item);
+		if (strcmp(name, settingName) == 0) {
+			if (!obs_data_item_has_user_value(item))
+				continue;
+			if (type == OBS_DATA_NUMBER) {
+				enum obs_data_number_type type =
+					obs_data_item_numtype(item);
+				if (type == OBS_DATA_NUM_INT) {
+					result = (int)obs_data_item_get_int(
+						item);
+				} else {
+					result = (int)obs_data_item_get_double(
+						item);
+				}
+			}
+		}
+	}
+}
+
+template<>
+void OBSSourceManager::GetSettingValueWithName(obs_data_t *d,
+					       const char *settingName,
+					       std::string &result)
+{
+	obs_data_item_t *item = nullptr;
+
+	for (item = obs_data_first(d); item; obs_data_item_next(&item)) {
+		enum obs_data_type type = obs_data_item_gettype(item);
+		const char *name = obs_data_item_get_name(item);
+		if (strcmp(name, settingName) == 0) {
+			if (!obs_data_item_has_user_value(item))
+				continue;
+			if (type == OBS_DATA_STRING) {
+				result = std::string(
+					obs_data_item_get_string(item));
+			}
+		}
+	}
 }
 
 bool OBSSourceManager::VirtualCamAvailable()

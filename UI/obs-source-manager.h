@@ -8,6 +8,7 @@ public:
 	OBSSourceManager();
 	~OBSSourceManager();
 
+	bool IsMainSceneCreated() const;
 	// rename the scene item
 	bool Rename(source::SceneItem *item, std::string &newName);
 	// attach the scene item to the main scene
@@ -50,8 +51,16 @@ public:
 	bool StopStreaming();
 
 private:
+	void LoadSceneItemFromScene(std::string &sceneName);
 	void RemoveScene(std::string &name);
 	obs_scene_t *CreateScene(std::string &name);
+
+	template<typename T>
+	static void GetSettingValueWithName(obs_data_t *d,
+					 const char *settingName, T& result);
+	template<>
+	static void GetSettingValueWithName(obs_data_t *d,
+					    const char *settingName, std::string &result);
 
 	static obs_source_t *ValidateScene(std::string &name);
 	static obs_source_t *ValidateInput(std::string &name);

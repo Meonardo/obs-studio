@@ -109,6 +109,8 @@ private:
 	Settings settings_;
 	uint64_t scene_id_;
 	bool should_apply_changes_;
+
+	friend class manager::OBSSourceManager;
 };
 
 class IPCameraSceneItem : public SceneItem {
@@ -146,6 +148,8 @@ private:
 	bool should_apply_changes_;
 	std::string url_;
 	bool stop_on_hide_;
+
+	friend class manager::OBSSourceManager;
 };
 
 class CameraSceneItem : public SceneItem {
@@ -277,6 +281,8 @@ private:
 					 bool sceneItemEnabled,
 					 obs_transform_info *sceneItemTransform,
 					 obs_sceneitem_crop *sceneItemCrop);
+
+	friend manager::OBSSourceManager;
 };
 
 } // namespace accrecorder::source

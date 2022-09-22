@@ -1477,7 +1477,8 @@ bool OBSBasic::InitBasicConfigDefaults()
 
 	/* use a default scaled resolution that has a pixel count no higher
 	 * than 1280x720  -> 1920x1080*/
-	while (((scale_cx * scale_cy) > (1920 * 1080)) && scaled_vals[i] > 0.0) {
+	while (((scale_cx * scale_cy) > (1920 * 1080)) &&
+	       scaled_vals[i] > 0.0) {
 		double scale = scaled_vals[i++];
 		scale_cx = uint32_t(double(cx) / scale);
 		scale_cy = uint32_t(double(cy) / scale);
@@ -1925,7 +1926,7 @@ void OBSBasic::OBSInit(bool forceHide)
 	} else {
 		show();
 	}
-		
+
 #endif
 
 	bool alwaysOnTop = config_get_bool(App()->GlobalConfig(), "BasicWindow",
@@ -2113,7 +2114,7 @@ void OBSBasic::OBSInit(bool forceHide)
 				       failed_msg);
 	}
 
-	// this will hide all the docks. 
+	// this will hide all the docks.
 	ui->toggleScenes->setChecked(true);
 	ui->toggleSources->setChecked(true);
 	ui->toggleMixer->setChecked(true);
@@ -2121,70 +2122,8 @@ void OBSBasic::OBSInit(bool forceHide)
 	ui->toggleControls->setChecked(true);
 	ui->toggleStats->setChecked(false);
 
-	//// OBSSourceManager tests
-	//accrecorder::manager::OBSSourceManager manager;
-
-	//// screen items
-	//auto items = std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
-	//manager.ListScreenItems(items);
-	//auto screen = items.back().get();
-	//if (manager.AttachSceneItem(screen)) {
-	//	//manager.ApplySceneItemPropertiesUpdate(screen);
-	//	screen->UpdateScale({0.5, 0.5});
-	//	manager.ApplySceneItemSettingsUpdate(screen);
-	//}
-	//// rename usecase
-	//std::string newName("Chunchun");
-	//manager.Rename(screen, newName);
-
-	//// rtsp camera item
-	//std::string cameraName("Baobao");
-	//std::string cameraURL("rtsp://192.168.99.169/1");
-	//auto ipCameraItem = manager.CreateIPCameraItem(cameraName, cameraURL);
-	//if (manager.AttachSceneItem(ipCameraItem.get())) {
-	//	ipCameraItem->UpdateScale({0.3f, 0.3f});
-	//	manager.ApplySceneItemSettingsUpdate(ipCameraItem.get());
-	//}
-
-	//// usb camera items
-	//auto cameraItems = std::vector<
-	//	std::shared_ptr<accrecorder::source::CameraSceneItem>>();
-	//manager.ListCameraItems(cameraItems);
-	//auto camera = cameraItems.front().get();
-	//if (manager.AttachSceneItem(camera)) {
-	//	camera->UpdateScale({0.5, 0.5});
-	//	camera->UpdatePosition({0, 300});
-	//	manager.ApplySceneItemSettingsUpdate(camera);
-
-	//	// select resolution & fps test case
-	//	camera->SelectResolution(3);
-	//	camera->SelectFps(3);
-	//	manager.ApplySceneItemPropertiesUpdate(camera);
-
-	//	std::vector<std::string> res;
-	//	camera->GetAvailableResolutions(res);
-	//	std::vector<std::tuple<std::string, int64_t>> fps;
-	//	camera->GetAvailableFps(fps);
-	//}
-
-	//// audio input & output item
-	//auto audioInputItem =
-	//	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
-	//manager.ListAudioItems(audioInputItem);
-	//auto input = audioInputItem[1].get();
-	//if (manager.AttachSceneItem(input)) {
-	//	// success
-	//}
-	//auto audioOutputItem = std::vector<
-	//	std::shared_ptr<accrecorder::source::AudioSceneItem>>();
-	//manager.ListAudioItems(audioOutputItem, false);
-	//auto output = audioOutputItem[2].get();
-	//if (manager.AttachSceneItem(output)) {
-	//	// success
-	//}
-
-	//// test remove scene item
-	//manager.Remove(ipCameraItem.get());
+	// tests
+	AddTests();
 }
 
 void OBSBasic::OnFirstLoad()
@@ -10380,4 +10319,77 @@ void OBSBasic::ResetProxyStyleSliders()
 		ActivateAudioSource(source);
 
 	UpdateContextBar(true);
+}
+
+void OBSBasic::AddTests() {
+	// OBSSourceManager tests
+	accrecorder::manager::OBSSourceManager manager;
+
+	if (!manager.IsMainSceneCreated()) {
+		// screen items
+		auto items = std::vector<
+			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
+		manager.ListScreenItems(items);
+		auto screen = items.back().get();
+		if (manager.AttachSceneItem(screen)) {
+			//manager.ApplySceneItemPropertiesUpdate(screen);
+			screen->UpdateScale({0.5, 0.5});
+			manager.ApplySceneItemSettingsUpdate(screen);
+		}
+		// rename usecase
+		std::string newName("Chunchun");
+		manager.Rename(screen, newName);
+
+		// rtsp camera item
+		std::string cameraName("Baobao");
+		std::string cameraURL("rtsp://192.168.99.169/1");
+		auto ipCameraItem =
+			manager.CreateIPCameraItem(cameraName, cameraURL);
+		if (manager.AttachSceneItem(ipCameraItem.get())) {
+			ipCameraItem->UpdateScale({0.3f, 0.3f});
+			manager.ApplySceneItemSettingsUpdate(
+				ipCameraItem.get());
+		}
+
+		// usb camera items
+		auto cameraItems = std::vector<
+			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+		manager.ListCameraItems(cameraItems);
+		auto camera = cameraItems.front().get();
+		if (manager.AttachSceneItem(camera)) {
+			camera->UpdateScale({0.5, 0.5});
+			camera->UpdatePosition({0, 300});
+			manager.ApplySceneItemSettingsUpdate(camera);
+
+			// select resolution & fps test case
+			camera->SelectResolution(3);
+			camera->SelectFps(3);
+			manager.ApplySceneItemPropertiesUpdate(camera);
+
+			std::vector<std::string> res;
+			camera->GetAvailableResolutions(res);
+			std::vector<std::tuple<std::string, int64_t>> fps;
+			camera->GetAvailableFps(fps);
+		}
+
+		// audio input & output item
+		auto audioInputItem = std::vector<
+			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+		manager.ListAudioItems(audioInputItem);
+		auto input = audioInputItem[1].get();
+		if (manager.AttachSceneItem(input)) {
+			// success
+		}
+		auto audioOutputItem = std::vector<
+			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+		manager.ListAudioItems(audioOutputItem, false);
+		auto output = audioOutputItem[2].get();
+		if (manager.AttachSceneItem(output)) {
+			// success
+		}
+
+		//test remove scene item
+		//manager.Remove(ipCameraItem.get());
+	}
+	
 }
