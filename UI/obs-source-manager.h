@@ -8,7 +8,10 @@ public:
 	OBSSourceManager();
 	~OBSSourceManager();
 
+	// check if the main is created
 	bool IsMainSceneCreated() const;
+	// all items already in the scene
+	void AvailableSceneItems(std::vector<source::SceneItem *> &items) const;
 	// rename the scene item
 	bool Rename(source::SceneItem *item, std::string &newName);
 	// attach the scene item to the main scene
@@ -19,21 +22,18 @@ public:
 	bool ApplySceneItemSettingsUpdate(source::SceneItem *item);
 
 	// list all the screens
-	void ListScreenItems(
-		std::vector<std::shared_ptr<source::ScreenSceneItem>> &items);
+	void ListScreenItems(std::vector<source::ScreenSceneItem *> &items);
 
 	// create a IPCamera scene item
-	std::shared_ptr<source::IPCameraSceneItem>
-	CreateIPCameraItem(std::string &name, std::string &url);
+	source::IPCameraSceneItem *CreateIPCameraItem(std::string &name,
+						      std::string &url);
 
 	// list all usb cameras
-	void ListCameraItems(
-		std::vector<std::shared_ptr<source::CameraSceneItem>> &items);
+	void ListCameraItems(std::vector<source::CameraSceneItem *> &items);
 
 	// list all AudioInputDevices & AudioOutputDevices
-	void ListAudioItems(
-		std::vector<std::shared_ptr<source::AudioSceneItem>> &items,
-		bool input = true);
+	void ListAudioItems(std::vector<source::AudioSceneItem *> &items,
+			    bool input = true);
 
 	// remove scene item
 	bool Remove(source::SceneItem *item);
@@ -57,10 +57,11 @@ private:
 
 	template<typename T>
 	static void GetSettingValueWithName(obs_data_t *d,
-					 const char *settingName, T& result);
+					    const char *settingName, T &result);
 	template<>
 	static void GetSettingValueWithName(obs_data_t *d,
-					    const char *settingName, std::string &result);
+					    const char *settingName,
+					    std::string &result);
 
 	static obs_source_t *ValidateScene(std::string &name);
 	static obs_source_t *ValidateInput(std::string &name);

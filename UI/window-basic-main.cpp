@@ -10319,16 +10319,17 @@ void OBSBasic::ResetProxyStyleSliders()
 	UpdateContextBar(true);
 }
 
-void OBSBasic::AddTests() {
+void OBSBasic::AddTests()
+{
 	// OBSSourceManager tests
 	accrecorder::manager::OBSSourceManager manager;
 
 	if (!manager.IsMainSceneCreated()) {
 		// screen items
-		auto items = std::vector<
-			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
+		auto items =
+			std::vector<accrecorder::source::ScreenSceneItem *>();
 		manager.ListScreenItems(items);
-		auto screen = items.back().get();
+		auto screen = items.back();
 		if (manager.AttachSceneItem(screen)) {
 			//manager.ApplySceneItemPropertiesUpdate(screen);
 			screen->UpdateScale({0.5, 0.5});
@@ -10343,17 +10344,16 @@ void OBSBasic::AddTests() {
 		std::string cameraURL("rtsp://192.168.99.169/1");
 		auto ipCameraItem =
 			manager.CreateIPCameraItem(cameraName, cameraURL);
-		if (manager.AttachSceneItem(ipCameraItem.get())) {
+		if (manager.AttachSceneItem(ipCameraItem)) {
 			ipCameraItem->UpdateScale({0.3f, 0.3f});
-			manager.ApplySceneItemSettingsUpdate(
-				ipCameraItem.get());
+			manager.ApplySceneItemSettingsUpdate(ipCameraItem);
 		}
 
 		// usb camera items
-		auto cameraItems = std::vector<
-			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+		auto cameraItems =
+			std::vector<accrecorder::source::CameraSceneItem *>();
 		manager.ListCameraItems(cameraItems);
-		auto camera = cameraItems.front().get();
+		auto camera = cameraItems.front();
 		if (manager.AttachSceneItem(camera)) {
 			camera->UpdateScale({0.5, 0.5});
 			camera->UpdatePosition({0, 300});
@@ -10371,17 +10371,17 @@ void OBSBasic::AddTests() {
 		}
 
 		// audio input & output item
-		auto audioInputItem = std::vector<
-			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+		auto audioInputItem =
+			std::vector<accrecorder::source::AudioSceneItem *>();
 		manager.ListAudioItems(audioInputItem);
-		auto input = audioInputItem[1].get();
+		auto input = audioInputItem[1];
 		if (manager.AttachSceneItem(input)) {
 			// success
 		}
-		auto audioOutputItem = std::vector<
-			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+		auto audioOutputItem =
+			std::vector<accrecorder::source::AudioSceneItem *>();
 		manager.ListAudioItems(audioOutputItem, false);
-		auto output = audioOutputItem[2].get();
+		auto output = audioOutputItem[2];
 		if (manager.AttachSceneItem(output)) {
 			// success
 		}
@@ -10389,5 +10389,4 @@ void OBSBasic::AddTests() {
 		//test remove scene item
 		//manager.Remove(ipCameraItem.get());
 	}
-	
 }
