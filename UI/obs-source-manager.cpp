@@ -537,6 +537,27 @@ void OBSSourceManager::ListAudioItems(
 	obs_properties_destroy(props);
 }
 
+source::SceneItem *OBSSourceManager::GetSceneItemByName(std::string &name)
+{
+	if (!IsMainSceneCreated())
+		return nullptr;
+	for (const auto &item : main_scene_->items_) {
+		if (item->Name() == name) {
+			return item;
+		}
+	}
+	return nullptr;
+}
+
+bool OBSSourceManager::RemoveSceneItemByName(std::string &name)
+{
+	auto item = GetSceneItemByName(name);
+	if (item == nullptr)
+		return false;
+
+	return Remove(item);
+}
+
 bool OBSSourceManager::Remove(source::SceneItem *item)
 {
 	if (item == nullptr)

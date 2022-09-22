@@ -35,7 +35,10 @@ public:
 	void ListAudioItems(std::vector<source::AudioSceneItem *> &items,
 			    bool input = true);
 
+	// find the scene item by the given name
+	source::SceneItem *GetSceneItemByName(std::string &name);
 	// remove scene item
+	bool RemoveSceneItemByName(std::string &name);
 	bool Remove(source::SceneItem *item);
 
 	// start virtual camera
