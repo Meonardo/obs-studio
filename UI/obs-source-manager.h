@@ -22,18 +22,21 @@ public:
 	bool ApplySceneItemSettingsUpdate(source::SceneItem *item);
 
 	// list all the screens
-	void ListScreenItems(std::vector<source::ScreenSceneItem *> &items);
+	void ListScreenItems(
+		std::vector<std::shared_ptr<source::ScreenSceneItem>> &items);
 
 	// create a IPCamera scene item
 	source::IPCameraSceneItem *CreateIPCameraItem(std::string &name,
 						      std::string &url);
 
 	// list all usb cameras
-	void ListCameraItems(std::vector<source::CameraSceneItem *> &items);
+	void ListCameraItems(
+		std::vector<std::shared_ptr<source::CameraSceneItem>> &items);
 
 	// list all AudioInputDevices & AudioOutputDevices
-	void ListAudioItems(std::vector<source::AudioSceneItem *> &items,
-			    bool input = true);
+	void ListAudioItems(
+		std::vector<std::shared_ptr<source::AudioSceneItem>> &items,
+		bool input = true);
 
 	// find the scene item by the given name
 	source::SceneItem *GetSceneItemByName(std::string &name);

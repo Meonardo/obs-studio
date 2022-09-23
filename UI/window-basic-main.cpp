@@ -10489,10 +10489,13 @@ void OBSBasic::AddTests()
 
 	if (!manager.IsMainSceneCreated()) {
 		// screen items
-		auto items =
-			std::vector<accrecorder::source::ScreenSceneItem *>();
+		auto items = std::vector<
+			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
 		manager.ListScreenItems(items);
-		auto screen = items.back();
+		// copy the item & create new one to the heap
+		auto screen = new accrecorder::source::ScreenSceneItem(
+			*items.back().get());
+
 		if (manager.AttachSceneItem(screen)) {
 			//manager.ApplySceneItemPropertiesUpdate(screen);
 			screen->UpdateScale({0.5, 0.5});
@@ -10513,10 +10516,13 @@ void OBSBasic::AddTests()
 		}
 
 		// usb camera items
-		auto cameraItems =
-			std::vector<accrecorder::source::CameraSceneItem *>();
+		auto cameraItems = std::vector<
+			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
 		manager.ListCameraItems(cameraItems);
-		auto camera = cameraItems.front();
+
+		// copy camera item
+		auto camera = new accrecorder::source::CameraSceneItem(
+			*cameraItems.front().get());
 		if (manager.AttachSceneItem(camera)) {
 			camera->UpdateScale({0.5, 0.5});
 			camera->UpdatePosition({0, 300});
@@ -10534,17 +10540,24 @@ void OBSBasic::AddTests()
 		}
 
 		// audio input & output item
-		auto audioInputItem =
-			std::vector<accrecorder::source::AudioSceneItem *>();
+		auto audioInputItem = std::vector<
+			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
 		manager.ListAudioItems(audioInputItem);
-		auto input = audioInputItem[1];
+		// copy
+		auto input = new accrecorder::source::AudioInputItem(
+			*reinterpret_cast<accrecorder::source::AudioInputItem *>(
+				audioInputItem[1].get()));
 		if (manager.AttachSceneItem(input)) {
 			// success
 		}
-		auto audioOutputItem =
-			std::vector<accrecorder::source::AudioSceneItem *>();
+
+		auto audioOutputItem = std::vector<
+			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
 		manager.ListAudioItems(audioOutputItem, false);
-		auto output = audioOutputItem[2];
+		// copy
+		auto output = new accrecorder::source::AudioOutputItem(
+			*reinterpret_cast<accrecorder::source::AudioOutputItem *>(
+				audioOutputItem[1].get()));
 		if (manager.AttachSceneItem(output)) {
 			// success
 		}
