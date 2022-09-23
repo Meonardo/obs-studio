@@ -1,23 +1,142 @@
 ﻿#include "add-scene-panel.hpp"
 #include <qbuttongroup.h>
 
-ComboBox::ComboBox(QWidget *parent) : QComboBox(parent)
+ComboBoxView::ComboBoxView(QWidget *parent) : QFrame(parent)
 {
-	this->setMaxVisibleItems(6);
-	this->setStyleSheet(
-		QString("QComboBox{background-color: rgba(240,240,240); border-radius: 4; color: rgb(68,68,68); %1}"
-			"QComboBox::drop-down{width:57 px; border: none;}"
-			"QComboBox::down-arrow {width: %2px; height: %3px; image: url(':/res/images/newUi/arrow@2x.png');}"
-			"QComboBox::down-arrow:on {image: url(':/res/images/newUi/arrow_on@2x.png');}"
-			"QComboBox QAbstractItemView { outline: 1px solid rgba(238,238,238); background-color: white; border: 1px solid rgba(238,238,238); border-radius: 8px;}"
-			"QComboBox QAbstractItemView::item {background-color: white; height: %4px; %1 color: rgb(68,68,68);}"
-			"QComboBox QAbstractItemView::item:hover {color: #FFFFFF;background-color: #554433;}")
-			.arg(getFontStyle(18))
-			.arg(15 * getScale())
-			.arg(10 * getScale())
-			.arg(60 * getScale()));
-	ItemDelegate *delegate = new ItemDelegate(this);
-	this->setItemDelegate(delegate);
+	this->setWindowFlags(Qt::FramelessWindowHint |
+			     Qt::WindowStaysOnTopHint | Qt::Popup |
+			     Qt::NoDropShadowWindowHint);
+	this->setAttribute(Qt::WA_TranslucentBackground, true);
+	this->setShadow(4 * getScale());
+	this->hide();
+}
+
+void ComboBoxView::paintEvent(QPaintEvent *event) 
+{
+	QPainter painter(this);
+	painter.setRenderHint(QPainter::Antialiasing);
+	QColor color(135, 135, 135);
+	QPen pen;
+	pen.setStyle(Qt::SolidLine);
+	pen.setCapStyle(Qt::RoundCap);
+	pen.setJoinStyle(Qt::RoundJoin);
+	int j = 1;
+	for (int i = 0; i < shadowBorder; i++) {
+		QRect rect = QRect(QPoint(shadowBorder - i, shadowBorder - i),
+				   QPoint(this->width() - (shadowBorder - i),
+					  this->height() - (shadowBorder - i)));
+		QPainterPath path;
+		int radius = 4 * getScale();
+		path = getRoundRectPath(rect, radius, radius, radius, radius);
+		path.setFillRule(Qt::WindingFill);
+
+		if (6 == i) {
+			switch (i) {
+			case 0:
+				color.setAlpha(50);
+				break;
+			case 1:
+				color.setAlpha(25);
+				break;
+			case 2:
+				color.setAlpha(17);
+				break;
+			case 3:
+				color.setAlpha(13);
+				break;
+			case 4:
+				color.setAlpha(8);
+				break;
+			case 5:
+				color.setAlpha(3);
+				break;
+			default:
+				break;
+			}
+		} else {
+			j = 1 + i / 10 * 5;
+			if (0 == i) {
+				painter.fillPath(path, Qt::white);
+			}
+			color.setAlpha(50 / ((i + 1) * j));
+		}
+
+		pen.setColor(color);
+		painter.setPen(pen);
+		painter.drawPath(path);
+	}
+}
+
+bool ComboBoxView::event(QEvent *e)
+{
+	if (e->type() == QEvent::HideToParent) {
+		emit viewHide();
+	}
+	return QFrame::event(e);
+}
+
+ComboBox::ComboBox(QWidget *parent) : QFrame(parent)
+{
+	this->setStyleSheet(QString("QFrame{background-color: rgb(240,240,240); border-radius: %1px;}").arg(4 * getScale()));
+	this->initUi();
+	this->setText(QString::fromLocal8Bit("板书1"));
+}
+
+bool ComboBox::event(QEvent *e)
+{
+	if (e->type() == QEvent::MouseButtonRelease) {
+		QMouseEvent *mouseevent = static_cast<QMouseEvent *>(e);
+		if (mouseevent->button() == Qt::LeftButton) {
+			checked = !checked;
+			if (checked) {
+				if (label_icon != nullptr)
+					label_icon->setPixmap(QPixmap(
+						":/res/images/newUi/arrow_on@2x.png"));
+				if (view != nullptr) {
+					view->move(mapToGlobal(QPoint(
+						((QWidget *)parent())->x() -
+							view->shadow(),
+						((QWidget *)parent())->y() +
+							this->height())));
+					view->show();
+				}
+			} else {
+				if (label_icon != nullptr)
+					label_icon->setPixmap(QPixmap(
+						":/res/images/newUi/arrow@2x.png"));
+				if (view != nullptr)
+					view->hide();
+			}
+		}
+	}
+
+	return QFrame::event(e);
+}
+
+void ComboBox::initUi()
+{
+	QHBoxLayout *hlayout = new QHBoxLayout(this);
+	hlayout->setSpacing(0);
+	hlayout->setContentsMargins(21 * getScale(), 0, 21 * getScale(), 0);
+	label_text = new QLabel(this);
+	label_text->setStyleSheet(QString("QLabel{color: rgb(68,68,68); %1}")
+					  .arg(getFontStyle(18)));
+	label_icon = new QLabel(this);
+	label_icon->setFixedSize(15 * getScale(), 10 * getScale());
+	label_icon->setPixmap(QPixmap(":/res/images/newUi/arrow@2x.png"));
+	hlayout->addWidget(label_text, 1, Qt::AlignVCenter);
+	hlayout->addWidget(label_icon, 0, Qt::AlignVCenter);
+
+	view = new ComboBoxView(this);
+	view->setFixedSize(410 * getScale(), 166 * getScale());
+	connect(view, &ComboBoxView::viewHide, this, [=](){
+		if (this->checked) {
+			checked = false;
+			if (label_icon != nullptr)
+				label_icon->setPixmap(QPixmap(
+					":/res/images/newUi/arrow@2x.png"));
+		}
+	});
 }
 
 void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
@@ -62,15 +181,15 @@ void SceneSettingsWidget::initUi()
 	label->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 				     .arg(getFontStyle(18)));
 
-	combobox_scenes->addItem(QString::fromLocal8Bit("老师特写"));
-	combobox_scenes->addItem(QString::fromLocal8Bit("学生镜头"));
-	combobox_scenes->addItem(QString::fromLocal8Bit("板书"));
-	combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
-	combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
-	combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
-	combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
-	combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
-	combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
+	//combobox_scenes->addItem(QString::fromLocal8Bit("老师特写"));
+	//combobox_scenes->addItem(QString::fromLocal8Bit("学生镜头"));
+	//combobox_scenes->addItem(QString::fromLocal8Bit("板书"));
+	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
+	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
+	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
+	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
+	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
+	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
 
 	QHBoxLayout *hlayout = new QHBoxLayout;
 	hlayout->setContentsMargins(0, 0, 0, 0);
@@ -471,24 +590,7 @@ void AddScenesPanel::initUi()
 			.arg(6 * getScale())
 			.arg(getFontStyle(16)));
 	pBtnCancel->setCheckable(true);
-	//TestWidget *frame = new TestWidget(this);
-	//frame->setFixedSize(50, 50);
-	//frame->move(0, 0);
-	//frame->hide();
-	//connect(frame, &TestWidget::SignalWidgetHide, this, [=]() {
-	//	pBtnCancel->setChecked(false);
-	//});
 	connect(pBtnCancel, &QPushButton::clicked, this, [=](bool checked) {
-		//if (checked) {
-		//	qDebug() << "-------" << this->x() << this->y()
-		//		 << this->mapToGlobal(
-		//			    QPoint(this->x(), this->y()));
-		//	frame->move(this->mapToGlobal(
-		//		QPoint(((QWidget *)this->parent())->x(),
-		//		       ((QWidget *)this->parent())->y())));
-		//	frame->show();
-		//}else
-		//	frame->hide();
 		this->close();
 		this->deleteLater();
 	});

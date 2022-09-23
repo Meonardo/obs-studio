@@ -10339,7 +10339,7 @@ void OBSBasic::createUi()
 	this->setFixedHeight(768 * getScale());
 	//this->setFixedSize(1280, 800);
 
-	this->setAttribute(Qt::WA_TranslucentBackground, true);
+	//this->setAttribute(Qt::WA_TranslucentBackground, true);
 	this->setWindowFlags(Qt::FramelessWindowHint);
 	
 

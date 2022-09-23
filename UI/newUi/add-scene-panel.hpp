@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <QWidget>
 #include <qlabel.h>
@@ -13,59 +13,57 @@
 #include <qcombobox.h>
 #include <qlineedit.h>
 #include <qitemdelegate.h>
-#include <qabstractitemview.h>
 #include <qscrollbar.h>
 #include <qframe.h>
-//#include <qkeyeventtransition.h>
+#include <qpainterpath.h>
 #include "font.hpp"
 
-class TestWidget : public QWidget
+/*  Custom Combobox View */
+class ComboBoxView : public QFrame
 {
 	Q_OBJECT
 public:
-	TestWidget(QWidget *parent = nullptr) : QWidget(parent) {
-		this->setWindowFlags(Qt::FramelessWindowHint | Qt::Popup);
-		//this->setAttribute(Qt::WA_NoMouseReplay);
-	}
+	ComboBoxView(QWidget *parent = nullptr);
+	void setRadius(int r) { this->radius = r; }
+	void setShadow(int border) { shadowBorder = border; }
+	inline int shadow() { return shadowBorder; }
+	void setFixedSize(const QSize &size) { this->setFixedSize(size.width(), size.height()); }
+	void setFixedSize(int w, int h) { QFrame::setFixedSize(this->shadowBorder * 2 + w, this->shadowBorder * 2 + h); }
 
 protected:
-	void paintEvent(QPaintEvent *event) {
-		QPainter painter(this);
-		painter.fillRect(this->rect(), QBrush(QColor(255, 0, 0)));
-	}
-	bool event(QEvent *e) override
-	{
-		if (e->type() == QEvent::HideToParent) {
-			emit SignalWidgetHide();
-		}
-		//if (QEvent::Show == e->type()) {
-		//	activateWindow();
-		//} else if (QEvent::WindowDeactivate == e->type()) {
-		//	//this->close();
-		//}
-		return QWidget::event(e);
-	}
-
+	void paintEvent(QPaintEvent *event) override;
+	bool event(QEvent *e) override;
+private:
+	int shadowBorder = 0;
+	int radius = 0;
 signals:
-	void SignalWidgetHide();
+	void viewHide();
 };
 
-class ComboBox : public QPushButton
-{
+/*  Custom Combobox  */
+class ComboBox : public QFrame {
 	Q_OBJECT
 public:
-	explicit ComboBox(const QString text = QString(), QWidget *parent = nullptr)
-		: QPushButton(parent)
-	{
-		this->setChecked(true);
+	explicit ComboBox(QWidget *parent = nullptr);
+
+	void setText(const QString &text) {
+		if (label_text != nullptr)
+			label_text->setText(text);
 	}
+
+	bool isChecked() { return checked; }
 
 protected:
-	void paintEvent(QPaintEvent *event) {
-	
-	}
+	bool event(QEvent *e) override;
 
+private:
+	void initUi();
 
+private:
+	bool checked = false;
+	QLabel *label_text = nullptr;
+	QLabel *label_icon = nullptr;
+	ComboBoxView *view = nullptr;
 };
 
 class ItemDelegate : public QAbstractItemDelegate
@@ -84,12 +82,12 @@ public:
 		   const QModelIndex &index) const;
 };
 
-class ComboBox : public QComboBox
-{
-	Q_OBJECT
-public:
-	explicit ComboBox(QWidget *parent = nullptr);
-};
+//class ComboBox : public QComboBox
+//{
+//	Q_OBJECT
+//public:
+//	explicit ComboBox(QWidget *parent = nullptr);
+//};
 
 class SceneSettingsWidget : public QWidget
 {
@@ -118,12 +116,12 @@ public:
 	}
 
 private:
-	QComboBox *combobox_cameraName = nullptr;
+	ComboBox *combobox_cameraName = nullptr;
 	QLineEdit *lineedit_rtsp = nullptr;
-	QComboBox *combobox_rate = nullptr;
-	QComboBox *combobox_fps = nullptr;
-	QComboBox *combobox_encode = nullptr;
-	QComboBox *combobox_resolution = nullptr;
+	ComboBox *combobox_rate = nullptr;
+	ComboBox *combobox_fps = nullptr;
+	ComboBox *combobox_encode = nullptr;
+	ComboBox *combobox_resolution = nullptr;
 
 	void initUi();
 };
@@ -137,11 +135,11 @@ public:
 	}
 
 private:
-	QComboBox *combobox_cameraName = nullptr;
-	QComboBox *combobox_rate = nullptr;
-	QComboBox *combobox_fps = nullptr;
-	QComboBox *combobox_encode = nullptr;
-	QComboBox *combobox_resolution = nullptr;
+	ComboBox *combobox_cameraName = nullptr;
+	ComboBox *combobox_rate = nullptr;
+	ComboBox *combobox_fps = nullptr;
+	ComboBox *combobox_encode = nullptr;
+	ComboBox *combobox_resolution = nullptr;
 
 	void initUi();
 };
