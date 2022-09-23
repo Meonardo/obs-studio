@@ -175,8 +175,8 @@ void OBSSourceManager::LoadSceneItemFromScene(std::string &sceneName)
 	obs_scene_enum_items(obs_scene_from_source(scene), cb,
 			     &main_scene_->items_);
 
-	// for now tmp enum all the cameras & filter the target camera then restore the st
-	std::vector<source::CameraSceneItem *> cameras;
+	// for now tmp enum all the cameras & filter the target camera then restore the settings.
+	std::vector<std::shared_ptr<source::CameraSceneItem>> cameras;
 	ListCameraItems(cameras);
 	for (auto &item : main_scene_->items_) {
 		if (item->type() == source::SceneItem::Type::kCamera) {
@@ -193,6 +193,9 @@ void OBSSourceManager::LoadSceneItemFromScene(std::string &sceneName)
 			}
 		}
 	}
+
+	// clean all the cameras that tmp created.
+	cameras.clear();
 
 	blog(LOG_INFO, "done with enum all the scene item in the scene");
 }
@@ -351,7 +354,7 @@ bool OBSSourceManager::ApplySceneItemSettingsUpdate(source::SceneItem *item)
 }
 
 void OBSSourceManager::ListScreenItems(
-	std::vector<source::ScreenSceneItem *> &items)
+	std::vector<std::shared_ptr<source::ScreenSceneItem>> &items)
 {
 	const char *tmpName = "tmp";
 	const char *prop_name = "monitor";
@@ -375,7 +378,8 @@ void OBSSourceManager::ListScreenItems(
 		const char *name = obs_property_list_item_name(p, i);
 		int id = (int)obs_property_list_item_int(p, i);
 		blog(LOG_ERROR, "enum monitor: %s, id=%d", name, id);
-		auto item = new source::ScreenSceneItem(std::string(name));
+		auto item = std::make_shared<source::ScreenSceneItem>(
+			std::string(name));
 		item->index = id;
 		items.push_back(item);
 	}
@@ -391,7 +395,7 @@ OBSSourceManager::CreateIPCameraItem(std::string &name, std::string &url)
 }
 
 void OBSSourceManager::ListCameraItems(
-	std::vector<source::CameraSceneItem *> &items)
+	std::vector<std::shared_ptr<source::CameraSceneItem>> &items)
 {
 	const char *tmpName = "tmpUSBCam";
 	const char *kind = "dshow_input";
@@ -417,7 +421,8 @@ void OBSSourceManager::ListCameraItems(
 		const char *id = obs_property_list_item_string(p, i);
 		blog(LOG_ERROR, "enum device id: %s, id=%s", name, id);
 
-		auto item = new source::CameraSceneItem(std::string(name));
+		auto item = std::make_shared<source::CameraSceneItem>(
+			std::string(name));
 		item->device_id_ = std::string(id);
 
 		// make a fake selection in order to get resolution properties
@@ -486,7 +491,7 @@ void OBSSourceManager::ListCameraItems(
 }
 
 void OBSSourceManager::ListAudioItems(
-	std::vector<source::AudioSceneItem *> &items, bool input)
+	std::vector<std::shared_ptr<source::AudioSceneItem>> &items, bool input)
 {
 	const char *tmpName = "tmpAudio";
 	const char *prop_name = "device_id";
@@ -521,13 +526,13 @@ void OBSSourceManager::ListAudioItems(
 		if (s_name == "default")
 			continue;
 		if (input) {
-			auto item =
-				new source::AudioInputItem(std::string(name));
+			auto item = std::make_shared<source::AudioInputItem>(
+				std::string(name));
 			item->device_id_ = id;
 			items.push_back(item);
 		} else {
-			auto item =
-				new source::AudioOutputItem(std::string(name));
+			auto item = std::make_shared<source::AudioOutputItem>(
+				std::string(name));
 			item->device_id_ = id;
 			items.push_back(item);
 		}
