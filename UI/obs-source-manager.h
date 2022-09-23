@@ -1,12 +1,15 @@
 #pragma once
 
 #include "obs-sources.h"
+#include <obs-frontend-internal.hpp>
 
 namespace accrecorder::manager {
 class OBSSourceManager {
 public:
 	OBSSourceManager();
 	~OBSSourceManager();
+
+	void AddEventsSender(obs_frontend_callbacks *api);
 
 	// check if the main is created
 	bool IsMainSceneCreated() const;
@@ -74,6 +77,7 @@ private:
 	static bool VirtualCamAvailable();
 
 	source::Scene *main_scene_;
+	obs_frontend_callbacks *api_;
 };
 
 } //namespace accrecorder::manager

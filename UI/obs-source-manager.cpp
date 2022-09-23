@@ -3,6 +3,9 @@
 #include <chrono>
 #include <thread>
 
+//#include "obs.h"
+//#include "obs-internal.h"
+
 static void SplitString(std::string &source, std::string &&token,
 			std::vector<std::string> &result)
 {
@@ -16,7 +19,7 @@ static void SplitString(std::string &source, std::string &&token,
 }
 
 namespace accrecorder::manager {
-OBSSourceManager::OBSSourceManager() : main_scene_(nullptr)
+OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
 {
 	std::string sceneName(kMainScene);
 	obs_source_t *scene = ValidateScene(sceneName);
@@ -50,6 +53,10 @@ OBSSourceManager::~OBSSourceManager()
 		delete main_scene_;
 		main_scene_ = nullptr;
 	}
+}
+
+void OBSSourceManager::AddEventsSender(obs_frontend_callbacks* api) {
+	api_ = api;
 }
 
 bool OBSSourceManager::IsMainSceneCreated() const
@@ -715,6 +722,11 @@ bool OBSSourceManager::SetStreamAddress(std::string &addr,
 
 	// save the server
 	obs_frontend_save_streaming_service();
+
+	// send callback to listeners
+	if (api_ != nullptr) {
+		api_->on_event(OBS_FRONTEND_EVENT_STREAMING_SERVICE_ADDED);
+	}
 
 	return true;
 }

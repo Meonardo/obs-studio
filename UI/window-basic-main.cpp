@@ -10323,6 +10323,8 @@ void OBSBasic::AddTests()
 {
 	// OBSSourceManager tests
 	accrecorder::manager::OBSSourceManager manager;
+	// add events sender
+	manager.AddEventsSender(api);
 
 	if (!manager.IsMainSceneCreated()) {
 		// screen items
@@ -10399,6 +10401,10 @@ void OBSBasic::AddTests()
 			// success
 		}
 
+		std::string address("rtmp://192.168.99.115:1395");
+		std::string username("");
+		std::string passwd("");
+		manager.SetStreamAddress(address, username, passwd);
 		//test remove scene item
 		//manager.Remove(ipCameraItem.get());
 	}
