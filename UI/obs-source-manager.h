@@ -41,6 +41,9 @@ public:
 		std::vector<std::shared_ptr<source::AudioSceneItem>> &items,
 		bool input = true);
 
+	// mix sounds with other input/output item to virtual microphone(VB Cabel)
+	bool AddAudioMixFilter(source::AudioSceneItem *item);
+
 	// find the scene item by the given name
 	source::SceneItem *GetSceneItemByName(std::string &name);
 	// remove scene item
@@ -63,6 +66,7 @@ private:
 	void LoadSceneItemFromScene(std::string &sceneName);
 	void RemoveScene(std::string &name);
 	obs_scene_t *CreateScene(std::string &name);
+	//void RemoveFilterByName(obs_source_t *source, const char* name);
 
 	template<typename T>
 	static void GetSettingValueWithName(obs_data_t *d,

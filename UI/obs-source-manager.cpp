@@ -2,9 +2,7 @@
 
 #include <chrono>
 #include <thread>
-
-//#include "obs.h"
-//#include "obs-internal.h"
+#include <random>
 
 static void SplitString(std::string &source, std::string &&token,
 			std::vector<std::string> &result)
@@ -16,6 +14,26 @@ static void SplitString(std::string &source, std::string &&token,
 		start = end + token.length();
 		end = source.find(token, start);
 	}
+}
+
+static std::string GetUUID()
+{
+	static std::random_device dev;
+	static std::mt19937 rng(dev());
+
+	std::uniform_int_distribution<int> dist(0, 15);
+
+	const char *v = "0123456789abcdef";
+	const bool dash[] = {0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0};
+
+	std::string res;
+	for (int i = 0; i < 16; i++) {
+		if (dash[i])
+			res += "-";
+		res += v[dist(rng)];
+		res += v[dist(rng)];
+	}
+	return res;
 }
 
 namespace accrecorder::manager {
@@ -55,7 +73,8 @@ OBSSourceManager::~OBSSourceManager()
 	}
 }
 
-void OBSSourceManager::AddEventsSender(obs_frontend_callbacks* api) {
+void OBSSourceManager::AddEventsSender(obs_frontend_callbacks *api)
+{
 	api_ = api;
 }
 
@@ -363,7 +382,8 @@ bool OBSSourceManager::ApplySceneItemSettingsUpdate(source::SceneItem *item)
 void OBSSourceManager::ListScreenItems(
 	std::vector<std::shared_ptr<source::ScreenSceneItem>> &items)
 {
-	const char *tmpName = "tmp";
+	std::string uuid = GetUUID();
+	const char *tmpName = uuid.c_str();
 	const char *prop_name = "monitor";
 	const char *kind = "monitor_capture";
 	OBSSourceAutoRelease source = obs_get_source_by_name(tmpName);
@@ -404,7 +424,9 @@ OBSSourceManager::CreateIPCameraItem(std::string &name, std::string &url)
 void OBSSourceManager::ListCameraItems(
 	std::vector<std::shared_ptr<source::CameraSceneItem>> &items)
 {
-	const char *tmpName = "tmpUSBCam";
+	std::string uuid = GetUUID();
+	const char *tmpName = uuid.c_str();
+
 	const char *kind = "dshow_input";
 	const char *prop_name = "video_device_id";
 	const char *resolution_p_name = "resolution";
@@ -500,10 +522,12 @@ void OBSSourceManager::ListCameraItems(
 void OBSSourceManager::ListAudioItems(
 	std::vector<std::shared_ptr<source::AudioSceneItem>> &items, bool input)
 {
-	const char *tmpName = "tmpAudio";
+	std::string uuid = GetUUID();
+	const char *tmpName = uuid.c_str();
+
 	const char *prop_name = "device_id";
 	char *kind = "wasapi_input_capture";
-	if (input) {
+	if (!input) {
 		kind = "wasapi_output_capture";
 	}
 
@@ -581,6 +605,66 @@ bool OBSSourceManager::Remove(source::SceneItem *item)
 
 	// detach from Scene
 	return main_scene_->Detach(item);
+}
+
+bool OBSSourceManager::AddAudioMixFilter(source::AudioSceneItem *item)
+{
+	if (item == nullptr) {
+		blog(LOG_ERROR, "target item can not be null!");
+		return false;
+	}
+	OBSSourceAutoRelease input = ValidateInput(item->Name());
+	if (input == nullptr) {
+		blog(LOG_ERROR, "invalid input!");
+		return false;
+	}
+
+	std::vector<std::shared_ptr<source::AudioSceneItem>> outputItems;
+	ListAudioItems(outputItems, false);
+	if (outputItems.empty()) {
+		blog(LOG_ERROR, "can not find mix device!");
+		return false;
+	}
+
+	const char *filterName = "Audio Monitor";
+	const char *filterKind = "audio_monitor";
+	OBSSourceAutoRelease existingFilter =
+		obs_source_get_filter_by_name(input, filterName);
+	if (existingFilter != nullptr) {
+		// remove it first
+		blog(LOG_INFO, "filter exists, remove it first!");
+		obs_source_filter_remove(input, existingFilter);
+	}
+
+	std::string mixDeviceId;
+	for (const auto &item : outputItems) {
+		if (item->Name() == "CABLE Input (VB-Audio Virtual Cable)") {
+			mixDeviceId = item->device_id_;
+			break;
+		}
+	}
+
+	// clear the enum list
+	outputItems.clear();
+
+	if (mixDeviceId.empty()) {
+		blog(LOG_ERROR, "can not find mix device!");
+		return false;
+	}
+
+	obs_data_t *filterSettings = obs_data_create();
+	obs_data_set_string(filterSettings, "device", mixDeviceId.c_str());
+	obs_source_t *filter = obs_source_create_private(filterKind, filterName,
+							 filterSettings);
+
+	if (!filter) {
+		blog(LOG_ERROR, "can not create the filter!");
+		return false;
+	}
+
+	obs_source_filter_add(input, filter);
+
+	return true;
 }
 
 template<typename T>

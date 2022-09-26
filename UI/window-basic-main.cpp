@@ -10388,6 +10388,7 @@ void OBSBasic::AddTests()
 				audioInputItem[1].get()));
 		if (manager.AttachSceneItem(input)) {
 			// success
+			manager.AddAudioMixFilter(input);
 		}
 
 		auto audioOutputItem = std::vector<
@@ -10399,6 +10400,7 @@ void OBSBasic::AddTests()
 				audioOutputItem[1].get()));
 		if (manager.AttachSceneItem(output)) {
 			// success
+			manager.AddAudioMixFilter(output);
 		}
 
 		std::string address("rtmp://192.168.99.115:1395");
