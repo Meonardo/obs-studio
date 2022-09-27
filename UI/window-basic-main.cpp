@@ -1909,13 +1909,13 @@ void OBSBasic::OBSInit(bool forceHide)
 
 	/* Show the main window, unless the tray icon isn't available
 	 * or neither the setting nor flag for starting minimized is set. */
-	/*bool sysTrayEnabled = config_get_bool(App()->GlobalConfig(),
+	bool sysTrayEnabled = config_get_bool(App()->GlobalConfig(),
 					      "BasicWindow", "sysTrayEnabled");
 	bool sysTrayWhenStarted = config_get_bool(
 		App()->GlobalConfig(), "BasicWindow", "SysTrayWhenStarted");
 	bool hideWindowOnStart = QSystemTrayIcon::isSystemTrayAvailable() &&
 				 sysTrayEnabled &&
-				 (opt_minimize_tray || sysTrayWhenStarted);*/
+				 (opt_minimize_tray || sysTrayWhenStarted);
 
 #ifdef _WIN32
 	SetWin32DropStyle(this);
@@ -2134,12 +2134,12 @@ void OBSBasic::OnFirstLoad()
 #ifdef WHATSNEW_ENABLED
 	/* Attempt to load init screen if available */
 	if (cef) {
-		WhatsNewInfoThread *wnit = new WhatsNewInfoThread();
+		/*WhatsNewInfoThread *wnit = new WhatsNewInfoThread();
 		connect(wnit, &WhatsNewInfoThread::Result, this,
 			&OBSBasic::ReceivedIntroJson, Qt::QueuedConnection);
 
 		introCheckThread.reset(wnit);
-		introCheckThread->start();
+		introCheckThread->start();*/
 	}
 #endif
 
