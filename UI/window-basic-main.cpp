@@ -6235,7 +6235,7 @@ void OBSBasic::on_actionUploadLastCrashLog_triggered()
 
 void OBSBasic::on_actionCheckForUpdates_triggered()
 {
-	CheckForUpdates(true);
+	//CheckForUpdates(true);
 }
 
 void OBSBasic::on_actionRepair_triggered()
