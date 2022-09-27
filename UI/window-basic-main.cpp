@@ -7816,7 +7816,7 @@ QModelIndexList OBSBasic::GetAllSelectedSourceItems()
 
 void OBSBasic::on_preview_customContextMenuRequested(const QPoint &pos)
 {
-	CreateSourcePopupMenu(GetTopSelectedSourceItem(), true);
+	//CreateSourcePopupMenu(GetTopSelectedSourceItem(), true);
 
 	UNUSED_PARAMETER(pos);
 }
