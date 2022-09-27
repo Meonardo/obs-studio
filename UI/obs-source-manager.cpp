@@ -317,6 +317,12 @@ bool OBSSourceManager::AttachSceneItem(source::SceneItem *item)
 	}
 
 	main_scene_->Attach(item);
+
+	if (dynamic_cast<source::AudioSceneItem *>(item)) {
+		auto audioItem = dynamic_cast<source::AudioSceneItem *>(item);
+		AddAudioMixFilter(audioItem);
+	}
+
 	return true;
 }
 
