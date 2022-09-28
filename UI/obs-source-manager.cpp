@@ -867,6 +867,19 @@ bool OBSSourceManager::SetStreamAddress(std::string &addr,
 	return true;
 }
 
+void OBSSourceManager::GetSteamAddress(std::string &address,
+				     std::string &username,
+		     std::string &passwd)
+{
+	OBSService currentStreamService = obs_frontend_get_streaming_service();
+	OBSDataAutoRelease currentStreamServiceSettings =
+		obs_service_get_settings(currentStreamService);
+
+  address = obs_data_get_string(currentStreamServiceSettings , "server");
+	username = obs_data_get_string(currentStreamServiceSettings, "username");
+  passwd = obs_data_get_string(currentStreamServiceSettings, "password");
+}
+
 bool OBSSourceManager::StartStreaming()
 {
 	if (obs_frontend_streaming_active()) {

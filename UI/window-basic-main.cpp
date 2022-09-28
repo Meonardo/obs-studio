@@ -10413,4 +10413,10 @@ void OBSBasic::AddTests()
 		//test remove scene item
 		//manager.Remove(ipCameraItem.get());
 	}
+
+	// get stream service info
+	std::string address;
+	std::string username;
+	std::string passwd;
+	manager.GetSteamAddress(address, username, passwd);
 }

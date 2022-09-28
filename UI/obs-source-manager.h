@@ -56,6 +56,8 @@ public:
 	// set stream address, like: rtmp://192.168.99.135
 	bool SetStreamAddress(std::string &addr, std::string &username,
 			      std::string &passwd);
+	void GetSteamAddress(std::string &address, std::string &username,
+			     std::string &passwd);
 	// start streaming
 	bool StartStreaming();
 	// stop streaming
