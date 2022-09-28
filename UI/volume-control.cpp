@@ -736,12 +736,15 @@ VolumeMeter::VolumeMeter(QWidget *parent, obs_volmeter_t *obs_volmeter,
 
 	// Default meter settings, they only show if
 	// there is no stylesheet, do not remove.
-	backgroundNominalColor.setRgb(0x26, 0x7f, 0x26); // Dark green
+	backgroundNominalColor.setRgb(0x25, 0xbe, 0x9a); // Dark green
 	backgroundWarningColor.setRgb(0x7f, 0x7f, 0x26); // Dark yellow
 	backgroundErrorColor.setRgb(0x7f, 0x26, 0x26);   // Dark red
-	foregroundNominalColor.setRgb(0x4c, 0xff, 0x4c); // Bright green
+	foregroundNominalColor.setRgb(0x25, 0xbe, 0x9a); // Bright green
 	foregroundWarningColor.setRgb(0xff, 0xff, 0x4c); // Bright yellow
 	foregroundErrorColor.setRgb(0xff, 0x4c, 0x4c);   // Bright red
+
+	setBackgroundNominalColor(backgroundNominalColor);
+	setForegroundNominalColor(foregroundNominalColor);
 
 	backgroundNominalColorDisabled.setRgb(90, 90, 90);
 	backgroundWarningColorDisabled.setRgb(117, 117, 117);

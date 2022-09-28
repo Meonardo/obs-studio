@@ -1923,13 +1923,13 @@ void OBSBasic::OBSInit(bool forceHide)
 
 	/* Show the main window, unless the tray icon isn't available
 	 * or neither the setting nor flag for starting minimized is set. */
-	/*bool sysTrayEnabled = config_get_bool(App()->GlobalConfig(),
+	bool sysTrayEnabled = config_get_bool(App()->GlobalConfig(),
 					      "BasicWindow", "sysTrayEnabled");
 	bool sysTrayWhenStarted = config_get_bool(
 		App()->GlobalConfig(), "BasicWindow", "SysTrayWhenStarted");
 	bool hideWindowOnStart = QSystemTrayIcon::isSystemTrayAvailable() &&
 				 sysTrayEnabled &&
-				 (opt_minimize_tray || sysTrayWhenStarted);*/
+				 (opt_minimize_tray || sysTrayWhenStarted);
 
 #ifdef _WIN32
 	SetWin32DropStyle(this);
@@ -2148,12 +2148,12 @@ void OBSBasic::OnFirstLoad()
 #ifdef WHATSNEW_ENABLED
 	/* Attempt to load init screen if available */
 	if (cef) {
-		WhatsNewInfoThread *wnit = new WhatsNewInfoThread();
+		/*WhatsNewInfoThread *wnit = new WhatsNewInfoThread();
 		connect(wnit, &WhatsNewInfoThread::Result, this,
 			&OBSBasic::ReceivedIntroJson, Qt::QueuedConnection);
 
 		introCheckThread.reset(wnit);
-		introCheckThread->start();
+		introCheckThread->start();*/
 	}
 #endif
 
@@ -6249,7 +6249,7 @@ void OBSBasic::on_actionUploadLastCrashLog_triggered()
 
 void OBSBasic::on_actionCheckForUpdates_triggered()
 {
-	CheckForUpdates(true);
+	//CheckForUpdates(true);
 }
 
 void OBSBasic::on_actionRepair_triggered()
@@ -7830,7 +7830,7 @@ QModelIndexList OBSBasic::GetAllSelectedSourceItems()
 
 void OBSBasic::on_preview_customContextMenuRequested(const QPoint &pos)
 {
-	CreateSourcePopupMenu(GetTopSelectedSourceItem(), true);
+	//CreateSourcePopupMenu(GetTopSelectedSourceItem(), true);
 
 	UNUSED_PARAMETER(pos);
 }
@@ -10507,8 +10507,12 @@ bool OBSBasic::eventFilter(QObject *obj, QEvent *event)
 
 void OBSBasic::AddTests()
 {
+	using accrecorder::source::SceneItem;
+
 	// OBSSourceManager tests
 	accrecorder::manager::OBSSourceManager manager;
+	// add events sender
+	manager.AddEventsSender(api);
 
 	if (!manager.IsMainSceneCreated()) {
 		// screen items
@@ -10519,7 +10523,8 @@ void OBSBasic::AddTests()
 		auto screen = new accrecorder::source::ScreenSceneItem(
 			*items.back().get());
 
-		if (manager.AttachSceneItem(screen)) {
+		if (manager.AttachSceneItem(screen,
+					    SceneItem::Category::kMain)) {
 			//manager.ApplySceneItemPropertiesUpdate(screen);
 			screen->UpdateScale({0.5, 0.5});
 			manager.ApplySceneItemSettingsUpdate(screen);
@@ -10533,7 +10538,8 @@ void OBSBasic::AddTests()
 		std::string cameraURL("rtsp://192.168.99.169/1");
 		auto ipCameraItem =
 			manager.CreateIPCameraItem(cameraName, cameraURL);
-		if (manager.AttachSceneItem(ipCameraItem)) {
+		if (manager.AttachSceneItem(ipCameraItem,
+					    SceneItem::Category::kMain)) {
 			ipCameraItem->UpdateScale({0.3f, 0.3f});
 			manager.ApplySceneItemSettingsUpdate(ipCameraItem);
 		}
@@ -10546,7 +10552,8 @@ void OBSBasic::AddTests()
 		// copy camera item
 		auto camera = new accrecorder::source::CameraSceneItem(
 			*cameraItems.front().get());
-		if (manager.AttachSceneItem(camera)) {
+		if (manager.AttachSceneItem(camera,
+					    SceneItem::Category::kPiP)) {
 			camera->UpdateScale({0.5, 0.5});
 			camera->UpdatePosition({0, 300});
 			manager.ApplySceneItemSettingsUpdate(camera);
@@ -10585,7 +10592,17 @@ void OBSBasic::AddTests()
 			// success
 		}
 
+		std::string address("rtmp://192.168.99.115:1395");
+		std::string username("");
+		std::string passwd("");
+		manager.SetStreamAddress(address, username, passwd);
 		//test remove scene item
 		//manager.Remove(ipCameraItem.get());
 	}
+
+	// get stream service info
+	std::string address;
+	std::string username;
+	std::string passwd;
+	manager.GetSteamAddress(address, username, passwd);
 }

@@ -75,6 +75,11 @@ SceneItem::Type ScreenSceneItem::type() const
 	return kScreen;
 }
 
+SceneItem::Category ScreenSceneItem::category() const
+{
+	return category_;
+}
+
 Scene *ScreenSceneItem::scene() const
 {
 	return nullptr;
@@ -199,6 +204,11 @@ std::string IPCameraSceneItem::Kind() const
 SceneItem::Type IPCameraSceneItem::type() const
 {
 	return kIPCamera;
+}
+
+SceneItem::Category IPCameraSceneItem::category() const
+{
+	return category_;
 }
 
 Scene *IPCameraSceneItem::scene() const
@@ -347,6 +357,11 @@ std::string CameraSceneItem::Kind() const
 SceneItem::Type CameraSceneItem::type() const
 {
 	return kCamera;
+}
+
+SceneItem::Category CameraSceneItem::category() const
+{
+	return category_;
 }
 
 Scene *CameraSceneItem::scene() const
@@ -505,6 +520,11 @@ void AudioSceneItem::SetName(std::string &name)
 	name_ = name;
 }
 
+SceneItem::Category AudioSceneItem::category() const
+{
+	return category_;
+}
+
 Scene *AudioSceneItem::scene() const
 {
 	return nullptr;
@@ -613,7 +633,7 @@ Scene::~Scene()
 	items_.clear();
 }
 
-bool Scene::Attach(SceneItem *item)
+bool Scene::Attach(SceneItem *item, SceneItem::Category category)
 {
 	obs_source_t *ret = obs_get_source_by_name(item->Name().c_str());
 	if (ret) {
@@ -647,6 +667,13 @@ bool Scene::Attach(SceneItem *item)
 
 	// save scene id
 	item->SetSceneID(obs_sceneitem_get_id(sceneItem));
+
+	// save the category to the private setting of the scene.
+	OBSDataAutoRelease privateSettings =
+		obs_sceneitem_get_private_settings(sceneItem);
+	OBSDataAutoRelease newPrivateSettings = obs_data_create();
+	obs_data_set_int(newPrivateSettings, "category", uint64_t(category));
+	obs_data_apply(privateSettings, newPrivateSettings);
 
 	// save item to vector
 	items_.push_back(item);

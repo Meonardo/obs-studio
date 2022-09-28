@@ -1,12 +1,15 @@
 #pragma once
 
 #include "obs-sources.h"
+#include <obs-frontend-internal.hpp>
 
 namespace accrecorder::manager {
 class OBSSourceManager {
 public:
 	OBSSourceManager();
 	~OBSSourceManager();
+
+	void AddEventsSender(obs_frontend_callbacks *api);
 
 	// check if the main is created
 	bool IsMainSceneCreated() const;
@@ -15,7 +18,9 @@ public:
 	// rename the scene item
 	bool Rename(source::SceneItem *item, std::string &newName);
 	// attach the scene item to the main scene
-	bool AttachSceneItem(source::SceneItem *item);
+	bool AttachSceneItem(source::SceneItem *item,
+			     source::SceneItem::Category category =
+				     source::SceneItem::Category::kDefault);
 	// apply scene item properties settings(internal settings)
 	bool ApplySceneItemPropertiesUpdate(source::SceneItem *item);
 	// apply scene item settings update(in the scene)
@@ -51,6 +56,8 @@ public:
 	// set stream address, like: rtmp://192.168.99.135
 	bool SetStreamAddress(std::string &addr, std::string &username,
 			      std::string &passwd);
+	void GetSteamAddress(std::string &address, std::string &username,
+			     std::string &passwd);
 	// start streaming
 	bool StartStreaming();
 	// stop streaming
@@ -60,6 +67,10 @@ private:
 	void LoadSceneItemFromScene(std::string &sceneName);
 	void RemoveScene(std::string &name);
 	obs_scene_t *CreateScene(std::string &name);
+
+	// mix sounds with other input/output item to virtual microphone(VB Cabel)
+	bool AddAudioMixFilter(source::AudioSceneItem *item);
+	//void RemoveFilterByName(obs_source_t *source, const char* name);
 
 	template<typename T>
 	static void GetSettingValueWithName(obs_data_t *d,
@@ -74,6 +85,7 @@ private:
 	static bool VirtualCamAvailable();
 
 	source::Scene *main_scene_;
+	obs_frontend_callbacks *api_;
 };
 
 } //namespace accrecorder::manager

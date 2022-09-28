@@ -426,6 +426,9 @@ bool OBSApp::InitGlobalConfigDefaults()
 	config_set_default_string(globalConfig, "General", "ProcessPriority",
 				  "Normal");
 	config_set_default_bool(globalConfig, "General", "EnableAutoUpdates",
+				false);
+
+	config_set_default_bool(globalConfig, "BasicWindow", "HideOBSWindowsFromCapture",
 				true);
 
 	config_set_default_bool(globalConfig, "General", "ConfirmOnExit", true);
@@ -456,13 +459,13 @@ bool OBSApp::InitGlobalConfigDefaults()
 	config_set_default_double(globalConfig, "BasicWindow", "SnapDistance",
 				  10.0);
 	config_set_default_bool(globalConfig, "BasicWindow",
-				"SpacingHelpersEnabled", true);
+				"SpacingHelpersEnabled", false);
 	config_set_default_bool(globalConfig, "BasicWindow",
 				"RecordWhenStreaming", false);
 	config_set_default_bool(globalConfig, "BasicWindow",
 				"KeepRecordingWhenStreamStops", false);
 	config_set_default_bool(globalConfig, "BasicWindow", "SysTrayEnabled",
-				false);
+				true);
 	config_set_default_bool(globalConfig, "BasicWindow",
 				"SysTrayWhenStarted", false);
 	config_set_default_bool(globalConfig, "BasicWindow", "SaveProjectors",
@@ -472,7 +475,7 @@ bool OBSApp::InitGlobalConfigDefaults()
 	config_set_default_bool(globalConfig, "BasicWindow",
 				"ShowListboxToolbars", true);
 	config_set_default_bool(globalConfig, "BasicWindow", "ShowStatusBar",
-				true);
+				false);
 	config_set_default_bool(globalConfig, "BasicWindow", "ShowSourceIcons",
 				true);
 	config_set_default_bool(globalConfig, "BasicWindow",

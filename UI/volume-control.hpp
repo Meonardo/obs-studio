@@ -15,13 +15,13 @@ class VolumeMeterTimer;
 class VolumeMeter : public QWidget {
 	Q_OBJECT
 	Q_PROPERTY(QColor backgroundNominalColor READ getBackgroundNominalColor
-			   WRITE setBackgroundNominalColor DESIGNABLE true)
+			   WRITE setBackgroundNominalColor DESIGNABLE false)
 	Q_PROPERTY(QColor backgroundWarningColor READ getBackgroundWarningColor
 			   WRITE setBackgroundWarningColor DESIGNABLE true)
 	Q_PROPERTY(QColor backgroundErrorColor READ getBackgroundErrorColor
 			   WRITE setBackgroundErrorColor DESIGNABLE true)
 	Q_PROPERTY(QColor foregroundNominalColor READ getForegroundNominalColor
-			   WRITE setForegroundNominalColor DESIGNABLE true)
+			   WRITE setForegroundNominalColor DESIGNABLE false)
 	Q_PROPERTY(QColor foregroundWarningColor READ getForegroundWarningColor
 			   WRITE setForegroundWarningColor DESIGNABLE true)
 	Q_PROPERTY(QColor foregroundErrorColor READ getForegroundErrorColor
