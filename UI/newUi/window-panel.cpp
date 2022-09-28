@@ -36,8 +36,7 @@ bool OBSPanel::eventFilter(QObject *obj, QEvent *event)
 			return QWidget::eventFilter(obj, event);
 		QMouseEvent *mouseevent = static_cast<QMouseEvent *>(event);
 		if (mouseevent->button() == Qt::LeftButton) {
-			qDebug() << "-------add new scene";
-			emit addNewScene();
+			emit addClicked();
 		}
 	}
 	return QWidget::eventFilter(obj, event);

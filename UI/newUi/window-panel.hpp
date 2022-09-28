@@ -22,6 +22,6 @@ protected:
 	virtual bool eventFilter(QObject *obj, QEvent *event) override;
 
 signals:
-	void addNewScene();
+	void addClicked();
 
 };

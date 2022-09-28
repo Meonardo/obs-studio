@@ -15,4 +15,7 @@ protected:
 
 private:
 	void initUi();
+
+signals:
+	void showStreamPanel();
 };

@@ -1,14 +1,129 @@
 ﻿#include "add-scene-panel.hpp"
 #include <qbuttongroup.h>
 
-ComboBoxView::ComboBoxView(QWidget *parent) : QFrame(parent)
+/********************************** ComboBoxItemWidget ***************************************************/
+ComboBoxItemWidget::ComboBoxItemWidget(int index, int width, int height, bool hideLine, QWidget *parent)
+	: itemIndex(index), QWidget(parent)
 {
-	this->setWindowFlags(Qt::FramelessWindowHint |
-			     Qt::WindowStaysOnTopHint | Qt::Popup |
-			     Qt::NoDropShadowWindowHint);
+	this->setFixedSize(width, height);
+	QVBoxLayout *layout = new QVBoxLayout(this);
+	layout->setContentsMargins(0, 0, 0, 0);
+	layout->setSpacing(0);
+
+	int margin = 20 * getScale();
+	pBtn_text = new QPushButton(this);
+	pBtn_text->setCheckable(true);
+	pBtn_text->setStyleSheet(QString("QPushButton{background-color: transparent; color: rgb(68, 68, 68); border:none; "
+													"border-radius: none; text-align: left; padding-left: %1px; %2}"
+									"QPushButton::checked {color: rgb(46, 105, 240);}"
+									"QPushButton::hover{background-color: rgb(239, 243, 254);}").arg(margin).arg(getFontStyle(16)));
+	connect(pBtn_text, &QPushButton::clicked, this, [=]() {emit btnClicked(itemIndex, pBtn_text->text());});
+
+	QLabel *label_line = new QLabel(this);
+	label_line->setFixedSize(width - margin * 2, 1 * getScale());
+	if (!hideLine)
+		label_line->setStyleSheet("QLabel{background-color: rgb(224, 224, 224); }");
+	else
+		label_line->setStyleSheet("QLabel{background-color: transparent;}");
+
+	pBtn_text->setFixedHeight(height - label_line->height());
+	layout->addWidget(pBtn_text);
+	layout->addWidget(label_line, 0, Qt::AlignHCenter);
+}
+
+void ComboBoxItemWidget::paintEvent(QPaintEvent *event)
+{
+	QPainter painter(this);
+	painter.fillRect(this->rect(),QBrush(QColor(241, 58, 164, 0)));
+	return QWidget::paintEvent(event);
+ }
+
+/********************************** ComboBoxView ***************************************************/
+ ComboBoxView::ComboBoxView(QWidget *parent) : QWidget(parent)
+{
+	this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint |
+				Qt::Popup | Qt::NoDropShadowWindowHint);
 	this->setAttribute(Qt::WA_TranslucentBackground, true);
-	this->setShadow(4 * getScale());
+	this->setAttribute(Qt::WA_NoMouseReplay, true);
 	this->hide();
+
+	shadowBorder = 4 * getScale();
+	itemHeight = 54 * getScale();
+	maxDisplayCount = 6;
+	//this->setFixedHeight(0);
+
+	listWidget = new QListWidget(this);
+	listWidget->setStyleSheet(
+	QString("QListWidget{border:none; background-color: transparent; padding: 0px; }"
+		"QListWidget::item{padding: 0px;}"
+		"QListWidget::Item:hover{background-color: transparent; }"
+		"QScrollBar:vertical{width:%1px; background-color: rgb(170, 170, 170);}")
+		.arg(6 * getScale()));
+	listWidget->setContentsMargins(0, 0, 0, 0);
+	listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	listWidget->setMaximumHeight(itemHeight * maxDisplayCount);
+	listWidget->setResizeMode(QListWidget::Adjust);
+	listWidget->setFocusPolicy(Qt::NoFocus);
+	listWidget->setGridSize(QSize(itemHeight, itemHeight));
+	listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+
+	QHBoxLayout *layout = new QHBoxLayout(this);
+	layout->setContentsMargins(shadowBorder, shadowBorder, shadowBorder, shadowBorder);
+	layout->addWidget(listWidget);	
+
+	itemGroup = new QButtonGroup(this);
+	itemGroup->setExclusive(true);
+}
+
+void ComboBoxView::addItems(QStringList textList)
+{
+	if (itemMap.keys().size() > 0) {
+		foreach(ComboBoxItemWidget * itemWidget, itemMap.values())
+		{
+			itemGroup->removeButton(itemWidget->getBtn());
+			itemWidget->deleteLater();
+		}
+		int count = listWidget->count();
+		for (int i = 0; i < count; i++) {
+			QListWidgetItem * item = listWidget->takeItem(0);
+			delete item;
+		}
+		itemMap.clear();
+	}
+
+	QAbstractButton *firstItem = nullptr;
+	for (int i = 0; i < textList.size(); i++) {
+		QListWidgetItem *item = new QListWidgetItem(listWidget);
+		ComboBoxItemWidget *itemWidget = new ComboBoxItemWidget(i, this->width(), itemHeight,
+					(i == textList.size() - 1) ? true : false, listWidget);
+		connect(itemWidget, &ComboBoxItemWidget::btnClicked, this, [=](int index, QString text){
+			currentIndex = index;
+			this->hide();
+			emit itemIndexChanged(index, text);
+		});
+		itemWidget->setText(textList.at(i));
+		listWidget->addItem(item);
+		listWidget->setItemWidget(item, itemWidget);
+		itemMap.insert(item, itemWidget);
+		itemGroup->addButton(itemWidget->getBtn());
+		if (0 == i)
+			firstItem = itemWidget->getBtn();
+	}
+
+	itemCount = textList.size();
+	if (itemCount <= maxDisplayCount)
+		this->setFixedHeight(itemHeight * itemCount + shadowBorder * 2);
+	else
+		this->setFixedHeight(itemHeight * maxDisplayCount + shadowBorder * 2);
+
+	if (nullptr != firstItem)
+		firstItem->click();
+}
+
+void ComboBoxView::setMaxDisplayCount(int count)
+{
+	listWidget->setMaximumHeight(itemHeight * maxDisplayCount);
+	maxDisplayCount = count;
 }
 
 void ComboBoxView::paintEvent(QPaintEvent *event) 
@@ -69,48 +184,84 @@ void ComboBoxView::paintEvent(QPaintEvent *event)
 
 bool ComboBoxView::event(QEvent *e)
 {
-	if (e->type() == QEvent::HideToParent) {
+	if (e->type() == QEvent::MouseButtonPress) {
+		return true;
+	} else if (e->type() == QEvent::MouseButtonRelease) {
+		this->hide();
+		emit viewHide();
+		return true;
+	} else if (e->type() == QEvent::HideToParent) {
 		emit viewHide();
 	}
-	return QFrame::event(e);
+	
+	return QWidget::event(e);
 }
 
-ComboBox::ComboBox(QWidget *parent) : QFrame(parent)
+/********************************** ComboBox ***************************************************/
+ComboBox::ComboBox( QWidget *parent) : QFrame(parent)
 {
 	this->setStyleSheet(QString("QFrame{background-color: rgb(240,240,240); border-radius: %1px;}").arg(4 * getScale()));
 	this->initUi();
-	this->setText(QString::fromLocal8Bit("板书1"));
+}
+
+void ComboBox::addItems(QStringList textList)
+{
+	if (textList.isEmpty())
+		return;
+
+	if (nullptr == view) {
+		view = new ComboBoxView(this);
+		connect(view, &ComboBoxView::itemIndexChanged, this, [=](int index, QString text) {
+			m_Index = index;
+			this->setText(text);
+			emit itemIndexChanged(text);
+		});
+		view->setFixedWidth(this->width());
+
+		connect(view, &ComboBoxView::viewHide, this, [=]() {
+			if (this->checked) {
+				checked = false;
+				if (label_icon != nullptr)
+					label_icon->setPixmap(QPixmap(":/res/images/newUi/arrow@2x.png"));
+			}
+		});
+	}
+	
+	view->addItems(textList);
 }
 
 bool ComboBox::event(QEvent *e)
 {
 	if (e->type() == QEvent::MouseButtonRelease) {
 		QMouseEvent *mouseevent = static_cast<QMouseEvent *>(e);
-		if (mouseevent->button() == Qt::LeftButton) {
+		if (mouseevent->button() == Qt::LeftButton && nullptr != view) {
 			checked = !checked;
 			if (checked) {
 				if (label_icon != nullptr)
-					label_icon->setPixmap(QPixmap(
-						":/res/images/newUi/arrow_on@2x.png"));
+					label_icon->setPixmap(QPixmap(":/res/images/newUi/arrow_on@2x.png"));
 				if (view != nullptr) {
-					view->move(mapToGlobal(QPoint(
-						((QWidget *)parent())->x() -
-							view->shadow(),
-						((QWidget *)parent())->y() +
-							this->height())));
+					QPoint globalPos = mapToGlobal(QPoint(0, 0));
+					view->move(globalPos.x() - view->shadow(), globalPos.y() + this->height());
 					view->show();
 				}
 			} else {
 				if (label_icon != nullptr)
-					label_icon->setPixmap(QPixmap(
-						":/res/images/newUi/arrow@2x.png"));
+					label_icon->setPixmap(QPixmap(":/res/images/newUi/arrow@2x.png"));
 				if (view != nullptr)
 					view->hide();
 			}
 		}
+	} else if (e->type() == QEvent::MouseButtonPress) {
 	}
 
 	return QFrame::event(e);
+}
+
+void ComboBox::resizeEvent(QResizeEvent *event)
+{
+	QWidget::resizeEvent(event);
+	if (nullptr != view)
+		view->setFixedWidth(this->width());
 }
 
 void ComboBox::initUi()
@@ -126,49 +277,33 @@ void ComboBox::initUi()
 	label_icon->setPixmap(QPixmap(":/res/images/newUi/arrow@2x.png"));
 	hlayout->addWidget(label_text, 1, Qt::AlignVCenter);
 	hlayout->addWidget(label_icon, 0, Qt::AlignVCenter);
-
-	view = new ComboBoxView(this);
-	view->setFixedSize(410 * getScale(), 166 * getScale());
-	connect(view, &ComboBoxView::viewHide, this, [=](){
-		if (this->checked) {
-			checked = false;
-			if (label_icon != nullptr)
-				label_icon->setPixmap(QPixmap(
-					":/res/images/newUi/arrow@2x.png"));
-		}
-	});
 }
 
-void ItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
-			 const QModelIndex &index) const
+void ComboBox::setText(const QString &text)
 {
-	QSize size = this->sizeHint(option, index);
-	//if (!option.state.testFlag(QStyle::State_Selected) &&
-	//	    option.state.testFlag(QStyle::State_MouseOver)) {
-
-		painter->fillRect(0, index.row() * size.height(), size.width(),
-				  size.height(), QBrush(QColor(239, 243, 254)));
-	//}
-
-	if (option.state.testFlag(QStyle::State_Selected)) {
-		painter->setPen(QPen(QColor(46, 105, 240)));
-	} else {
-		painter->setPen(QPen(QColor(68, 68, 68)));
+	int label_width = this->width() - 57 * getScale();
+	if (label_text != nullptr) {
+		QFontMetrics fontMetric(getFont(18));
+		int fontSize = fontMetric.width(text);
+		QString str = text;
+		if (fontSize > label_width)
+			str = fontMetric.elidedText(text, Qt::ElideRight, label_width);
+		label_text->setText(str);
 	}
-
-	painter->setFont(getFont(16));
-
-	QRect boundRect;
-	painter->drawText(QRect(21 * getScale(), index.row() * size.height(),
-				size.width(), size.height()),
-			  Qt::AlignLeft | Qt::AlignVCenter,
-			  index.data().toString(), &boundRect);
 }
 
-QSize ItemDelegate::sizeHint(const QStyleOptionViewItem &option,
-			     const QModelIndex &index) const
+/*********************************  SceneSettingsWidget ****************************************/
+void SceneSettingsWidget::initData(
+	std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>> screenItems)
 {
-	return QSize(410 * getScale(), 55 * getScale());
+	QStringList sceneList;
+	foreach(auto item, screenItems)
+		sceneList.append(QString::fromStdString(item->Name()));
+
+	combobox_scenes->addItems(sceneList);
+	combobox_fps->addItems(QStringList() << "30Hz");
+	combobox_encode->addItems(QStringList() << "H264");
+	combobox_resolution->addItems(QStringList() << "1080p");
 }
 
 void SceneSettingsWidget::initUi()
@@ -180,16 +315,6 @@ void SceneSettingsWidget::initUi()
 
 	label->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 				     .arg(getFontStyle(18)));
-
-	//combobox_scenes->addItem(QString::fromLocal8Bit("老师特写"));
-	//combobox_scenes->addItem(QString::fromLocal8Bit("学生镜头"));
-	//combobox_scenes->addItem(QString::fromLocal8Bit("板书"));
-	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
-	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
-	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
-	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
-	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
-	//combobox_scenes->addItem(QString::fromLocal8Bit("桌面"));
 
 	QHBoxLayout *hlayout = new QHBoxLayout;
 	hlayout->setContentsMargins(0, 0, 0, 0);
@@ -254,6 +379,21 @@ void SceneSettingsWidget::initUi()
 	vlayout->addLayout(hlayout_2);
 }
 
+void IpCameraSettingsWidget::initData()
+{
+	QStringList ipCameraList = QStringList()
+				<< QString::fromLocal8Bit("老师特写")
+				<< QString::fromLocal8Bit("老师全景")
+				<< QString::fromLocal8Bit("学生特写")
+				<< QString::fromLocal8Bit("学生全景");
+
+	combobox_cameraName->addItems(ipCameraList);
+	combobox_rate->addItems(QStringList() << "4096kbit/s");
+	combobox_fps->addItems(QStringList() << "30Hz");
+	combobox_encode->addItems(QStringList() << "H264");
+	combobox_resolution->addItems(QStringList() << "1080p");
+}
+
 void IpCameraSettingsWidget::initUi()
 {
 	QLabel *label = new QLabel(QString::fromLocal8Bit("摄像头名称"), this);
@@ -278,7 +418,9 @@ void IpCameraSettingsWidget::initUi()
 	label_1->setStyleSheet(label->styleSheet());
 	lineedit_rtsp = new QLineEdit(this);
 	lineedit_rtsp->setFixedSize(410 * getScale(), 51 * getScale());
-	lineedit_rtsp->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border-radius: %1px;}").arg(4 * getScale()));
+	lineedit_rtsp->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+			"QLineEdit::hover{background-color: rgb(240,240,240);}"
+			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
 	lineedit_rtsp->setPlaceholderText(QString::fromLocal8Bit("输入RTSP"));
 	lineedit_rtsp->setFont(getFont(18));
 	QPalette palette = lineedit_rtsp->palette();
@@ -360,6 +502,22 @@ void IpCameraSettingsWidget::initUi()
 	vlayout->addLayout(hlayout_3);
 }
 
+void USBCameraSettingsWidget::initData(
+	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>> usbCameraSource)
+{
+	QStringList ipCameraList;
+	foreach(auto item, usbCameraSource)
+	{
+		ipCameraList.append(QString::fromStdString(item->Name()));
+		mapCameraSource.insert(QString::fromStdString(item->Name()), item);
+	}
+	combobox_cameraName->addItems(ipCameraList);
+
+	combobox_fps->addItems(QStringList() << "30Hz");
+	combobox_rate->addItems(QStringList() << "4093kbit/s");
+	combobox_encode->addItems(QStringList() << "H264");
+}
+
 void USBCameraSettingsWidget::initUi()
 {
 	QLabel *label = new QLabel(QString::fromLocal8Bit("摄像头名称"), this);
@@ -368,6 +526,8 @@ void USBCameraSettingsWidget::initUi()
 				     .arg(getFontStyle(18)));
 	combobox_cameraName = new ComboBox(this);
 	combobox_cameraName->setFixedSize(410 * getScale(), 51 * getScale());
+	connect(combobox_cameraName, &ComboBox::itemIndexChanged, this,
+		&USBCameraSettingsWidget::slot_combobox_cameraName_changed);
 
 	QHBoxLayout *hlayout = new QHBoxLayout;
 	hlayout->setContentsMargins(0, 0, 0, 0);
@@ -443,34 +603,86 @@ void USBCameraSettingsWidget::initUi()
 	vlayout->addLayout(hlayout_2);
 }
 
-AddScenesPanel::AddScenesPanel(QWidget *parent) : QWidget(parent)
+void USBCameraSettingsWidget::slot_combobox_cameraName_changed(QString text)
 {
-	this->initUi();
-	this->installEventFilter(this);
+	std::shared_ptr<accrecorder::source::CameraSceneItem> itemSource =
+		mapCameraSource.value(text, nullptr);
+	if (nullptr == itemSource)
+		return;
+
+	std::vector<std::string> res;
+	std::vector<std::tuple<std::string, int64_t>> fps;
+	itemSource->GetAvailableResolutions(res);
+	itemSource->GetAvailableFps(fps);
+
+	QStringList temp;
+	foreach(std::string str, res) {
+		temp.append(QString::fromStdString(str));
+	}
+	combobox_resolution->addItems(temp);
+
+	//temp.clear();
+	//for (int i = 0; i < fps.size(); i ++) {
+	//	std::tuple<std::string, int64_t> stuple = fps.at(i);
+	//	qDebug() << "---0:" << QString::fromStdString(std::get<0>(stuple));
+	//	qDebug() << "---1:" << std::get<1>(stuple);
+	//}
 }
 
-AddScenesPanel::~AddScenesPanel() {}
-
-void AddScenesPanel::paintEvent(QPaintEvent *event)
+/*********************************** Basic panel *******************************************/
+void BasicPanel::paintEvent(QPaintEvent *event)
 {
 	QPainter painter(this);
 	painter.setRenderHint(QPainter::Antialiasing);
 
-	painter.fillRect(this->rect(), QColor(0, 0, 0, 0));
-	painter.setBrush(QColor(255, 255, 255));
-	painter.drawRoundedRect(this->rect(), 12 * getScale(), 12 * getScale());
-	return QWidget::paintEvent(event);
+	QColor color(135, 135, 135);
+	QPen pen;
+	pen.setStyle(Qt::SolidLine);
+	pen.setCapStyle(Qt::RoundCap);
+	pen.setJoinStyle(Qt::RoundJoin);
+	int j = 1;
+	for (int i = 0; i < shadowBorder; i++) {
+		QRect rect = QRect(QPoint(shadowBorder - i, shadowBorder - i),
+				   QPoint(this->width() - (shadowBorder - i),
+					  this->height() - (shadowBorder - i)));
+		QPainterPath path;
+		int radius = 12 * getScale();
+		path = getRoundRectPath(rect, radius, radius, radius, radius);
+		path.setFillRule(Qt::WindingFill);
+
+		if (0 == i)
+			painter.fillPath(path, QColor(255, 255, 255));
+		if (4 == shadowBorder) {
+			switch (i) {
+			case 0: color.setAlpha(65); break;
+			case 1: color.setAlpha(25); break;
+			case 2: color.setAlpha(13); break;
+			case 3: color.setAlpha(3); break;
+			default: break;
+			}
+		} else if (8 == shadowBorder) {
+			switch (i) {
+			case 0: color.setAlpha(65); break;
+			case 1: color.setAlpha(35); break;
+			case 2: color.setAlpha(25); break;
+			case 3: color.setAlpha(13); break;
+			case 4: color.setAlpha(10); break;
+			case 5: color.setAlpha(8); break;
+			case 6: color.setAlpha(5); break;
+			case 7: color.setAlpha(3); break;
+			default: break;
+			}
+		}
+
+		pen.setColor(color);
+		painter.setPen(pen);
+		painter.drawPath(path);
+	}
 }
 
-bool AddScenesPanel::eventFilter(QObject *obj, QEvent *event)
+bool BasicPanel::eventFilter(QObject *obj, QEvent *event)
 {
-	if (obj == pBtn_close && event->type() == QEvent::MouseButtonRelease) {
-		QMouseEvent *mouseevent = static_cast<QMouseEvent *>(event);
-		if (mouseevent->button() == Qt::LeftButton) {
-			this->close();
-			this->deleteLater();
-		}
-	} else if (obj == this && event->type() == QEvent::MouseButtonPress) {
+	if (obj == this && event->type() == QEvent::MouseButtonPress) {
 		QMouseEvent *mouseevent = static_cast<QMouseEvent *>(event);
 		if (mouseevent->button() == Qt::LeftButton) {
 			mousePressed = true;
@@ -486,29 +698,39 @@ bool AddScenesPanel::eventFilter(QObject *obj, QEvent *event)
 		QPoint gPos = mouseevent->pos();
 		this->move(this->x() + gPos.x() - cPos.x(),
 			   this->y() + gPos.y() - cPos.y());
-	} else if (obj != this && event->type() == QEvent::MouseButtonPress) {
-		event->accept();
-		return false;
+	} else if (obj != this && event->type() == QEvent::MouseMove) {
+		return true;
 	}
 	return QWidget::eventFilter(obj, event);
 }
 
+/*********************************** Add scene panel *******************************************/
+AddScenesPanel::AddScenesPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent) : m_manager(manager), BasicPanel(parent)
+{
+	this->initUi();
+	this->installEventFilter(this);
+	this->initData();
+}
+
 void AddScenesPanel::initUi()
 {
-	auto frame_top = new QFrame(this);
+	frame_top = new QFrame(this);
 	frame_top->setFixedHeight(70 * getScale());
+	frame_top->setObjectName("frame_top");
+	frame_top->setStyleSheet("#frame_top{background-color: transparent;}");
 
 	QLabel *label_title = new QLabel(frame_top);
 	label_title->setText(QString::fromLocal8Bit("添加主画面"));
-	label_title->setStyleSheet(
-		QString("QLabel{color:rgba(34,34,34); %1}")
+	label_title->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(22, FontWeight::Blod)));
 
-	pBtn_close = new QLabel(frame_top);
+	pBtn_close = new QPushButton(frame_top);
 	pBtn_close->setFixedSize(36 * getScale(), 36 * getScale());
-	pBtn_close->setStyleSheet(
-		"QLabel{border-image: url(':/res/images/newUi/close@2x.png');}");
+	pBtn_close->setStyleSheet("QPushButton{padding: 0px; border: none; min-width: 36px; min-height: 36px;"
+					"background-color: transparent; border-image: url(':/res/images/newUi/close@2x.png');}");
+	connect(pBtn_close, &QPushButton::clicked, this, [=](){ this->close(); this->deleteLater(); });
 	pBtn_close->installEventFilter(this);
+
 
 	QHBoxLayout *layout_top = new QHBoxLayout(frame_top);
 	layout_top->setContentsMargins(30 * getScale(), 0, 24 * getScale(), 0);
@@ -521,6 +743,7 @@ void AddScenesPanel::initUi()
 	tabBtn_1 = new QPushButton(QString::fromLocal8Bit("板书"), frame_tab);
 	tabBtn_1->setCheckable(true);
 	tabBtn_1->setFixedSize(168 * getScale(), 36 * getScale());
+	tabBtn_1->installEventFilter(this);
 	tabBtn_1->setStyleSheet(
 		QString("QPushButton{ background-color: rgb(239,243,254); color: rgb(102,102,102); border-radius: 0; "
 			"border-bottom-left-radius:%1px; border-top-left-radius: %1px; %2}"
@@ -537,6 +760,7 @@ void AddScenesPanel::initUi()
 	tabBtn_2 = new QPushButton(QString(tr("IP Camera")), frame_tab);
 	tabBtn_2->setCheckable(true);
 	tabBtn_2->setFixedSize(168 * getScale(), 36 * getScale());
+	tabBtn_2->installEventFilter(this);
 	tabBtn_2->setStyleSheet(
 		QString("QPushButton{ background-color: rgb(239,243,254); color: rgb(102,102,102); border-radius: 0; %1}"
 			"QPushButton::checked{ background-color: rgb(46,105,240); color: white;"
@@ -551,6 +775,7 @@ void AddScenesPanel::initUi()
 	tabBtn_3 = new QPushButton(QString(tr("USB Camera")), frame_tab);
 	tabBtn_3->setCheckable(true);
 	tabBtn_3->setFixedSize(168 * getScale(), 36 * getScale());
+	tabBtn_3->installEventFilter(this);
 	tabBtn_3->setStyleSheet(
 		QString("QPushButton{ background-color: rgb(239,243,254); color: rgb(102,102,102); border-radius: 0;"
 			"border-bottom-right-radius:%1px; border-top-right-radius: %1px; %2}"
@@ -576,6 +801,7 @@ void AddScenesPanel::initUi()
 
 	stackedWidget = new QStackedWidget(this);
 	stackedWidget->setFixedWidth(612 * getScale());
+	stackedWidget->installEventFilter(this);
 
 	auto frame_bottom = new QFrame(this);
 	frame_bottom->setFixedHeight(121 * getScale());
@@ -583,8 +809,9 @@ void AddScenesPanel::initUi()
 	pBtnCancel = new QPushButton(this);
 	pBtnCancel->setText(QString::fromLocal8Bit("取消"));
 	pBtnCancel->setFixedSize(139 * getScale(), 51 * getScale());
+	pBtnCancel->installEventFilter(this);
 	pBtnCancel->setStyleSheet(
-		QString("QPushButton{border: %1px solid rgba(170,170,170); border-radius: %2;"
+		QString("QPushButton{border: %1px solid rgb(170,170,170); border-radius: %2;"
 			"background-color: white; color: rgb(68, 68, 68); %3}")
 			.arg(1 * getScale())
 			.arg(6 * getScale())
@@ -598,11 +825,13 @@ void AddScenesPanel::initUi()
 	pBtnYes = new QPushButton(this);
 	pBtnYes->setText(QString::fromLocal8Bit("确认添加"));
 	pBtnYes->setFixedSize(139 * getScale(), 51 * getScale());
+	pBtnYes->installEventFilter(this);
 	pBtnYes->setStyleSheet(
-		QString("QPushButton{background-color: rgba(46,105,240); border-radius: %1; "
+		QString("QPushButton{background-color: rgb(46,105,240); border-radius: %1; "
 			"color: rgb(255, 255, 255); %2}")
 			.arg(6 * getScale())
 			.arg(getFontStyle(16)));
+	connect(pBtnYes, &QPushButton::clicked, this, &AddScenesPanel::slot_addBtn_clicked);
 
 	QHBoxLayout *layout_bottom = new QHBoxLayout(frame_bottom);
 	layout_bottom->setSpacing(30 * getScale());
@@ -631,14 +860,330 @@ void AddScenesPanel::initUi()
 	tabBtn_1->setChecked(true);
 
 	sceneSettingsWidget = new SceneSettingsWidget(this->stackedWidget);
-	ipCameraSettingsWidget =
-		new IpCameraSettingsWidget(this->stackedWidget);
-	usbCameraSettingsWidget =
-		new USBCameraSettingsWidget(this->stackedWidget);
+	ipCameraSettingsWidget = new IpCameraSettingsWidget(this->stackedWidget);
+	usbCameraSettingsWidget = new USBCameraSettingsWidget(this->stackedWidget);
 	this->stackedWidget->addWidget(sceneSettingsWidget);
 	this->stackedWidget->addWidget(ipCameraSettingsWidget);
 	this->stackedWidget->addWidget(usbCameraSettingsWidget);
 	this->stackedWidget->setCurrentWidget(sceneSettingsWidget);
 
 	this->setFixedSize(612 * getScale(), 496 * getScale());
+}
+
+void AddScenesPanel::initData()
+{
+	std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>> sceneSource
+			= std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>();	
+	//std::vector<std::shared_ptr<accrecorder::source::IPCameraSceneItem>> ipCameraSource
+	//		= std::vector<std::shared_ptr<accrecorder::source::IPCameraSceneItem>>();	
+	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>> usbCameraSource
+			= std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+	m_manager->ListScreenItems(sceneSource);
+	m_manager->ListCameraItems(usbCameraSource);
+
+	if (nullptr != sceneSettingsWidget)
+		sceneSettingsWidget->initData(sceneSource);
+	if (nullptr != ipCameraSettingsWidget)
+		ipCameraSettingsWidget->initData();
+	if (nullptr != usbCameraSettingsWidget)
+		usbCameraSettingsWidget->initData(usbCameraSource);
+}
+
+void AddScenesPanel::slot_addBtn_clicked()
+{
+	if (0 == stackedWidget->currentIndex()) {
+	} else if (1 == stackedWidget->currentIndex()) {
+	} else if (2 == stackedWidget->currentIndex()) {
+	}
+}
+
+/*********************************** Add audio panel *******************************************/
+AddAudioPanel::AddAudioPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent)
+	: sourceManager(manager), BasicPanel(parent)
+{
+	this->installEventFilter(this);
+	this->initUi();
+	this->initData();
+	this->setObjectName("testaudiopanel");
+}
+
+void AddAudioPanel::initUi()
+{
+	QLabel *label_title = new QLabel(this);
+	label_title->setText(QString::fromLocal8Bit("音频设置"));
+	label_title->setStyleSheet( QString("QLabel{color:rgb(34,34,34); %1}")
+			.arg(getFontStyle(22, FontWeight::Blod)));
+	label_title->setFixedSize(89 * getScale(), 23 * getScale());
+	label_title->move(30 * getScale(), 24 * getScale());
+	
+	QPushButton *pBtn_close = new QPushButton(this);
+	pBtn_close->setFixedSize(36 * getScale(), 36 * getScale());
+	pBtn_close->move(440 * getScale(), 17 * getScale());
+	pBtn_close->setStyleSheet("QPushButton{padding: 0px; border: none; min-width: 36px; min-height: 36px;"
+		"background-color: transparent; border-image: url(':/res/images/newUi/close@2x.png');}");
+	connect(pBtn_close, &QPushButton::clicked, this, [=]() {
+		this->close();
+		this->deleteLater();
+	});
+	pBtn_close->installEventFilter(this);
+
+	combobox_audio = new ComboBox(this);
+	combobox_audio->setFixedSize(440 * getScale(), 51 * getScale());
+	combobox_audio->move(30 * getScale(), 86 * getScale());
+	//connect(combobox_autio, &ComboBox::itemIndexChanged, this, [=](){});
+
+	QPushButton *pBtnCancel = new QPushButton(this);
+	pBtnCancel->setText(QString::fromLocal8Bit("取消"));
+	pBtnCancel->setFixedSize(120 * getScale(), 40 * getScale());
+	pBtnCancel->move(120 * getScale(), 177 * getScale());
+	pBtnCancel->installEventFilter(this);
+	pBtnCancel->setStyleSheet(QString("QPushButton{border: %1px solid rgb(170,170,170); border-radius: %2;"
+			"background-color: white; color: rgb(68, 68, 68); %3}")
+			.arg(1 * getScale())
+			.arg(6 * getScale())
+			.arg(getFontStyle(16)));
+	connect(pBtnCancel, &QPushButton::clicked, this, [=]() {
+		this->close();
+		this->deleteLater();
+	});
+
+	QPushButton *pBtnYes = new QPushButton(this);
+	pBtnYes->setText(QString::fromLocal8Bit("确认"));
+	pBtnYes->setFixedSize(pBtnCancel->width(), pBtnCancel->height());
+	pBtnYes->move(260 * getScale(), pBtnCancel->y());
+	pBtnYes->installEventFilter(this);
+	pBtnYes->setStyleSheet(QString("QPushButton{background-color: rgb(46,105,240); border-radius: %1; "
+			"color: rgb(255, 255, 255); %2}")
+			.arg(6 * getScale())
+			.arg(getFontStyle(16)));
+	connect(pBtnYes, &QPushButton::clicked, this, [=]() {
+		std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>> audioItems =
+				std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+		sourceManager->ListAudioItems(audioItems);
+		// copy
+		auto input = new accrecorder::source::AudioInputItem
+			(*reinterpret_cast<accrecorder::source::AudioInputItem *>(audioItems[combobox_audio->currentIndex()].get()));
+		if (sourceManager->AttachSceneItem(input)) {
+			// success
+		}
+		this->close();
+		this->deleteLater();
+	});
+}
+
+void AddAudioPanel::initData()
+{
+	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>> audioItems =
+		std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+	sourceManager->ListAudioItems(audioItems);
+
+	QStringList nameList;
+	foreach(auto item, audioItems) {
+		nameList.append(QString::fromStdString(item->Name()));
+	}
+
+	combobox_audio->addItems(nameList);
+}
+
+
+/*********************************** Push stream panel *******************************************/
+StreamingPanel::StreamingPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent)
+	: sourceManager(manager), BasicPanel(parent)
+{
+	this->installEventFilter(this);
+	this->initUi();
+	this->initData();
+}
+
+void StreamingPanel::initUi()
+{
+	QLabel *label_title = new QLabel(this);
+	label_title->setText(QString::fromLocal8Bit("推流设置"));
+	label_title->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
+			.arg(getFontStyle(22, FontWeight::Blod)));
+	label_title->setFixedSize(89 * getScale(), 23 * getScale());
+	label_title->move(30 * getScale(), 24 * getScale());
+
+	QPushButton *pBtn_close = new QPushButton(this);
+	pBtn_close->setFixedSize(36 * getScale(), 36 * getScale());
+	pBtn_close->move(340 * getScale(), 17 * getScale());
+	pBtn_close->setStyleSheet("QPushButton{padding: 0px; border: none; min-width: 36px; min-height: 36px;"
+		"background-color: transparent; border-image: url(':/res/images/newUi/close@2x.png');}");
+	connect(pBtn_close, &QPushButton::clicked, this, [=]() {
+		this->close();
+		this->deleteLater();
+	});
+	pBtn_close->installEventFilter(this);
+
+	QLabel *label_rtsp1 = new QLabel(this);
+	label_rtsp1->setText(QString::fromLocal8Bit("RTMP1"));
+	label_rtsp1->setFixedSize(70 * getScale(), 15 * getScale());
+	label_rtsp1->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
+			.arg(getFontStyle(18)));
+	label_rtsp1->move(31 * getScale(), 87 * getScale());
+
+	QLabel *label_rtsp2 = new QLabel(this);
+	label_rtsp2->setText(QString::fromLocal8Bit("RTMP2"));
+	label_rtsp2->setFixedSize(70 * getScale(), 15 * getScale());
+	label_rtsp2->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
+			.arg(getFontStyle(18)));
+	label_rtsp2->move(31 * getScale(), 205 * getScale());
+
+	QLabel *label_rtsp3 = new QLabel(this);
+	label_rtsp3->setText(QString::fromLocal8Bit("RTMP3"));
+	label_rtsp3->setFixedSize(70 * getScale(), 15 * getScale());
+	label_rtsp3->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
+			.arg(getFontStyle(18)));
+	label_rtsp3->move(31 * getScale(), 323 * getScale());
+
+	lineedit_rtsp1 = new QLineEdit(this);
+	lineedit_rtsp1->setFixedSize(340 * getScale(), 51 * getScale());
+	lineedit_rtsp1->setEnabled(true);
+	lineedit_rtsp1->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+			"QLineEdit::hover{background-color: rgb(240,240,240);}"
+			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
+	lineedit_rtsp1->setPlaceholderText(QString::fromLocal8Bit("输入RTSP1"));
+	lineedit_rtsp1->move(30 * getScale(), 123 * getScale());
+	QPalette palette = lineedit_rtsp1->palette();
+	palette.setColor(QPalette::PlaceholderText, QColor(170, 170, 170));
+	lineedit_rtsp1->setPalette(palette);
+
+	lineedit_rtsp2 = new QLineEdit(this);
+	lineedit_rtsp2->setFixedSize(340 * getScale(), 51 * getScale());
+	lineedit_rtsp2->setEnabled(false);
+	lineedit_rtsp2->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+			"QLineEdit::hover{background-color: rgb(240,240,240);}"
+			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
+	lineedit_rtsp2->setPlaceholderText(QString::fromLocal8Bit("输入RTSP2"));
+	lineedit_rtsp2->setFont(getFont(18));
+	lineedit_rtsp2->move(30 * getScale(), 241 * getScale());
+	lineedit_rtsp2->setPalette(lineedit_rtsp1->palette());
+
+	lineedit_rtsp3 = new QLineEdit(this);
+	lineedit_rtsp3->setFixedSize(340 * getScale(), 51 * getScale());
+	lineedit_rtsp3->setEnabled(false);
+	lineedit_rtsp3->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+			"QLineEdit::hover{background-color: rgb(240,240,240);}"
+			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
+	lineedit_rtsp3->setPlaceholderText(QString::fromLocal8Bit("输入RTSP3"));
+	lineedit_rtsp3->setFont(getFont(18));
+	lineedit_rtsp3->move(30 * getScale(), 359 * getScale());
+	lineedit_rtsp3->setPalette(lineedit_rtsp1->palette());
+
+	QCheckBox *checkbox_rtsp1 = new QCheckBox(this);
+	checkbox_rtsp1->setFixedSize(42 * getScale(), 24 * getScale());
+	checkbox_rtsp1->move(324 * getScale(), 79 * getScale());
+	checkbox_rtsp1->setStyleSheet(
+		QString("QCheckBox { background-color: transparent; border: none;} "
+			"QCheckBox::indicator { width: %1; height:%2; image: url(''); }"
+			"QCheckBox::indicator:unchecked { border-image: url(':/res/images/newUi/switch@2x.png');}"
+			"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}"
+			"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}")
+			.arg(checkbox_rtsp1->width())
+			.arg(checkbox_rtsp1->height()));
+	checkbox_rtsp1->setChecked(true);
+	connect(checkbox_rtsp1, &QCheckBox::stateChanged, this, [=](int state){
+		if (0 == state)
+			lineedit_rtsp1->setEnabled(false);
+		else if (2 == state)
+			lineedit_rtsp1->setEnabled(true);
+	});
+
+	QCheckBox *checkbox_rtsp2 = new QCheckBox(this);
+	checkbox_rtsp2->setFixedSize(42 * getScale(), 24 * getScale());
+	checkbox_rtsp2->move(324 * getScale(), 197 * getScale());
+	checkbox_rtsp2->setStyleSheet(
+		QString("QCheckBox { background-color: transparent; border: none;} "
+			"QCheckBox::indicator { width: %1; height:%2; image: url(''); }"
+			"QCheckBox::indicator:unchecked { border-image: url(':/res/images/newUi/switch@2x.png');}"
+			"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}"
+			"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}")
+			.arg(checkbox_rtsp2->width())
+			.arg(checkbox_rtsp2->height()));
+	connect(checkbox_rtsp2, &QCheckBox::stateChanged, this, [=](int state) {
+		if (0 == state)
+			lineedit_rtsp2->setEnabled(false);
+		else if (2 == state)
+			lineedit_rtsp2->setEnabled(true);
+	});
+
+	QCheckBox *checkbox_rtsp3 = new QCheckBox(this);
+	checkbox_rtsp3->setFixedSize(42 * getScale(), 24 * getScale());
+	checkbox_rtsp3->setFixedSize(42 * getScale(), 24 * getScale());
+	checkbox_rtsp3->move(324 * getScale(), 315 * getScale());
+	checkbox_rtsp3->setStyleSheet(
+		QString("QCheckBox { background-color: transparent; border: none;} "
+			"QCheckBox::indicator { width: %1; height:%2; image: url(''); }"
+			"QCheckBox::indicator:unchecked { border-image: url(':/res/images/newUi/switch@2x.png');}"
+			"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}"
+			"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}")
+			.arg(checkbox_rtsp3->width())
+			.arg(checkbox_rtsp3->height()));
+	connect(checkbox_rtsp3, &QCheckBox::stateChanged, this, [=](int state) {
+		if (0 == state)
+			lineedit_rtsp3->setEnabled(false);
+		else if (2 == state)
+			lineedit_rtsp3->setEnabled(true);
+	});
+
+	QButtonGroup *group = new QButtonGroup(this);
+	group->setExclusive(true);
+	group->addButton(checkbox_rtsp1);
+	group->addButton(checkbox_rtsp2);
+	group->addButton(checkbox_rtsp3);
+
+	QPushButton *pBtnCancel = new QPushButton(this);
+	pBtnCancel->setText(QString::fromLocal8Bit("取消"));
+	pBtnCancel->setFixedSize(120 * getScale(), 40 * getScale());
+	pBtnCancel->move(70 * getScale(), 450 * getScale());
+	pBtnCancel->installEventFilter(this);
+	pBtnCancel->setStyleSheet(QString("QPushButton{border: %1px solid rgb(170,170,170); border-radius: %2;"
+			"background-color: white; color: rgb(68, 68, 68); %3}")
+			.arg(1 * getScale())
+			.arg(6 * getScale())
+			.arg(getFontStyle(16)));
+	connect(pBtnCancel, &QPushButton::clicked, this, [=]() {
+		this->close();
+		this->deleteLater();
+	});
+
+	QPushButton *pBtnYes = new QPushButton(this);
+	pBtnYes->setText(QString::fromLocal8Bit("确定"));
+	pBtnYes->setFixedSize(pBtnCancel->width(), pBtnCancel->height());
+	pBtnYes->move(210 * getScale(), pBtnCancel->y());
+	pBtnYes->installEventFilter(this);
+	pBtnYes->setStyleSheet(QString("QPushButton{background-color: rgb(46,105,240); border-radius: %1; "
+			"color: rgb(255, 255, 255); %2}")
+			.arg(6 * getScale())
+			.arg(getFontStyle(16)));
+	connect(pBtnYes, &QPushButton::clicked, this, [=]() {
+		QString str; 
+		if (checkbox_rtsp1->isChecked())
+			str = lineedit_rtsp1->text();
+		else if (checkbox_rtsp2->isChecked())
+			str = lineedit_rtsp2->text();
+		else if (checkbox_rtsp3->isChecked())
+			str = lineedit_rtsp3->text();
+
+		if (str.isEmpty())
+			return;
+
+		sourceManager->SetStreamAddress(str.toStdString(), QString().toStdString(), QString().toStdString());
+	});
+}
+
+void StreamingPanel::initData()
+{
+//	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>
+//		audioItems = std::vector<
+//			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+//	sourceManager->ListAudioItems(audioItems);
+//
+//	QStringList nameList;
+//	foreach(auto item, audioItems)
+//	{
+//		nameList.append(QString::fromStdString(item->Name()));
+//	}
+//
+//	combobox_audio->addItems(nameList);
 }

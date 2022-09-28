@@ -1,4 +1,4 @@
-/******************************************************************************
+﻿/******************************************************************************
     Copyright (C) 2013-2015 by Hugh Bailey <obs.jim@gmail.com>
                                Zachary Lund <admin@computerquip.com>
                                Philippe Groarke <philippe.groarke@gmail.com>
@@ -10335,6 +10335,7 @@ void OBSBasic::ResetProxyStyleSliders()
 
 void OBSBasic::createUi()
 {
+	sourceManager = new accrecorder::manager::OBSSourceManager;
 	this->setFixedWidth(1280 * getScale());
 	this->setFixedHeight(768 * getScale());
 	//this->setFixedSize(1280, 800);
@@ -10428,6 +10429,8 @@ void OBSBasic::createUi()
 
 	auto toolbar = new OBSToolbar(frame_inBottom);
 	toolbar->setFixedHeight(40 * getScale());
+	connect(toolbar, &OBSToolbar::showStreamPanel, this,
+		&OBSBasic::showStreamingPanel);
 	//frame_toolBar->setStyleSheet("QFrame{background-color: '#444444';}");
 
 	auto frame_panel = new QFrame(frame_inBottom);
@@ -10441,18 +10444,18 @@ void OBSBasic::createUi()
 
 	auto panel1 = new OBSPanel(tr("Main Scene"), frame_panel);
 	panel1->setFixedWidth(416 * getScale());
-	connect(panel1, &OBSPanel::addNewScene, this,
+	connect(panel1, &OBSPanel::addClicked, this,
 		&OBSBasic::showAddScenePanel);
 
 	auto panel2 = new OBSPanel(tr("Sub Scene"), frame_panel);
 	panel2->setFixedWidth(416 * getScale());
-	connect(panel2, &OBSPanel::addNewScene, this,
+	connect(panel2, &OBSPanel::addClicked, this,
 		&OBSBasic::showAddScenePanel);
 
 	auto panel3 = new OBSPanel(tr("Audio"), frame_panel);
 	panel3->setFixedWidth(416 * getScale());
-	connect(panel3, &OBSPanel::addNewScene, this,
-		&OBSBasic::showAddScenePanel);
+	connect(panel3, &OBSPanel::addClicked, this,
+		&OBSBasic::showAddAudioPanel);
 
 	auto layout_panel = new QHBoxLayout(frame_panel);
 	layout_panel->setSpacing(6 * getScale());
@@ -10464,9 +10467,29 @@ void OBSBasic::createUi()
 
 void OBSBasic::showAddScenePanel()
 {
-	auto panel = new AddScenesPanel(ui->centralwidget);
+	auto panel = new AddScenesPanel(sourceManager, ui->centralwidget);
 	panel->setFixedSize(612 * getScale(), 496 * getScale());
 	panel->move((this->width() - panel->width()) / 2, (this->height() - panel->height())/2);
+	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
+	panel->show();
+}
+
+void OBSBasic::showAddAudioPanel()
+{
+	auto panel = new AddAudioPanel(sourceManager, ui->centralwidget);
+	panel->setFixedSize(500 * getScale(), 245 * getScale());
+	panel->move((this->width() - panel->width()) / 2,
+		    (this->height() - panel->height()) / 2);
+	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
+	panel->show();
+}
+
+void OBSBasic::showStreamingPanel()
+{
+	auto panel = new StreamingPanel(sourceManager, ui->centralwidget);
+	panel->setFixedSize(400 * getScale(), 508 * getScale());
+	panel->move((this->width() - panel->width()) / 2,
+		    (this->height() - panel->height()) / 2);
 	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
 	panel->show();
 }

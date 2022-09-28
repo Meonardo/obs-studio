@@ -73,6 +73,8 @@ class OBSBasicStats;
 
 #define PREVIEW_EDGE_SIZE 10
 
+#include "obs-source-manager.h"
+
 struct BasicOutputHandler;
 
 enum class QtDataRole {
@@ -852,9 +854,13 @@ private:
 	QLabel* pBtn_close;
 
 	void createUi();
+private:
+	accrecorder::manager::OBSSourceManager *sourceManager;
 
 private slots:
-	void showAddScenePanel();	
+	void showAddScenePanel();
+	void showAddAudioPanel();
+	void showStreamingPanel();
 
 protected:
 	virtual bool eventFilter(QObject *obj, QEvent *event) override;

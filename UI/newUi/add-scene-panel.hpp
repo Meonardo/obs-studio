@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <QWidget>
 #include <qlabel.h>
@@ -16,87 +16,95 @@
 #include <qscrollbar.h>
 #include <qframe.h>
 #include <qpainterpath.h>
+#include <qlistwidget.h>
+#include <qbuttongroup.h>
 #include "font.hpp"
+#include "obs-source-manager.h"
+#include <qfontmetrics.h>
+#include <qcheckbox.h>
 
-/*  Custom Combobox View */
-class ComboBoxView : public QFrame
+/************************************** ComboBox item widget ****************************/
+class ComboBoxItemWidget : public QWidget
+{
+	Q_OBJECT
+public:
+	explicit ComboBoxItemWidget(int index, int width, int height, bool hideLine = false, QWidget *parent = nullptr);
+	void setText(const QString &text) { if (pBtn_text != nullptr) pBtn_text->setText(text); }
+	inline QPushButton *getBtn() { return pBtn_text; }
+protected:
+	void paintEvent(QPaintEvent *event) override;
+private:
+	QPushButton *pBtn_text = nullptr;
+	int itemIndex;
+signals:
+	void btnClicked(int, QString);
+};
+
+/************************************** Combobox View ****************************/
+class ComboBoxView : public QWidget
 {
 	Q_OBJECT
 public:
 	ComboBoxView(QWidget *parent = nullptr);
-	void setRadius(int r) { this->radius = r; }
-	void setShadow(int border) { shadowBorder = border; }
 	inline int shadow() { return shadowBorder; }
-	void setFixedSize(const QSize &size) { this->setFixedSize(size.width(), size.height()); }
-	void setFixedSize(int w, int h) { QFrame::setFixedSize(this->shadowBorder * 2 + w, this->shadowBorder * 2 + h); }
+	void addItems(QStringList list);
+	void setMaxDisplayCount(int count);
+	inline int getCurrentIndex() { return currentIndex; }
+	void setFixedWidth(int w) { QWidget::setFixedWidth( w + 2 * shadowBorder); }
 
 protected:
 	void paintEvent(QPaintEvent *event) override;
 	bool event(QEvent *e) override;
 private:
+	int itemCount = 0;
 	int shadowBorder = 0;
-	int radius = 0;
+	int maxDisplayCount = 1;
+	int currentIndex = 0;
+	int itemHeight = 0;
+	QListWidget *listWidget = nullptr;
+	QButtonGroup *itemGroup = nullptr;
+	QMap<QListWidgetItem *, ComboBoxItemWidget*> itemMap;
 signals:
 	void viewHide();
+	void itemIndexChanged(int, QString);
 };
 
-/*  Custom Combobox  */
+/************************************** Custom Combobox ****************************/
 class ComboBox : public QFrame {
 	Q_OBJECT
 public:
 	explicit ComboBox(QWidget *parent = nullptr);
-
-	void setText(const QString &text) {
-		if (label_text != nullptr)
-			label_text->setText(text);
-	}
-
 	bool isChecked() { return checked; }
+	void setMaxDisplayCount(int count) { view->setMaxDisplayCount(count); }
+	void addItems(QStringList textList);
+	inline QString getText() { return label_text->text(); }
+	inline int currentIndex() { return m_Index; }
 
 protected:
 	bool event(QEvent *e) override;
+	void resizeEvent(QResizeEvent *event) override;
 
 private:
 	void initUi();
+	void setText(const QString &text);
 
 private:
 	bool checked = false;
 	QLabel *label_text = nullptr;
 	QLabel *label_icon = nullptr;
 	ComboBoxView *view = nullptr;
+	int m_Index;
+signals:
+	void itemIndexChanged(QString);
 };
 
-class ItemDelegate : public QAbstractItemDelegate
-{
-	Q_OBJECT
-
-public:
-	explicit ItemDelegate(QObject *parent = nullptr)
-		: QAbstractItemDelegate(parent){};
-
-    void paint(QPainter *painter,
-			   const QStyleOptionViewItem &option,
-			   const QModelIndex &index) const;
-
-	QSize sizeHint(const QStyleOptionViewItem &option,
-		   const QModelIndex &index) const;
-};
-
-//class ComboBox : public QComboBox
-//{
-//	Q_OBJECT
-//public:
-//	explicit ComboBox(QWidget *parent = nullptr);
-//};
-
+/************************************** Scene settings widget ****************************/
 class SceneSettingsWidget : public QWidget
 {
 	Q_OBJECT
 public:
-	SceneSettingsWidget(QWidget *parent = nullptr) : QWidget(parent)
-	{
-		this->initUi();
-	}
+	SceneSettingsWidget(QWidget *parent = nullptr) : QWidget(parent){ this->initUi(); }
+	void initData(std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>> screenItems);
 
 private:
 	ComboBox *combobox_scenes = nullptr;
@@ -107,13 +115,12 @@ private:
 	void initUi();
 };
 
+/************************************** ipCamera settings widget ****************************/
 class IpCameraSettingsWidget : public QWidget {
 	Q_OBJECT
 public:
-	IpCameraSettingsWidget(QWidget *parent = nullptr) : QWidget(parent)
-	{
-		this->initUi();
-	}
+	IpCameraSettingsWidget(QWidget *parent = nullptr) : QWidget(parent) { this->initUi(); }
+	void initData();
 
 private:
 	ComboBox *combobox_cameraName = nullptr;
@@ -126,13 +133,12 @@ private:
 	void initUi();
 };
 
+/************************************** usbCamera settings widget ****************************/
 class USBCameraSettingsWidget : public QWidget {
 	Q_OBJECT
 public:
-	USBCameraSettingsWidget(QWidget *parent = nullptr) : QWidget(parent)
-	{
-		this->initUi();
-	}
+	USBCameraSettingsWidget(QWidget *parent = nullptr) : QWidget(parent){ this->initUi(); }
+	void initData(std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>> usbCameraSource);
 
 private:
 	ComboBox *combobox_cameraName = nullptr;
@@ -141,27 +147,48 @@ private:
 	ComboBox *combobox_encode = nullptr;
 	ComboBox *combobox_resolution = nullptr;
 
+	QMap<QString, std::shared_ptr<accrecorder::source::CameraSceneItem>> mapCameraSource;
+
 	void initUi();
+
+private slots:
+	void slot_combobox_cameraName_changed(QString);
 };
 
-
-
-class AddScenesPanel : public QWidget
+/************************************** Basic panel ****************************/
+class BasicPanel : public QWidget
 {
 	Q_OBJECT
-
 public:
-	AddScenesPanel(QWidget *parent);
-	~AddScenesPanel();
+	explicit BasicPanel(QWidget *parent = nullptr) : QWidget(parent) { shadowBorder = 4 * getScale(); }
+	~BasicPanel() {}
+protected:
+	virtual void paintEvent(QPaintEvent *event) override;
+	virtual bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
-	QLabel *pBtn_close = nullptr;
+	int shadowBorder;
+	bool mousePressed = false;
+	QPoint cPos = QPoint();
+};
+
+/************************************** add scene panel ****************************/
+class AddScenesPanel : public BasicPanel
+{
+	Q_OBJECT
+public:
+	AddScenesPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent);
+	~AddScenesPanel() {}
+
+private:
+	QPushButton *pBtn_close = nullptr;
 	QStackedWidget *stackedWidget = nullptr;
 	QPushButton *tabBtn_1 = nullptr;
 	QPushButton *tabBtn_2 = nullptr;
 	QPushButton *tabBtn_3 = nullptr;
 	QPushButton *pBtnCancel = nullptr;
 	QPushButton *pBtnYes = nullptr;
+	QFrame *frame_top = nullptr;
 
 	SceneSettingsWidget *sceneSettingsWidget = nullptr;
 	IpCameraSettingsWidget *ipCameraSettingsWidget = nullptr;
@@ -170,11 +197,49 @@ private:
 	bool mousePressed = false;
 	QPoint cPos = QPoint();
 
-protected:
-	void paintEvent(QPaintEvent *event) override;
-	bool eventFilter(QObject *obj, QEvent *event) override;
+	accrecorder::manager::OBSSourceManager *m_manager;
 
 private:
 	void initUi();
+	void initData();
 
+private slots:
+	void slot_addBtn_clicked();
+};
+
+/************************************** audio panel ****************************/
+class AddAudioPanel : public BasicPanel
+{
+	Q_OBJECT
+public:
+	AddAudioPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent = nullptr);
+	~AddAudioPanel() {}
+
+private:
+	ComboBox *combobox_audio = nullptr;
+	accrecorder::manager::OBSSourceManager *sourceManager;
+
+	void initUi();
+	void initData();
+};
+
+/************************************** push stream panel ****************************/
+class StreamingPanel : public BasicPanel {
+	Q_OBJECT
+public:
+	StreamingPanel(accrecorder::manager::OBSSourceManager *manager,
+		      QWidget *parent = nullptr);
+	~StreamingPanel() {}
+
+private:
+	QLineEdit *lineedit_rtsp1 = nullptr;
+	QLineEdit *lineedit_rtsp2 = nullptr;
+	QLineEdit *lineedit_rtsp3 = nullptr;
+	QCheckBox *checkbox_rtsp1 = nullptr;
+	QCheckBox *checkbox_rtsp2 = nullptr;
+	QCheckBox *checkbox_rtsp3 = nullptr;
+	accrecorder::manager::OBSSourceManager *sourceManager;
+
+	void initUi();
+	void initData();
 };

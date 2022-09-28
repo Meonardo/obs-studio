@@ -51,10 +51,11 @@ void OBSToolbar::initUi()
 			"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}")
 			.arg(checkbox_ai->width()).arg(checkbox_ai->height()));
 
-	QLabel *pBtn_settings_ai = new QLabel(this);
+	QPushButton *pBtn_settings_ai = new QPushButton(this);
 	pBtn_settings_ai->setFixedSize(16 * getScale(), 16 * getScale());
-	pBtn_settings_ai->setStyleSheet(QString("QLabel{ border-image: url(':/res/images/newUi/settings@2x.png');}"));
-
+	pBtn_settings_ai->setStyleSheet(QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
+					"border-image: url(':/res/images/newUi/settings@2x.png'); "
+					"min-width: %1; min-height: %1;}").arg(16 * getScale()));
 
 	QLabel *label_settings_ai = new QLabel(this);
 	label_settings_ai->setText(tr("设置"));
@@ -75,9 +76,12 @@ void OBSToolbar::initUi()
 		"QCheckBox::indicator:unchecked { border-image: url(':/res/images/newUi/switch@2x.png');}"
 		"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}").arg(checkbox_stream->width()).arg(checkbox_stream->height()));
 
-	QLabel *pBtn_settings_stream = new QLabel(this);
+	QPushButton *pBtn_settings_stream = new QPushButton(this);
 	pBtn_settings_stream->setFixedSize(16 * getScale(), 16 * getScale());
-	pBtn_settings_stream->setStyleSheet(QString("QLabel{ border-image: url(':/res/images/newUi/settings@2x.png');}"));
+	pBtn_settings_stream->setStyleSheet(QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
+					"border-image: url(':/res/images/newUi/settings@2x.png'); "
+					"min-width: %1; min-height: %1;}").arg(16 * getScale()));
+	connect(pBtn_settings_stream, & QPushButton::clicked, this, [=](){ emit showStreamPanel(); });
 
 	QLabel *label_settings_stream = new QLabel(this);
 	label_settings_stream->setText(tr("设置"));
@@ -86,7 +90,6 @@ void OBSToolbar::initUi()
 	QHBoxLayout *layout = new QHBoxLayout(this);
 	layout->setSpacing(0);
 	layout->setContentsMargins(0, 0, 0, 0);
-
 	layout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
 
 	layout->addWidget(label, 0, Qt::AlignVCenter);
