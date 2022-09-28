@@ -10321,6 +10321,8 @@ void OBSBasic::ResetProxyStyleSliders()
 
 void OBSBasic::AddTests()
 {
+	using accrecorder::source::SceneItem;
+
 	// OBSSourceManager tests
 	accrecorder::manager::OBSSourceManager manager;
 	// add events sender
@@ -10335,7 +10337,8 @@ void OBSBasic::AddTests()
 		auto screen = new accrecorder::source::ScreenSceneItem(
 			*items.back().get());
 
-		if (manager.AttachSceneItem(screen)) {
+		if (manager.AttachSceneItem(screen,
+					    SceneItem::Category::kMain)) {
 			//manager.ApplySceneItemPropertiesUpdate(screen);
 			screen->UpdateScale({0.5, 0.5});
 			manager.ApplySceneItemSettingsUpdate(screen);
@@ -10349,7 +10352,8 @@ void OBSBasic::AddTests()
 		std::string cameraURL("rtsp://192.168.99.169/1");
 		auto ipCameraItem =
 			manager.CreateIPCameraItem(cameraName, cameraURL);
-		if (manager.AttachSceneItem(ipCameraItem)) {
+		if (manager.AttachSceneItem(ipCameraItem,
+					    SceneItem::Category::kMain)) {
 			ipCameraItem->UpdateScale({0.3f, 0.3f});
 			manager.ApplySceneItemSettingsUpdate(ipCameraItem);
 		}
@@ -10362,7 +10366,8 @@ void OBSBasic::AddTests()
 		// copy camera item
 		auto camera = new accrecorder::source::CameraSceneItem(
 			*cameraItems.front().get());
-		if (manager.AttachSceneItem(camera)) {
+		if (manager.AttachSceneItem(camera,
+					    SceneItem::Category::kPiP)) {
 			camera->UpdateScale({0.5, 0.5});
 			camera->UpdatePosition({0, 300});
 			manager.ApplySceneItemSettingsUpdate(camera);

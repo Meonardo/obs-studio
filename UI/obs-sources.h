@@ -26,6 +26,12 @@ public:
 		kWindow
 	};
 
+	enum Category {
+		kDefault = 0,
+		kMain,
+		kPiP
+	};
+
 	struct Settings {
 		// position
 		vec2 pos;
@@ -47,6 +53,8 @@ public:
 	virtual std::string Kind() const = 0;
 	// item type enum(external)
 	virtual Type type() const = 0;
+	// category
+	virtual Category category() const = 0;
 
 	// item location & scale in the scene
 	virtual Settings GetSettings() const = 0;
@@ -81,6 +89,7 @@ public:
 	virtual void SetName(std::string &name) override;
 	virtual std::string Kind() const override;
 	virtual Type type() const override;
+	virtual Category category() const override;
 
 	virtual Settings GetSettings() const override;
 	virtual void UpdateSettings(Settings b) override;
@@ -106,6 +115,7 @@ protected:
 private:
 	std::string name_;
 	Type type_;
+	Category category_;
 	Settings settings_;
 	uint64_t scene_id_;
 	bool should_apply_changes_;
@@ -124,6 +134,7 @@ public:
 	virtual void SetName(std::string &name) override;
 	virtual std::string Kind() const override;
 	virtual Type type() const override;
+	virtual Category category() const override;
 	virtual Settings GetSettings() const override;
 	virtual void UpdateSettings(Settings b) override;
 	virtual void Hide(bool hidden) override;
@@ -143,6 +154,7 @@ protected:
 private:
 	std::string name_;
 	Type type_;
+	Category category_;
 	Settings settings_;
 	uint64_t scene_id_;
 	bool should_apply_changes_;
@@ -163,6 +175,7 @@ public:
 	virtual void SetName(std::string &name) override;
 	virtual std::string Kind() const override;
 	virtual Type type() const override;
+	virtual Category category() const override;
 	virtual Settings GetSettings() const override;
 	virtual void UpdateSettings(Settings b) override;
 	virtual void Hide(bool hidden) override;
@@ -187,6 +200,7 @@ protected:
 private:
 	std::string name_;
 	Type type_;
+	Category category_;
 	Settings settings_;
 	uint64_t scene_id_;
 	bool should_apply_changes_;
@@ -220,6 +234,7 @@ public:
 	virtual bool ShouldApplyAnyUpdates() const override;
 	virtual void MarkUpdateCompleted() override;
 	virtual obs_data_t *Properties() const override;
+	virtual Category category() const override;
 
 	virtual std::string Kind() const = 0;
 	virtual Type type() const = 0;
@@ -232,6 +247,8 @@ protected:
 
 	std::string name_;
 	Type type_;
+	Category category_;
+
 	Settings settings_;
 	uint64_t scene_id_;
 	bool should_apply_changes_;
@@ -266,7 +283,7 @@ public:
 	Scene(const Scene &copy) = delete;
 	~Scene();
 
-	bool Attach(SceneItem *item);
+	bool Attach(SceneItem *item, SceneItem::Category category);
 	bool Detach(SceneItem *item, bool deleteIt = false);
 	bool ApplySceneItemSettingsUpdate(SceneItem *item);
 

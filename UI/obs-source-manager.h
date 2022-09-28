@@ -18,7 +18,9 @@ public:
 	// rename the scene item
 	bool Rename(source::SceneItem *item, std::string &newName);
 	// attach the scene item to the main scene
-	bool AttachSceneItem(source::SceneItem *item);
+	bool AttachSceneItem(source::SceneItem *item,
+			     source::SceneItem::Category category =
+				     source::SceneItem::Category::kDefault);
 	// apply scene item properties settings(internal settings)
 	bool ApplySceneItemPropertiesUpdate(source::SceneItem *item);
 	// apply scene item settings update(in the scene)
