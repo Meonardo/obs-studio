@@ -10358,55 +10358,55 @@ void OBSBasic::AddTests()
 			manager.ApplySceneItemSettingsUpdate(ipCameraItem);
 		}
 
-		// usb camera items
-		auto cameraItems = std::vector<
-			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
-		manager.ListCameraItems(cameraItems);
+		//// usb camera items
+		//auto cameraItems = std::vector<
+		//	std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+		//manager.ListCameraItems(cameraItems);
 
-		// copy camera item
-		auto camera = new accrecorder::source::CameraSceneItem(
-			*cameraItems.front().get());
-		if (manager.AttachSceneItem(camera,
-					    SceneItem::Category::kPiP)) {
-			camera->UpdateScale({0.5, 0.5});
-			camera->UpdatePosition({0, 300});
-			manager.ApplySceneItemSettingsUpdate(camera);
+		//// copy camera item
+		//auto camera = new accrecorder::source::CameraSceneItem(
+		//	*cameraItems.front().get());
+		//if (manager.AttachSceneItem(camera,
+		//			    SceneItem::Category::kPiP)) {
+		//	camera->UpdateScale({0.5, 0.5});
+		//	camera->UpdatePosition({0, 300});
+		//	manager.ApplySceneItemSettingsUpdate(camera);
 
-			// select resolution & fps test case
-			camera->SelectResolution(3);
-			camera->SelectFps(3);
-			manager.ApplySceneItemPropertiesUpdate(camera);
+		//	// select resolution & fps test case
+		//	camera->SelectResolution(3);
+		//	camera->SelectFps(3);
+		//	manager.ApplySceneItemPropertiesUpdate(camera);
 
-			std::vector<std::string> res;
-			camera->GetAvailableResolutions(res);
-			std::vector<std::tuple<std::string, int64_t>> fps;
-			camera->GetAvailableFps(fps);
-		}
+		//	std::vector<std::string> res;
+		//	camera->GetAvailableResolutions(res);
+		//	std::vector<std::tuple<std::string, int64_t>> fps;
+		//	camera->GetAvailableFps(fps);
+		//}
 
-		// audio input & output item
-		auto audioInputItem = std::vector<
-			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
-		manager.ListAudioItems(audioInputItem);
-		// copy
-		auto input = new accrecorder::source::AudioInputItem(
-			*reinterpret_cast<accrecorder::source::AudioInputItem *>(
-				audioInputItem[1].get()));
-		if (manager.AttachSceneItem(input)) {
-			// success
-		}
+		//// audio input & output item
+		//auto audioInputItem = std::vector<
+		//	std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+		//manager.ListAudioItems(audioInputItem);
+		//// copy
+		//auto input = new accrecorder::source::AudioInputItem(
+		//	*reinterpret_cast<accrecorder::source::AudioInputItem *>(
+		//		audioInputItem[1].get()));
+		//if (manager.AttachSceneItem(input)) {
+		//	// success
+		//}
 
-		auto audioOutputItem = std::vector<
-			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
-		manager.ListAudioItems(audioOutputItem, false);
-		// copy
-		auto output = new accrecorder::source::AudioOutputItem(
-			*reinterpret_cast<accrecorder::source::AudioOutputItem *>(
-				audioOutputItem[1].get()));
-		if (manager.AttachSceneItem(output)) {
-			// success
-		}
+		//auto audioOutputItem = std::vector<
+		//	std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+		//manager.ListAudioItems(audioOutputItem, false);
+		//// copy
+		//auto output = new accrecorder::source::AudioOutputItem(
+		//	*reinterpret_cast<accrecorder::source::AudioOutputItem *>(
+		//		audioOutputItem[1].get()));
+		//if (manager.AttachSceneItem(output)) {
+		//	// success
+		//}
 
-		std::string address("rtmp://192.168.99.115:1395");
+		std::string address("rtmp://192.168.99.48:1935");
 		std::string username("");
 		std::string passwd("");
 		manager.SetStreamAddress(address, username, passwd);
