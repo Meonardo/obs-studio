@@ -179,7 +179,14 @@ VolControl::VolControl(OBSSource source_, bool showConfig, bool vertical)
 
 	if (showConfig) {
 		config = new QPushButton(this);
-		config->setProperty("themeID", "menuIconSmall");
+		config->setFixedSize(16 * getScale(), 16 * getScale());
+		config->setStyleSheet(
+			QString("QPushButton{ border-image: url(':/res/images/newUi/delete@2x.png'); "
+				"min-width: %1; min-height:%2px; padding:0px; border: 1px solid transparent; background-color: transparent;}"
+				"QPushButton::hover{ border-image: url(':/res/images/newUi/delete2@2x.png');}")
+				.arg(16 * getScale())
+				.arg(16 * getScale()));
+		//config->setProperty("themeID", "menuIconSmall");
 		config->setSizePolicy(QSizePolicy::Maximum,
 				      QSizePolicy::Maximum);
 		config->setMaximumSize(22, 22);
@@ -257,20 +264,21 @@ VolControl::VolControl(OBSSource source_, bool showConfig, bool vertical)
 
 		textLayout->setContentsMargins(0, 0, 0, 0);
 		textLayout->addWidget(nameLabel);
-		textLayout->addWidget(volLabel);
 		textLayout->setAlignment(nameLabel, Qt::AlignLeft);
-		textLayout->setAlignment(volLabel, Qt::AlignRight);
 
-		volLayout->addWidget(slider);
+		if (showConfig)
+			textLayout->addWidget(config);
+
 		volLayout->addWidget(mute);
+		volLayout->addWidget(slider);
 		volLayout->setSpacing(5);
+
+		volLayout->addWidget(volLabel);
+		volLayout->setAlignment(volLabel, Qt::AlignRight);
 
 		botLayout->setContentsMargins(0, 0, 0, 0);
 		botLayout->setSpacing(0);
 		botLayout->addLayout(volLayout);
-
-		if (showConfig)
-			botLayout->addWidget(config);
 
 		mainLayout->addItem(textLayout);
 		mainLayout->addWidget(volMeter);

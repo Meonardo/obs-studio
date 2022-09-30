@@ -3431,114 +3431,14 @@ void OBSBasic::LockVolumeControl(bool lock)
 	vol->EnableSlider(!lock);
 }
 
+// delete audio source
 void OBSBasic::VolControlContextMenu()
 {
 	VolControl *vol = reinterpret_cast<VolControl *>(sender());
+	std::string name = obs_source_get_name(vol->GetSource());
+  sourceManager->RemoveSceneItemByName(name);
 
-	/* ------------------- */
-
-	QAction lockAction(QTStr("LockVolume"), this);
-	lockAction.setCheckable(true);
-	lockAction.setChecked(SourceVolumeLocked(vol->GetSource()));
-
-	QAction hideAction(QTStr("Hide"), this);
-	QAction unhideAllAction(QTStr("UnhideAll"), this);
-	QAction mixerRenameAction(QTStr("Rename"), this);
-
-	QAction copyFiltersAction(QTStr("Copy.Filters"), this);
-	QAction pasteFiltersAction(QTStr("Paste.Filters"), this);
-
-	QAction filtersAction(QTStr("Filters"), this);
-	QAction propertiesAction(QTStr("Properties"), this);
-	QAction advPropAction(QTStr("Basic.MainMenu.Edit.AdvAudio"), this);
-
-	QAction toggleControlLayoutAction(QTStr("VerticalLayout"), this);
-	toggleControlLayoutAction.setCheckable(true);
-	toggleControlLayoutAction.setChecked(config_get_bool(
-		GetGlobalConfig(), "BasicWindow", "VerticalVolControl"));
-
-	/* ------------------- */
-
-	connect(&hideAction, &QAction::triggered, this,
-		&OBSBasic::HideAudioControl, Qt::DirectConnection);
-	connect(&unhideAllAction, &QAction::triggered, this,
-		&OBSBasic::UnhideAllAudioControls, Qt::DirectConnection);
-	connect(&lockAction, &QAction::toggled, this,
-		&OBSBasic::LockVolumeControl, Qt::DirectConnection);
-	connect(&mixerRenameAction, &QAction::triggered, this,
-		&OBSBasic::MixerRenameSource, Qt::DirectConnection);
-
-	connect(&copyFiltersAction, &QAction::triggered, this,
-		&OBSBasic::AudioMixerCopyFilters, Qt::DirectConnection);
-	connect(&pasteFiltersAction, &QAction::triggered, this,
-		&OBSBasic::AudioMixerPasteFilters, Qt::DirectConnection);
-
-	connect(&filtersAction, &QAction::triggered, this,
-		&OBSBasic::GetAudioSourceFilters, Qt::DirectConnection);
-	connect(&propertiesAction, &QAction::triggered, this,
-		&OBSBasic::GetAudioSourceProperties, Qt::DirectConnection);
-	connect(&advPropAction, &QAction::triggered, this,
-		&OBSBasic::on_actionAdvAudioProperties_triggered,
-		Qt::DirectConnection);
-
-	/* ------------------- */
-
-	connect(&toggleControlLayoutAction, &QAction::changed, this,
-		&OBSBasic::ToggleVolControlLayout, Qt::DirectConnection);
-
-	/* ------------------- */
-
-	hideAction.setProperty("volControl",
-			       QVariant::fromValue<VolControl *>(vol));
-	lockAction.setProperty("volControl",
-			       QVariant::fromValue<VolControl *>(vol));
-	mixerRenameAction.setProperty("volControl",
-				      QVariant::fromValue<VolControl *>(vol));
-
-	copyFiltersAction.setProperty("volControl",
-				      QVariant::fromValue<VolControl *>(vol));
-	pasteFiltersAction.setProperty("volControl",
-				       QVariant::fromValue<VolControl *>(vol));
-
-	filtersAction.setProperty("volControl",
-				  QVariant::fromValue<VolControl *>(vol));
-	propertiesAction.setProperty("volControl",
-				     QVariant::fromValue<VolControl *>(vol));
-
-	/* ------------------- */
-
-	copyFiltersAction.setEnabled(obs_source_filter_count(vol->GetSource()) >
-				     0);
-
-	OBSSourceAutoRelease source =
-		obs_weak_source_get_source(copyFiltersSource);
-	if (source) {
-		pasteFiltersAction.setEnabled(true);
-	} else {
-		pasteFiltersAction.setEnabled(false);
-	}
-
-	QMenu popup;
-	vol->SetContextMenu(&popup);
-	popup.addAction(&lockAction);
-	popup.addSeparator();
-	popup.addAction(&unhideAllAction);
-	popup.addAction(&hideAction);
-	popup.addAction(&mixerRenameAction);
-	popup.addSeparator();
-	popup.addAction(&copyFiltersAction);
-	popup.addAction(&pasteFiltersAction);
-	popup.addSeparator();
-	popup.addAction(&toggleControlLayoutAction);
-	popup.addSeparator();
-	popup.addAction(&filtersAction);
-	popup.addAction(&propertiesAction);
-	popup.addAction(&advPropAction);
-
-	// toggleControlLayoutAction deletes and re-creates the volume controls
-	// meaning that "vol" would be pointing to freed memory.
-	if (popup.exec(QCursor::pos()) != &toggleControlLayoutAction)
-		vol->SetContextMenu(nullptr);
+  DeactivateAudioSource(vol->GetSource());
 }
 
 void OBSBasic::on_hMixerScrollArea_customContextMenuRequested()
@@ -3657,18 +3557,20 @@ void OBSBasic::ActivateAudioSource(OBSSource source)
 
 	vol->setContextMenuPolicy(Qt::CustomContextMenu);
 
-	connect(vol, &QWidget::customContextMenuRequested, this,
-		&OBSBasic::VolControlContextMenu);
+	/*connect(vol, &QWidget::customContextMenuRequested, this,
+		&OBSBasic::VolControlContextMenu);*/
 	connect(vol, &VolControl::ConfigClicked, this,
 		&OBSBasic::VolControlContextMenu);
 
 	InsertQObjectByName(volumes, vol);
 
 	for (auto volume : volumes) {
-		if (vertical)
+		if (audioPanel != nullptr) 
+			audioPanel->addAudioItem(volume);
+		/*if (vertical)
 			ui->vVolControlLayout->addWidget(volume);
 		else
-			ui->hVolControlLayout->addWidget(volume);
+			ui->hVolControlLayout->addWidget(volume);*/
 	}
 }
 

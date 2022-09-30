@@ -852,8 +852,6 @@ private:
 	bool LowDiskSpace();
 	void DiskSpaceMessage();
 
-	//void AddTests();
-
 	OBSSource prevFTBSource = nullptr;
 
 	float dpi = 1.0;
