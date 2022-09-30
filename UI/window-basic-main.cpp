@@ -10325,19 +10325,19 @@ void OBSBasic::createUi()
 	layout_tool->addWidget(toolbar);
 	layout_tool->addWidget(frame_panel);
 
-	scenePanel = new OBSPanel(QString::fromLocal8Bit("主画面"), frame_panel);
+	scenePanel = new OBSPanel(QTStr("NewUi.MainScreen"), frame_panel);
 	scenePanel->setMinimumWidth(416 * getScale());
 	connect(scenePanel, &OBSPanel::addClicked, this, [=]() {
 		this->showSceneSettingsPanel(accrecorder::source::SceneItem::Category::kMain);
 	});
 
-	subScenePanel = new OBSPanel(QString::fromLocal8Bit("画中画"), frame_panel);
+	subScenePanel = new OBSPanel(QTStr("NewUi.Pip"), frame_panel);
 	subScenePanel->setMinimumWidth(416 * getScale());
 	connect(subScenePanel, &OBSPanel::addClicked, this, [=]() {
 		this->showSceneSettingsPanel(accrecorder::source::SceneItem::Category::kPiP);
 	});
 
-	audioPanel = new OBSPanel(QString::fromLocal8Bit("音轨"), frame_panel);
+	audioPanel = new OBSPanel(QTStr("NewUi.AudioTrack"), frame_panel);
 	audioPanel->setMinimumWidth(416 * getScale());
 	connect(audioPanel, &OBSPanel::addClicked, this,
 		&OBSBasic::showAudioSettingsPanel);
@@ -10357,6 +10357,8 @@ void OBSBasic::createUi()
 
 void OBSBasic::initData()
 {
+	this->resize(1280 * getScale(), 768 * getScale());
+
 	sourceManager = new accrecorder::manager::OBSSourceManager;
 	scenePanel->setManager(sourceManager);
 	subScenePanel->setManager(sourceManager);

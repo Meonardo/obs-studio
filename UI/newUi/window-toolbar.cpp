@@ -6,6 +6,7 @@
 #include <qlayout.h>
 #include <qdebug.h>
 #include "font.hpp"
+#include "obs-app.hpp"
 
 OBSToolbar::OBSToolbar(QWidget *parent)
 	: QWidget(parent)
@@ -27,7 +28,7 @@ void OBSToolbar::paintEvent(QPaintEvent *event)
 void OBSToolbar::initUi()
 {
 	QLabel *label = new QLabel(this);
-	label->setText(tr("导播"));
+	label->setText(QTStr("NewUi.Guide"));
 	label->setStyleSheet(QString("QLabel{ color: white; %1}").arg(getFontStyle(14)));
 	label->hide();
 
@@ -42,7 +43,7 @@ void OBSToolbar::initUi()
 	label_line->hide();
 
 	QLabel *label_1 = new QLabel(this);
-	label_1->setText(tr("AI板书"));
+	label_1->setText(QTStr("NewUi.AiBlackboard"));
 	label_1->setStyleSheet(QString("QLabel{ color: white; %1}").arg(getFontStyle(14)));
 	label_1->hide();
 
@@ -65,7 +66,7 @@ void OBSToolbar::initUi()
 	pBtn_settings_ai->hide();
 
 	QLabel *label_settings_ai = new QLabel(this);
-	label_settings_ai->setText(tr("设置"));
+	label_settings_ai->setText(QTStr("NewUi.Settings"));
 	label_settings_ai->setStyleSheet(QString("QLabel{ color: rgb(170,170,170); %1}").arg(getFontStyle(12)));
 	label_settings_ai->hide();
 
@@ -75,7 +76,7 @@ void OBSToolbar::initUi()
 	label_line_2->hide();
 
 	QLabel *label_2 = new QLabel(this);
-	label_2->setText(tr("推流"));
+	label_2->setText(QTStr("NewUi.Streaming"));
 	label_2->setStyleSheet(QString("QLabel{ color: white; %1}").arg(getFontStyle(14)));
 
 	QPushButton *pBtn_settings_stream = new QPushButton(this);
@@ -100,7 +101,7 @@ void OBSToolbar::initUi()
 	});
 
 	QLabel *label_settings_stream = new QLabel(this);
-	label_settings_stream->setText(tr("设置"));
+	label_settings_stream->setText(QTStr("NewUi.Settings"));
 	label_settings_stream->setStyleSheet(QString("QLabel{ color: rgb(170,170,170); %1}").arg(getFontStyle(12)));
 
 	QHBoxLayout *layout = new QHBoxLayout(this);
