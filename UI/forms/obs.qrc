@@ -72,6 +72,19 @@
         <file>images/newUi/settings@2x.png</file>
         <file>images/newUi/arrow@2x.png</file>
         <file>images/newUi/arrow_on@2x.png</file>
+        <file>images/newUi/banshu@2x.png</file>
+        <file>images/newUi/banshu2@2x.png</file>
+        <file>images/newUi/danxuan@2x.png</file>
+        <file>images/newUi/danxuan2@2x.png</file>
+        <file>images/newUi/duoxuan@2x.png</file>
+        <file>images/newUi/duoxuan2@2x.png</file>
+        <file>images/newUi/ipcamera@2x.png</file>
+        <file>images/newUi/ipcamera2@2x.png</file>
+        <file>images/newUi/usbcamera@2x.png</file>
+        <file>images/newUi/usbcamera2@2x.png</file>
+        <file>images/newUi/more@2x.png</file>
+        <file>images/newUi/delete@2x.png</file>
+        <file>images/newUi/delete2@2x.png</file>
     </qresource>
     <qresource prefix="/settings">
         <file>images/settings/output.svg</file>

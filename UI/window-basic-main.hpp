@@ -39,6 +39,14 @@
 #include "log-viewer.hpp"
 #include "undo-stack-obs.hpp"
 
+/* add by luoweidong start*/
+#include "newUi/window-panel.hpp"
+#include <qpainter.h>
+#include "newUi/window-toolbar.hpp"
+#include "newUi/font.hpp"
+#include "newUi/add-scene-panel.hpp"
+/* add by luoweidong end*/
+
 #include <obs-frontend-internal.hpp>
 
 #include <util/platform.h>
@@ -844,26 +852,29 @@ private:
 	bool LowDiskSpace();
 	void DiskSpaceMessage();
 
-	void AddTests();
+	//void AddTests();
 
 	OBSSource prevFTBSource = nullptr;
 
 	float dpi = 1.0;
 
 	/*add by luoweidong -- start*/
-	QLabel* pBtn_close;
-
 	void createUi();
-private:
+	void initData();
+ private:
+	OBSPanel *scenePanel;
+	OBSPanel *subScenePanel;
+	OBSPanel *audioPanel;
+	QFrame *frame_cover;
 	accrecorder::manager::OBSSourceManager *sourceManager;
 
-private slots:
-	void showAddScenePanel();
-	void showAddAudioPanel();
-	void showStreamingPanel();
+	void showSceneSettingsPanel(accrecorder::source::SceneItem::Category);
 
 protected:
-	virtual bool eventFilter(QObject *obj, QEvent *event) override;
+	bool event(QEvent *event);
+private slots:
+	void showAudioSettingsPanel();
+	void showStreamingPanel();
 	/*add by luoweidong -- end*/
 
 public:

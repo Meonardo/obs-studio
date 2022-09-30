@@ -29,18 +29,22 @@ void OBSToolbar::initUi()
 	QLabel *label = new QLabel(this);
 	label->setText(tr("导播"));
 	label->setStyleSheet(QString("QLabel{ color: white; %1}").arg(getFontStyle(14)));
+	label->hide();
 
 	QFrame *switch_mode = new QFrame(this);
 	switch_mode->setFixedSize(104 * getScale(), 28 * getScale());
 	switch_mode->setStyleSheet("QFrame{ background-color: rgb(102,102,102);}");
+	switch_mode->hide();
 
 	QLabel *label_line = new QLabel(this);
 	label_line->setFixedSize(1 * getScale(), 28 * getScale());
 	label_line->setStyleSheet("QLabel{background-color: rgb(34,34,34);}");
+	label_line->hide();
 
 	QLabel *label_1 = new QLabel(this);
 	label_1->setText(tr("AI板书"));
 	label_1->setStyleSheet(QString("QLabel{ color: white; %1}").arg(getFontStyle(14)));
+	label_1->hide();
 
 	QCheckBox *checkbox_ai = new QCheckBox(this);
 	checkbox_ai->setFixedSize(42 * getScale(), 24 * getScale());
@@ -50,24 +54,37 @@ void OBSToolbar::initUi()
 			"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}"
 			"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}")
 			.arg(checkbox_ai->width()).arg(checkbox_ai->height()));
+	checkbox_ai->hide();
 
 	QPushButton *pBtn_settings_ai = new QPushButton(this);
 	pBtn_settings_ai->setFixedSize(16 * getScale(), 16 * getScale());
 	pBtn_settings_ai->setStyleSheet(QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
 					"border-image: url(':/res/images/newUi/settings@2x.png'); "
 					"min-width: %1; min-height: %1;}").arg(16 * getScale()));
+	pBtn_settings_ai->setEnabled(false);
+	pBtn_settings_ai->hide();
 
 	QLabel *label_settings_ai = new QLabel(this);
 	label_settings_ai->setText(tr("设置"));
 	label_settings_ai->setStyleSheet(QString("QLabel{ color: rgb(170,170,170); %1}").arg(getFontStyle(12)));
+	label_settings_ai->hide();
 
 	QLabel *label_line_2 = new QLabel(this);
 	label_line_2->setFixedSize(1 * getScale(), 28 * getScale());
 	label_line_2->setStyleSheet("QLabel{background-color: rgb(34,34,34);}");
+	label_line_2->hide();
 
 	QLabel *label_2 = new QLabel(this);
 	label_2->setText(tr("推流"));
 	label_2->setStyleSheet(QString("QLabel{ color: white; %1}").arg(getFontStyle(14)));
+
+	QPushButton *pBtn_settings_stream = new QPushButton(this);
+	pBtn_settings_stream->setFixedSize(16 * getScale(), 16 * getScale());
+	pBtn_settings_stream->setEnabled(false);
+	pBtn_settings_stream->setStyleSheet(QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
+					"border-image: url(':/res/images/newUi/settings@2x.png'); "
+					"min-width: %1; min-height: %1;}").arg(16 * getScale()));
+	connect(pBtn_settings_stream, & QPushButton::clicked, this, [=](){ emit showStreamPanel(); });
 
 	QCheckBox *checkbox_stream = new QCheckBox(this);
 	checkbox_stream->setFixedSize(42 * getScale(), 24 * getScale());
@@ -75,13 +92,12 @@ void OBSToolbar::initUi()
 		"QCheckBox::indicator { width: %1; height:%2; image: url(''); }"
 		"QCheckBox::indicator:unchecked { border-image: url(':/res/images/newUi/switch@2x.png');}"
 		"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/switch2@2x.png');}").arg(checkbox_stream->width()).arg(checkbox_stream->height()));
-
-	QPushButton *pBtn_settings_stream = new QPushButton(this);
-	pBtn_settings_stream->setFixedSize(16 * getScale(), 16 * getScale());
-	pBtn_settings_stream->setStyleSheet(QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
-					"border-image: url(':/res/images/newUi/settings@2x.png'); "
-					"min-width: %1; min-height: %1;}").arg(16 * getScale()));
-	connect(pBtn_settings_stream, & QPushButton::clicked, this, [=](){ emit showStreamPanel(); });
+	connect(checkbox_stream, &QCheckBox::stateChanged, this, [=](int state) {
+		if (0 == state)
+			pBtn_settings_stream->setEnabled(false);
+		else
+			pBtn_settings_stream->setEnabled(true);
+	});
 
 	QLabel *label_settings_stream = new QLabel(this);
 	label_settings_stream->setText(tr("设置"));

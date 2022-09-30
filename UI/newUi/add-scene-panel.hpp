@@ -23,6 +23,7 @@
 #include <qfontmetrics.h>
 #include <qcheckbox.h>
 
+
 /************************************** ComboBox item widget ****************************/
 class ComboBoxItemWidget : public QWidget
 {
@@ -105,6 +106,7 @@ class SceneSettingsWidget : public QWidget
 public:
 	SceneSettingsWidget(QWidget *parent = nullptr) : QWidget(parent){ this->initUi(); }
 	void initData(std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>> screenItems);
+	int getSceneIndex() { return combobox_scenes->currentIndex();  }
 
 private:
 	ComboBox *combobox_scenes = nullptr;
@@ -139,6 +141,7 @@ class USBCameraSettingsWidget : public QWidget {
 public:
 	USBCameraSettingsWidget(QWidget *parent = nullptr) : QWidget(parent){ this->initUi(); }
 	void initData(std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>> usbCameraSource);
+	int getSceneIndex() { return combobox_cameraName->currentIndex(); }
 
 private:
 	ComboBox *combobox_cameraName = nullptr;
@@ -160,7 +163,12 @@ class BasicPanel : public QWidget
 {
 	Q_OBJECT
 public:
-	explicit BasicPanel(QWidget *parent = nullptr) : QWidget(parent) { shadowBorder = 4 * getScale(); }
+	explicit BasicPanel(QWidget *parent = nullptr) : QWidget(parent)
+	{
+		shadowBorder = 4 * getScale();
+		this->setWindowFlags(Qt::FramelessWindowHint);
+		this->setAttribute(Qt::WA_TranslucentBackground, true);
+	}
 	~BasicPanel() {}
 protected:
 	virtual void paintEvent(QPaintEvent *event) override;
@@ -173,12 +181,13 @@ private:
 };
 
 /************************************** add scene panel ****************************/
-class AddScenesPanel : public BasicPanel
+class ScenesSettingsPanel : public BasicPanel
 {
 	Q_OBJECT
 public:
-	AddScenesPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent);
-	~AddScenesPanel() {}
+	ScenesSettingsPanel(accrecorder::manager::OBSSourceManager *manager,
+		       accrecorder::source::SceneItem::Category categroy, QWidget *parent = nullptr);
+	~ScenesSettingsPanel() {}
 
 private:
 	QPushButton *pBtn_close = nullptr;
@@ -197,7 +206,8 @@ private:
 	bool mousePressed = false;
 	QPoint cPos = QPoint();
 
-	accrecorder::manager::OBSSourceManager *m_manager;
+	accrecorder::manager::OBSSourceManager *sourceManager;
+	accrecorder::source::SceneItem::Category itemCategory;
 
 private:
 	void initUi();
@@ -205,15 +215,19 @@ private:
 
 private slots:
 	void slot_addBtn_clicked();
+
+signals:
+	void attachFinished(accrecorder::source::SceneItem *,
+			    accrecorder::source::SceneItem::Category);
 };
 
 /************************************** audio panel ****************************/
-class AddAudioPanel : public BasicPanel
+class AudioSettingsPanel : public BasicPanel
 {
 	Q_OBJECT
 public:
-	AddAudioPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent = nullptr);
-	~AddAudioPanel() {}
+	AudioSettingsPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent = nullptr);
+	~AudioSettingsPanel() {}
 
 private:
 	ComboBox *combobox_audio = nullptr;
@@ -224,12 +238,12 @@ private:
 };
 
 /************************************** push stream panel ****************************/
-class StreamingPanel : public BasicPanel {
+class StreamingSettingsPanel : public BasicPanel {
 	Q_OBJECT
 public:
-	StreamingPanel(accrecorder::manager::OBSSourceManager *manager,
+	StreamingSettingsPanel(accrecorder::manager::OBSSourceManager *manager,
 		      QWidget *parent = nullptr);
-	~StreamingPanel() {}
+	~StreamingSettingsPanel() {}
 
 private:
 	QLineEdit *lineedit_rtsp1 = nullptr;

@@ -705,14 +705,15 @@ bool BasicPanel::eventFilter(QObject *obj, QEvent *event)
 }
 
 /*********************************** Add scene panel *******************************************/
-AddScenesPanel::AddScenesPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent) : m_manager(manager), BasicPanel(parent)
+ScenesSettingsPanel::ScenesSettingsPanel(accrecorder::manager::OBSSourceManager *manager, accrecorder::source::SceneItem::Category categroy,
+		QWidget *parent) : sourceManager(manager), itemCategory(categroy), BasicPanel(parent)
 {
 	this->initUi();
 	this->installEventFilter(this);
 	this->initData();
 }
 
-void AddScenesPanel::initUi()
+void ScenesSettingsPanel::initUi()
 {
 	frame_top = new QFrame(this);
 	frame_top->setFixedHeight(70 * getScale());
@@ -720,7 +721,10 @@ void AddScenesPanel::initUi()
 	frame_top->setStyleSheet("#frame_top{background-color: transparent;}");
 
 	QLabel *label_title = new QLabel(frame_top);
-	label_title->setText(QString::fromLocal8Bit("添加主画面"));
+	if (itemCategory == accrecorder::source::SceneItem::Category::kMain)
+		label_title->setText(QString::fromLocal8Bit("添加主画面"));
+	else if (itemCategory == accrecorder::source::SceneItem::Category::kPiP)
+		label_title->setText(QString::fromLocal8Bit("添加画中画"));
 	label_title->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(22, FontWeight::Blod)));
 
@@ -831,7 +835,7 @@ void AddScenesPanel::initUi()
 			"color: rgb(255, 255, 255); %2}")
 			.arg(6 * getScale())
 			.arg(getFontStyle(16)));
-	connect(pBtnYes, &QPushButton::clicked, this, &AddScenesPanel::slot_addBtn_clicked);
+	connect(pBtnYes, &QPushButton::clicked, this, &ScenesSettingsPanel::slot_addBtn_clicked);
 
 	QHBoxLayout *layout_bottom = new QHBoxLayout(frame_bottom);
 	layout_bottom->setSpacing(30 * getScale());
@@ -870,7 +874,7 @@ void AddScenesPanel::initUi()
 	this->setFixedSize(612 * getScale(), 496 * getScale());
 }
 
-void AddScenesPanel::initData()
+void ScenesSettingsPanel::initData()
 {
 	std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>> sceneSource
 			= std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>();	
@@ -878,8 +882,8 @@ void AddScenesPanel::initData()
 	//		= std::vector<std::shared_ptr<accrecorder::source::IPCameraSceneItem>>();	
 	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>> usbCameraSource
 			= std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>();
-	m_manager->ListScreenItems(sceneSource);
-	m_manager->ListCameraItems(usbCameraSource);
+	sourceManager->ListScreenItems(sceneSource);
+	sourceManager->ListCameraItems(usbCameraSource);
 
 	if (nullptr != sceneSettingsWidget)
 		sceneSettingsWidget->initData(sceneSource);
@@ -889,16 +893,38 @@ void AddScenesPanel::initData()
 		usbCameraSettingsWidget->initData(usbCameraSource);
 }
 
-void AddScenesPanel::slot_addBtn_clicked()
+void ScenesSettingsPanel::slot_addBtn_clicked()
 {
-	if (0 == stackedWidget->currentIndex()) {
-	} else if (1 == stackedWidget->currentIndex()) {
-	} else if (2 == stackedWidget->currentIndex()) {
+	accrecorder::source::SceneItem *screen = nullptr;
+	if (0 == stackedWidget->currentIndex()) {	//scene
+		auto items = std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
+		sourceManager->ListScreenItems(items);
+		// copy the item & create new one to the heap
+		screen = new accrecorder::source::ScreenSceneItem(
+			*items[sceneSettingsWidget->getSceneIndex()].get());
+	} else if (1 == stackedWidget->currentIndex()) {	
+	} else if (2 == stackedWidget->currentIndex()) {	//usb camera
+		auto items = std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+		sourceManager->ListCameraItems(items);
+		// copy the item & create new one to the heap
+		screen = new accrecorder::source::CameraSceneItem(
+			*items[usbCameraSettingsWidget->getSceneIndex()].get());
+	}
+
+	if (nullptr != screen && sourceManager->AttachSceneItem(screen , itemCategory)) {
+		screen->Hide(true);
+		//m_manager->ApplySceneItemPropertiesUpdate(screen);
+		sourceManager->ApplySceneItemSettingsUpdate(screen);
+		emit attachFinished(screen, itemCategory);
+		this->close();
+	} else {
+		this->close();
+		this->deleteLater();
 	}
 }
 
 /*********************************** Add audio panel *******************************************/
-AddAudioPanel::AddAudioPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent)
+AudioSettingsPanel::AudioSettingsPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent)
 	: sourceManager(manager), BasicPanel(parent)
 {
 	this->installEventFilter(this);
@@ -907,7 +933,7 @@ AddAudioPanel::AddAudioPanel(accrecorder::manager::OBSSourceManager *manager, QW
 	this->setObjectName("testaudiopanel");
 }
 
-void AddAudioPanel::initUi()
+void AudioSettingsPanel::initUi()
 {
 	QLabel *label_title = new QLabel(this);
 	label_title->setText(QString::fromLocal8Bit("音频设置"));
@@ -971,7 +997,7 @@ void AddAudioPanel::initUi()
 	});
 }
 
-void AddAudioPanel::initData()
+void AudioSettingsPanel::initData()
 {
 	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>> audioItems =
 		std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
@@ -987,7 +1013,7 @@ void AddAudioPanel::initData()
 
 
 /*********************************** Push stream panel *******************************************/
-StreamingPanel::StreamingPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent)
+StreamingSettingsPanel::StreamingSettingsPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent)
 	: sourceManager(manager), BasicPanel(parent)
 {
 	this->installEventFilter(this);
@@ -995,7 +1021,7 @@ StreamingPanel::StreamingPanel(accrecorder::manager::OBSSourceManager *manager, 
 	this->initData();
 }
 
-void StreamingPanel::initUi()
+void StreamingSettingsPanel::initUi()
 {
 	QLabel *label_title = new QLabel(this);
 	label_title->setText(QString::fromLocal8Bit("推流设置"));
@@ -1042,7 +1068,7 @@ void StreamingPanel::initUi()
 	lineedit_rtsp1->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
-	lineedit_rtsp1->setPlaceholderText(QString::fromLocal8Bit("输入RTSP1"));
+	lineedit_rtsp1->setPlaceholderText(QString::fromLocal8Bit("输入RTMP1"));
 	lineedit_rtsp1->move(30 * getScale(), 123 * getScale());
 	QPalette palette = lineedit_rtsp1->palette();
 	palette.setColor(QPalette::PlaceholderText, QColor(170, 170, 170));
@@ -1054,7 +1080,7 @@ void StreamingPanel::initUi()
 	lineedit_rtsp2->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
-	lineedit_rtsp2->setPlaceholderText(QString::fromLocal8Bit("输入RTSP2"));
+	lineedit_rtsp2->setPlaceholderText(QString::fromLocal8Bit("输入RTMP2"));
 	lineedit_rtsp2->setFont(getFont(18));
 	lineedit_rtsp2->move(30 * getScale(), 241 * getScale());
 	lineedit_rtsp2->setPalette(lineedit_rtsp1->palette());
@@ -1065,7 +1091,7 @@ void StreamingPanel::initUi()
 	lineedit_rtsp3->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
-	lineedit_rtsp3->setPlaceholderText(QString::fromLocal8Bit("输入RTSP3"));
+	lineedit_rtsp3->setPlaceholderText(QString::fromLocal8Bit("输入RTMP3"));
 	lineedit_rtsp3->setFont(getFont(18));
 	lineedit_rtsp3->move(30 * getScale(), 359 * getScale());
 	lineedit_rtsp3->setPalette(lineedit_rtsp1->palette());
@@ -1169,21 +1195,14 @@ void StreamingPanel::initUi()
 			return;
 
 		sourceManager->SetStreamAddress(str.toStdString(), QString().toStdString(), QString().toStdString());
+		this->close();
+		this->deleteLater();
 	});
 }
 
-void StreamingPanel::initData()
+void StreamingSettingsPanel::initData()
 {
-//	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>
-//		audioItems = std::vector<
-//			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
-//	sourceManager->ListAudioItems(audioItems);
-//
-//	QStringList nameList;
-//	foreach(auto item, audioItems)
-//	{
-//		nameList.append(QString::fromStdString(item->Name()));
-//	}
-//
-//	combobox_audio->addItems(nameList);
+	std::string address;
+	sourceManager->GetSteamAddress(address, QString().toStdString(),  QString().toStdString());
+	lineedit_rtsp1->setText(QString::fromStdString(address));
 }

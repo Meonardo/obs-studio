@@ -148,7 +148,7 @@ obs_data_t *ScreenSceneItem::Properties() const
 {
 	obs_data_t *data = obs_data_create();
 	obs_data_set_int(data, "monitor", index);
-	obs_data_set_int(data, "method", 0);
+	obs_data_set_int(data, "method", 2);
 	obs_data_set_bool(data, "cursor", show_cursor);
 
 	return data;

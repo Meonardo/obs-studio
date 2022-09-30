@@ -283,6 +283,7 @@ target_sources(
           window-remux.cpp
           window-remux.hpp)
 
+#add by luoweidong start
 target_sources(
   obs
   PRIVATE
@@ -291,15 +292,9 @@ target_sources(
     newUi/window-toolbar.cpp
     newUi/window-panel.hpp
     newUi/window-panel.cpp
-    newUi/window-mode-checkbutton.hpp
-    newUi/window-mode-checkbutton.cpp
-    newUi/window-ai-checkbutton.hpp
-    newUi/window-ai-checkbutton.cpp
-    newUi/m-scene-tree.hpp
-    newUi/m-scene-tree.cpp
     newUi/add-scene-panel.hpp
     newUi/add-scene-panel.cpp)
-
+#add by luoweidong end
 
 target_sources(
   obs
