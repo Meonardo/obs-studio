@@ -69,7 +69,7 @@ function Configure-OBS {
     $BuildDirectoryActual = "${BuildDirectory}$(if (${BuildArch} -eq "x64") { "64" } else { "32" })"
     $GeneratorPlatform = "$(if (${BuildArch} -eq "x64") { "x64" } else { "Win32" })"
     
-    $QTDIR_BASE = "${CheckoutDir}/../../../Programs/Qt/5.15.2/"
+    $QTDIR_BASE = "E:\\Qt\\5.15.2\"
     $QTDIR = "${QTDIR_BASE}$(if (${BuildArch} -eq "x64") { "msvc2019_64" } else { "msvc2019" })"
 
     $CmakeCommand = @(

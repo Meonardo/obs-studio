@@ -283,6 +283,19 @@ target_sources(
           window-remux.cpp
           window-remux.hpp)
 
+#add by luoweidong start
+target_sources(
+  obs
+  PRIVATE
+    newUi/font.hpp
+    newUi/window-toolbar.hpp
+    newUi/window-toolbar.cpp
+    newUi/window-panel.hpp
+    newUi/window-panel.cpp
+    newUi/add-scene-panel.hpp
+    newUi/add-scene-panel.cpp)
+#add by luoweidong end
+
 target_sources(
   obs
   PRIVATE importers/importers.cpp importers/importers.hpp importers/classic.cpp
@@ -511,6 +524,7 @@ source_group(
   FILES ${_UI})
 unset(_SOURCES)
 unset(_UI)
+
 
 define_graphic_modules(obs)
 setup_obs_app(obs)

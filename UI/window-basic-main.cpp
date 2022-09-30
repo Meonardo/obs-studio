@@ -76,6 +76,7 @@
 #include <fstream>
 #include <sstream>
 
+
 #ifdef _WIN32
 #include "win-update/win-update.hpp"
 #include "windows.h"
@@ -274,6 +275,10 @@ OBSBasic::OBSBasic(QWidget *parent)
 	ui->contextContainer->setStyle(new OBSContextBarProxyStyle);
 	ui->broadcastButton->setVisible(false);
 
+	/* add by luoweidong start*/
+	createUi();
+	/* add by luoweidong end*/
+
 	startingDockLayout = saveState();
 
 	statsDock = new OBSDock();
@@ -421,12 +426,12 @@ OBSBasic::OBSBasic(QWidget *parent)
 	ui->actionMainRedo->setShortcutContext(Qt::ApplicationShortcut);
 
 	//hide all docking panes
-	ui->toggleScenes->setChecked(false);
-	ui->toggleSources->setChecked(false);
-	ui->toggleMixer->setChecked(false);
-	ui->toggleTransitions->setChecked(false);
-	ui->toggleControls->setChecked(false);
-	ui->toggleStats->setChecked(false);
+	ui->toggleScenes->setChecked(true);
+	ui->toggleSources->setChecked(true);
+	ui->toggleMixer->setChecked(true);
+	ui->toggleTransitions->setChecked(true);
+	ui->toggleControls->setChecked(true);
+	ui->toggleStats->setChecked(true);
 
 	QPoint curPos;
 
@@ -713,7 +718,7 @@ void OBSBasic::Save(const char *file)
 	OBSScene scene = GetCurrentScene();
 	OBSSource curProgramScene = OBSGetStrongRef(programScene);
 	if (!curProgramScene)
-		curProgramScene = obs_scene_get_source(scene);
+		curProgramScene = obs_scene_get_source(scene); 
 
 	OBSDataArrayAutoRelease sceneOrder = SaveSceneListOrder();
 	OBSDataArrayAutoRelease transitions = SaveTransitions();
@@ -2115,15 +2120,17 @@ void OBSBasic::OBSInit(bool forceHide)
 	}
 
 	// this will hide all the docks.
-	ui->toggleScenes->setChecked(true);
-	ui->toggleSources->setChecked(true);
-	ui->toggleMixer->setChecked(true);
-	ui->toggleTransitions->setChecked(true);
-	ui->toggleControls->setChecked(true);
+	ui->toggleScenes->setChecked(false);
+	ui->toggleSources->setChecked(false);
+	ui->toggleMixer->setChecked(false);
+	ui->toggleTransitions->setChecked(false);
+	ui->toggleControls->setChecked(false);
 	ui->toggleStats->setChecked(false);
 
-	// tests
-	AddTests();
+	//AddTests();
+	/* add by luoweidong start*/
+	initData();
+	/* add by luoweidong end*/
 }
 
 void OBSBasic::OnFirstLoad()
@@ -10319,104 +10326,306 @@ void OBSBasic::ResetProxyStyleSliders()
 	UpdateContextBar(true);
 }
 
-void OBSBasic::AddTests()
+void OBSBasic::createUi()
 {
-	using accrecorder::source::SceneItem;
+	//this->setFixedWidth(1280 * getScale());
+	//this->setFixedHeight(768 * getScale());
+	////this->setAttribute(Qt::WA_TranslucentBackground, true);
+	//this->setWindowFlags(Qt::FramelessWindowHint);
 
-	// OBSSourceManager tests
-	accrecorder::manager::OBSSourceManager manager;
-	// add events sender
-	manager.AddEventsSender(api);
+	//QFrame *frame = new QFrame(ui->centralwidget);
+	//frame->setObjectName("mainframe");
+	//frame->setStyleSheet(QString("#mainframe {"
+	//				 "background-color: '#FFFFFF';"
+	//			     "border-radius: %1px;"
+	//			     "}").arg(12 * getScale()));
 
-	if (!manager.IsMainSceneCreated()) {
-		// screen items
-		auto items = std::vector<
-			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
-		manager.ListScreenItems(items);
-		// copy the item & create new one to the heap
-		auto screen = new accrecorder::source::ScreenSceneItem(
-			*items.back().get());
+	//QVBoxLayout *vlayout = new QVBoxLayout(ui->centralwidget);
+	//vlayout->setSpacing(0);
+	//vlayout->setMargin(0);
+	//vlayout->addWidget(frame);
 
-		if (manager.AttachSceneItem(screen,
-					    SceneItem::Category::kMain)) {
-			//manager.ApplySceneItemPropertiesUpdate(screen);
-			screen->UpdateScale({0.5, 0.5});
-			manager.ApplySceneItemSettingsUpdate(screen);
-		}
-		// rename usecase
-		std::string newName("Chunchun");
-		manager.Rename(screen, newName);
+	///********** Title ***********/
+	//auto frame_top = new QFrame(frame);
+	//frame_top->setFixedHeight(70 * getScale());
+	//frame_top->setStyleSheet("QFrame{ background-color: transparent; }");
 
-		// rtsp camera item
-		std::string cameraName("Baobao");
-		std::string cameraURL("rtsp://192.168.99.169/1");
-		auto ipCameraItem =
-			manager.CreateIPCameraItem(cameraName, cameraURL);
-		if (manager.AttachSceneItem(ipCameraItem,
-					    SceneItem::Category::kMain)) {
-			ipCameraItem->UpdateScale({0.3f, 0.3f});
-			manager.ApplySceneItemSettingsUpdate(ipCameraItem);
-		}
+	//auto label_title = new QLabel(frame_top);
+	//label_title->setText(tr("导播设置"));
+	//label_title->setStyleSheet(QString("QLabel{ color: '#222222'; %1}").arg(getFontStyle(22, FontWeight::Blod)));
 
-		//// usb camera items
-		//auto cameraItems = std::vector<
-		//	std::shared_ptr<accrecorder::source::CameraSceneItem>>();
-		//manager.ListCameraItems(cameraItems);
+	//auto pBtn_fullScreen = new QLabel(frame_top);
+	//pBtn_fullScreen->setFixedSize(36 * getScale(), 36 * getScale());
+	//pBtn_fullScreen->setStyleSheet("QLabel{border-image: url(':/res/images/newUi/fullscreen@2x.png'); }");
 
-		//// copy camera item
-		//auto camera = new accrecorder::source::CameraSceneItem(
-		//	*cameraItems.front().get());
-		//if (manager.AttachSceneItem(camera,
-		//			    SceneItem::Category::kPiP)) {
-		//	camera->UpdateScale({0.5, 0.5});
-		//	camera->UpdatePosition({0, 300});
-		//	manager.ApplySceneItemSettingsUpdate(camera);
+	//pBtn_close = new QLabel(frame_top);
+	//pBtn_close->setFixedSize(36 * getScale(), 36 * getScale());
+	//pBtn_close->setStyleSheet("QLabel{border-image: url(':/res/images/newUi/close@2x.png');}");
+	//pBtn_close->installEventFilter(this);
 
-		//	// select resolution & fps test case
-		//	camera->SelectResolution(3);
-		//	camera->SelectFps(3);
-		//	manager.ApplySceneItemPropertiesUpdate(camera);
+	//auto layout_top = new QHBoxLayout(frame_top);
+	//layout_top->setSpacing(18 * getScale());
+	//layout_top->setContentsMargins(22 * getScale(), 0, 14 * getScale(), 0);
+	//layout_top->addWidget(label_title);
+	//layout_top->addWidget(pBtn_fullScreen);
+	//layout_top->addWidget(pBtn_close);
+	//
 
-		//	std::vector<std::string> res;
-		//	camera->GetAvailableResolutions(res);
-		//	std::vector<std::tuple<std::string, int64_t>> fps;
-		//	camera->GetAvailableFps(fps);
-		//}
+	///****************** main ********************/
+	//auto frame_main= new QFrame(frame);
+	//frame_main->setStyleSheet("QFrame{background-color: '#222222';}");
 
-		//// audio input & output item
-		//auto audioInputItem = std::vector<
-		//	std::shared_ptr<accrecorder::source::AudioSceneItem>>();
-		//manager.ListAudioItems(audioInputItem);
-		//// copy
-		//auto input = new accrecorder::source::AudioInputItem(
-		//	*reinterpret_cast<accrecorder::source::AudioInputItem *>(
-		//		audioInputItem[1].get()));
-		//if (manager.AttachSceneItem(input)) {
-		//	// success
-		//}
+	//auto label = new QLabel(frame_main);
+	//label->setContentsMargins(16 * getScale(), 0, 0, 0);
+	//label->setFixedHeight(40 * getScale());
+	//label->setText(tr("直播窗口"));
+	//label->setStyleSheet(QString("QLabel{ background-color: '#444444'; color: '#FFFFFF';  %1}").arg(getFontStyle(14)));
 
-		//auto audioOutputItem = std::vector<
-		//	std::shared_ptr<accrecorder::source::AudioSceneItem>>();
-		//manager.ListAudioItems(audioOutputItem, false);
-		//// copy
-		//auto output = new accrecorder::source::AudioOutputItem(
-		//	*reinterpret_cast<accrecorder::source::AudioOutputItem *>(
-		//		audioOutputItem[1].get()));
-		//if (manager.AttachSceneItem(output)) {
-		//	// success
-		//}
+	auto testDock = new OBSDock(this);
+	this->addDockWidget(Qt::BottomDockWidgetArea, testDock);
+	
+	auto frame_tool = new QFrame(this);
+	//frame_tool->setFixedSize(this->width(), 284 * getScale());
+	//frame_tool->move((this->width() - frame_tool->width())/2,
+	//		 this->height() - frame_tool->height());
+	frame_tool->setObjectName("frame_tool");
+	frame_tool->setStyleSheet("#frame_tool{background-color: '#222222';}");
 
-		std::string address("rtmp://192.168.99.48:1935");
-		std::string username("");
-		std::string passwd("");
-		manager.SetStreamAddress(address, username, passwd);
-		//test remove scene item
-		//manager.Remove(ipCameraItem.get());
-	}
+	testDock->setWidget(frame_tool);
+	this->resize(1280 * getScale(), 768 * getScale());
+	//auto layout_main = new QVBoxLayout(frame_main);
+	//int margin = 4 * getScale();
+	//layout_main->setContentsMargins(margin, margin, margin, margin);
+	//layout_main->setSpacing(1 * getScale());
+	//layout_main->addWidget(label, 0);
+	//layout_main->addWidget(ui->contextContainer, 1);
+	//layout_main->addWidget(frame_tool, 0);
 
-	// get stream service info
-	std::string address;
-	std::string username;
-	std::string passwd;
-	manager.GetSteamAddress(address, username, passwd);
+	//QVBoxLayout *frame_layout = new QVBoxLayout(frame);
+	//frame_layout->setSpacing(0);
+	//margin = 8 * getScale();
+	//frame_layout->setContentsMargins(margin, 0, margin, margin);
+	//frame_layout->addWidget(frame_top, 0);
+	//frame_layout->addWidget(frame_main, 1);
+
+	/**************** tool ******************/
+	auto toolbar = new OBSToolbar(frame_tool);
+	toolbar->setFixedHeight(40 * getScale());
+	connect(toolbar, &OBSToolbar::showStreamPanel, this, &OBSBasic::showStreamingPanel);
+
+	auto frame_panel = new QFrame(frame_tool);
+	frame_panel->setStyleSheet("QFrame{background-color: transparent;}");
+
+	//frame_tool->layout()->addWidget();
+	auto layout_tool = new QVBoxLayout(frame_tool);
+	layout_tool->setSpacing(4 * getScale());
+	layout_tool->setContentsMargins(0, 0, 0, 0);
+	layout_tool->addWidget(toolbar);
+	layout_tool->addWidget(frame_panel);
+
+	scenePanel = new OBSPanel(QString::fromLocal8Bit("主画面"), frame_panel);
+	scenePanel->setMinimumWidth(416 * getScale());
+	connect(scenePanel, &OBSPanel::addClicked, this, [=]() {
+		this->showSceneSettingsPanel(accrecorder::source::SceneItem::Category::kMain);
+	});
+
+	subScenePanel = new OBSPanel(QString::fromLocal8Bit("画中画"), frame_panel);
+	subScenePanel->setMinimumWidth(416 * getScale());
+	connect(subScenePanel, &OBSPanel::addClicked, this, [=]() {
+		this->showSceneSettingsPanel(accrecorder::source::SceneItem::Category::kPiP);
+	});
+
+	audioPanel = new OBSPanel(QString::fromLocal8Bit("音轨"), frame_panel);
+	audioPanel->setMinimumWidth(416 * getScale());
+	connect(audioPanel, &OBSPanel::addClicked, this,
+		&OBSBasic::showAudioSettingsPanel);
+
+	auto layout_panel = new QHBoxLayout(frame_panel);
+	layout_panel->setSpacing(6 * getScale());
+	layout_panel->setContentsMargins(0, 0, 0, 0);
+	layout_panel->addWidget(scenePanel);
+	layout_panel->addWidget(subScenePanel);
+	layout_panel->addWidget(audioPanel);
+
+	frame_cover = new QFrame(this);
+	frame_cover->setStyleSheet("QFrame{background-color: transparent;}");
+	frame_cover->setFixedSize(this->width(), this->height());
+	frame_cover->hide();
 }
+
+void OBSBasic::initData()
+{
+	sourceManager = new accrecorder::manager::OBSSourceManager;
+	scenePanel->setManager(sourceManager);
+	subScenePanel->setManager(sourceManager);
+	audioPanel->setManager(sourceManager);
+
+	std::vector<accrecorder::source::SceneItem *> items =
+		std::vector<accrecorder::source::SceneItem *>();
+	sourceManager->AvailableSceneItems(items);
+
+	int i = 0;
+	foreach(auto item, items) {
+		if (item->category() ==  accrecorder::source::SceneItem::Category::kMain) {
+			scenePanel->addItem(item);
+		}else if (item->category() ==  accrecorder::source::SceneItem::Category::kPiP) {
+			subScenePanel->addItem(item);
+		} else if (item->category() ==  accrecorder::source::SceneItem::Category::kDefault) {
+		}
+	}
+}
+
+bool OBSBasic::event(QEvent *event)
+{
+	if (event->type() == QEvent::Resize && frame_cover != nullptr)
+		frame_cover->setFixedSize(this->width(), this->height());
+		
+	return OBSMainWindow::event(event);
+}
+
+void OBSBasic::showSceneSettingsPanel(accrecorder::source::SceneItem::Category categoty)
+{
+	auto panel = new ScenesSettingsPanel(sourceManager, categoty);
+	
+	connect(panel, &ScenesSettingsPanel::attachFinished, this, [=](
+			accrecorder::source::SceneItem *item, accrecorder::source::SceneItem::Category category) {
+		if (category == accrecorder::source::SceneItem::Category::kMain)
+			scenePanel->addItem(item);
+		else if (category == accrecorder::source::SceneItem::Category::kPiP)
+			subScenePanel->addItem(item);
+		panel->deleteLater();
+	});
+	panel->setFixedSize(612 * getScale(), 496 * getScale());
+	panel->move((this->width() - panel->width()) / 2, (this->height() - panel->height())/2);
+	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
+	panel->show();
+
+	connect(panel, &ScenesSettingsPanel::destroyed, frame_cover, &QFrame::hide);
+	frame_cover->show();
+}
+
+void OBSBasic::showAudioSettingsPanel()
+{
+	auto panel = new AudioSettingsPanel(sourceManager);
+	panel->setFixedSize(500 * getScale(), 245 * getScale());
+	panel->move((this->width() - panel->width()) / 2,
+		    (this->height() - panel->height()) / 2);
+	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
+	panel->show();
+
+	connect(panel, &AudioSettingsPanel::destroyed, frame_cover, &QFrame::hide);
+	frame_cover->show();
+}
+
+void OBSBasic::showStreamingPanel()
+{
+	auto panel = new StreamingSettingsPanel(sourceManager);
+	panel->setFixedSize(400 * getScale(), 508 * getScale());
+	panel->move((this->width() - panel->width()) / 2,
+		    (this->height() - panel->height()) / 2);
+	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
+	panel->show();
+}
+
+//
+//void OBSBasic::AddTests()
+//{
+//	using accrecorder::source::SceneItem;
+//
+//	// OBSSourceManager tests
+//	accrecorder::manager::OBSSourceManager manager;
+//	// add events sender
+//	manager.AddEventsSender(api);
+//
+//	if (!manager.IsMainSceneCreated()) {
+//		// screen items
+//		auto items = std::vector<
+//			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
+//		manager.ListScreenItems(items);
+//		// copy the item & create new one to the heap
+//		auto screen = new accrecorder::source::ScreenSceneItem(
+//			*items.back().get());
+//
+//		if (manager.AttachSceneItem(screen,
+//					    SceneItem::Category::kMain)) {
+//			//manager.ApplySceneItemPropertiesUpdate(screen);
+//			screen->UpdateScale({0.5, 0.5});
+//			manager.ApplySceneItemSettingsUpdate(screen);
+//		}
+//		// rename usecase
+//		std::string newName("Chunchun");
+//		manager.Rename(screen, newName);
+//
+//		// rtsp camera item
+//		std::string cameraName("Baobao");
+//		std::string cameraURL("rtsp://192.168.99.169/1");
+//		auto ipCameraItem =
+//			manager.CreateIPCameraItem(cameraName, cameraURL);
+//		if (manager.AttachSceneItem(ipCameraItem,
+//					    SceneItem::Category::kMain)) {
+//			ipCameraItem->UpdateScale({0.3f, 0.3f});
+//			manager.ApplySceneItemSettingsUpdate(ipCameraItem);
+//		}
+//
+//		// usb camera items
+//		auto cameraItems = std::vector<
+//			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+//		manager.ListCameraItems(cameraItems);
+//
+//		// copy camera item
+//		auto camera = new accrecorder::source::CameraSceneItem(
+//			*cameraItems.front().get());
+//		if (manager.AttachSceneItem(camera,
+//					    SceneItem::Category::kPiP)) {
+//			camera->UpdateScale({0.5, 0.5});
+//			camera->UpdatePosition({0, 300});
+//			manager.ApplySceneItemSettingsUpdate(camera);
+//
+//			// select resolution & fps test case
+//			camera->SelectResolution(3);
+//			camera->SelectFps(3);
+//			manager.ApplySceneItemPropertiesUpdate(camera);
+//
+//			std::vector<std::string> res;
+//			camera->GetAvailableResolutions(res);
+//			std::vector<std::tuple<std::string, int64_t>> fps;
+//			camera->GetAvailableFps(fps);
+//		}
+//
+//		// audio input & output item
+//		auto audioInputItem = std::vector<
+//			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+//		manager.ListAudioItems(audioInputItem);
+//		// copy
+//		auto input = new accrecorder::source::AudioInputItem(
+//			*reinterpret_cast<accrecorder::source::AudioInputItem *>(
+//				audioInputItem[1].get()));
+//		if (manager.AttachSceneItem(input)) {
+//			// success
+//		}
+//
+//		auto audioOutputItem = std::vector<
+//			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+//		manager.ListAudioItems(audioOutputItem, false);
+//		// copy
+//		auto output = new accrecorder::source::AudioOutputItem(
+//			*reinterpret_cast<accrecorder::source::AudioOutputItem *>(
+//				audioOutputItem[1].get()));
+//		if (manager.AttachSceneItem(output)) {
+//			// success
+//		}
+//
+//		std::string address("rtmp://192.168.99.115:1395");
+//		std::string username("");
+//		std::string passwd("");
+//		manager.SetStreamAddress(address, username, passwd);
+//		//test remove scene item
+//		//manager.Remove(ipCameraItem.get());
+//	}
+//
+//	// get stream service info
+//	std::string address;
+//	std::string username;
+//	std::string passwd;
+//	manager.GetSteamAddress(address, username, passwd);
+//}

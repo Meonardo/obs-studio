@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1088</width>
+    <width>1192</width>
     <height>729</height>
    </rect>
   </property>
@@ -38,21 +38,6 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
-    <property name="spacing">
-     <number>0</number>
-    </property>
-    <property name="leftMargin">
-     <number>4</number>
-    </property>
-    <property name="topMargin">
-     <number>0</number>
-    </property>
-    <property name="rightMargin">
-     <number>4</number>
-    </property>
-    <property name="bottomMargin">
-     <number>0</number>
-    </property>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
@@ -495,7 +480,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1088</width>
+     <width>1192</width>
      <height>0</height>
     </rect>
    </property>
@@ -746,7 +731,7 @@
   </widget>
   <widget class="OBSDock" name="scenesDock">
    <property name="features">
-    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
    <property name="windowTitle">
     <string>Basic.Main.Scenes</string>
@@ -884,7 +869,7 @@
   </widget>
   <widget class="OBSDock" name="sourcesDock">
    <property name="features">
-    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
    <property name="windowTitle">
     <string>Basic.Main.Sources</string>
@@ -1023,7 +1008,7 @@
   </widget>
   <widget class="OBSDock" name="mixerDock">
    <property name="features">
-    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
    <property name="windowTitle">
     <string>Mixer</string>
@@ -1074,7 +1059,10 @@
         </property>
         <item>
          <widget class="QStackedWidget" name="stackedMixerArea">
-          <widget class="VScrollArea" name="hMixerScrollArea">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QScrollArea" name="hMixerScrollArea">
            <property name="contextMenuPolicy">
             <enum>Qt::CustomContextMenu</enum>
            </property>
@@ -1098,7 +1086,7 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>217</width>
+              <width>226</width>
               <height>16</height>
              </rect>
             </property>
@@ -1152,7 +1140,7 @@
               <x>0</x>
               <y>0</y>
               <width>16</width>
-              <height>28</height>
+              <height>190</height>
              </rect>
             </property>
             <property name="sizePolicy">
@@ -1206,7 +1194,7 @@
   </widget>
   <widget class="OBSDock" name="transitionsDock">
    <property name="features">
-    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
    <property name="windowTitle">
     <string>Basic.SceneTransitions</string>
@@ -1453,7 +1441,7 @@
   </widget>
   <widget class="OBSDock" name="controlsDock">
    <property name="features">
-    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
    <property name="windowTitle">
     <string>Basic.Main.Controls</string>
@@ -2374,12 +2362,6 @@
    <class>HScrollArea</class>
    <extends>QScrollArea</extends>
    <header>horizontal-scroll-area.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>VScrollArea</class>
-   <extends>QScrollArea</extends>
-   <header>vertical-scroll-area.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

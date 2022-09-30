@@ -39,6 +39,14 @@
 #include "log-viewer.hpp"
 #include "undo-stack-obs.hpp"
 
+/* add by luoweidong start*/
+#include "newUi/window-panel.hpp"
+#include <qpainter.h>
+#include "newUi/window-toolbar.hpp"
+#include "newUi/font.hpp"
+#include "newUi/add-scene-panel.hpp"
+/* add by luoweidong end*/
+
 #include <obs-frontend-internal.hpp>
 
 #include <util/platform.h>
@@ -72,6 +80,8 @@ class OBSBasicStats;
 #define SIMPLE_ENCODER_APPLE_H264 "apple_h264"
 
 #define PREVIEW_EDGE_SIZE 10
+
+#include "obs-source-manager.h"
 
 struct BasicOutputHandler;
 
@@ -842,11 +852,30 @@ private:
 	bool LowDiskSpace();
 	void DiskSpaceMessage();
 
-	void AddTests();
+	//void AddTests();
 
 	OBSSource prevFTBSource = nullptr;
 
 	float dpi = 1.0;
+
+	/*add by luoweidong -- start*/
+	void createUi();
+	void initData();
+ private:
+	OBSPanel *scenePanel;
+	OBSPanel *subScenePanel;
+	OBSPanel *audioPanel;
+	QFrame *frame_cover;
+	accrecorder::manager::OBSSourceManager *sourceManager;
+
+	void showSceneSettingsPanel(accrecorder::source::SceneItem::Category);
+
+protected:
+	bool event(QEvent *event);
+private slots:
+	void showAudioSettingsPanel();
+	void showStreamingPanel();
+	/*add by luoweidong -- end*/
 
 public:
 	OBSSource GetProgramSource();
