@@ -10,6 +10,7 @@
 #include <qmap.h>
 #include "horizontal-scroll-area.hpp"
 #include "obs-source-manager.h"
+#include "volume-control.hpp"
 
 class OBSPanelItem : public QWidget
 {
@@ -48,11 +49,12 @@ public:
 	OBSPanel(const QString &title, QWidget *parent);
 	~OBSPanel() {}
 	void addItem(accrecorder::source::SceneItem *item);
-	void addAudioItem(QWidget *item);
+	void addAudioItem(VolControl *item);
 	void setManager(accrecorder::manager::OBSSourceManager *manager) { sourceManager = manager; }
 
 private:
 	QString m_title;
+	QFrame *listFrame;
 	QWidget *scrollAreaContentWidget;
 	QVBoxLayout *contentWidgetLayout;
 	HScrollArea *hscrollArea;
@@ -61,6 +63,7 @@ private:
 
 	QList<accrecorder::source::SceneItem *> sceneItemList;
 	QList<OBSPanelItem *> panelItemList;
+	QList<VolControl *> volItemList;
 	accrecorder::manager::OBSSourceManager *sourceManager;
 
 	void initUi();

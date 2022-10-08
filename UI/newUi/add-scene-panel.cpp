@@ -1,5 +1,6 @@
-﻿#include "add-scene-panel.hpp"
+#include "add-scene-panel.hpp"
 #include <qbuttongroup.h>
+#include "obs-app.hpp"
 
 /********************************** ComboBoxItemWidget ***************************************************/
 ComboBoxItemWidget::ComboBoxItemWidget(int index, int width, int height, bool hideLine, QWidget *parent)
@@ -308,7 +309,7 @@ void SceneSettingsWidget::initData(
 
 void SceneSettingsWidget::initUi()
 {
-	QLabel *label = new QLabel(QString::fromLocal8Bit("板书画面"), this);
+	QLabel *label = new QLabel(QTStr("NewUi.BlackBoardScreen"), this);
 	label->setFixedWidth(72 * getScale());
 	combobox_scenes = new ComboBox(this);
 	combobox_scenes->setFixedSize(410 * getScale(), 51 * getScale());
@@ -326,8 +327,8 @@ void SceneSettingsWidget::initUi()
 	hlayout->addWidget(combobox_scenes, 0, Qt::AlignVCenter);
 	hlayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
 
-	QLabel *label_1 = new QLabel(QString::fromLocal8Bit("帧率"), this);
-	QLabel *label_2 = new QLabel(QString::fromLocal8Bit("编码"), this);
+	QLabel *label_1 = new QLabel(QTStr("NewUi.Fps"), this);
+	QLabel *label_2 = new QLabel(QTStr("NewUi.Encode"), this);
 	label_1->setStyleSheet(label->styleSheet());
 	label_2->setStyleSheet(label->styleSheet());
 	label_1->setFixedWidth(label->width());
@@ -354,7 +355,7 @@ void SceneSettingsWidget::initUi()
 	hlayout_1->addWidget(combobox_encode, 0, Qt::AlignVCenter);
 	hlayout_1->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
 
-	QLabel *label_3 = new QLabel(QString::fromLocal8Bit("分辨率"), this);
+	QLabel *label_3 = new QLabel(QTStr("NewUi.Resolution"), this);
 	label_3->setStyleSheet(label->styleSheet());
 	label_3->setFixedWidth(label->width());
 	combobox_resolution = new ComboBox(this);
@@ -382,10 +383,10 @@ void SceneSettingsWidget::initUi()
 void IpCameraSettingsWidget::initData()
 {
 	QStringList ipCameraList = QStringList()
-				<< QString::fromLocal8Bit("老师特写")
-				<< QString::fromLocal8Bit("老师全景")
-				<< QString::fromLocal8Bit("学生特写")
-				<< QString::fromLocal8Bit("学生全景");
+		<< QTStr("NewUi.TeacherCloseUp")
+		<< QTStr("NewUi.TeacherPanorama")
+		<< QTStr("NewUi.StudentCloseUp")
+		<< QTStr("NewUi.StudentPanorama");
 
 	combobox_cameraName->addItems(ipCameraList);
 	combobox_rate->addItems(QStringList() << "4096kbit/s");
@@ -396,7 +397,7 @@ void IpCameraSettingsWidget::initData()
 
 void IpCameraSettingsWidget::initUi()
 {
-	QLabel *label = new QLabel(QString::fromLocal8Bit("摄像头名称"), this);
+	QLabel *label = new QLabel(QTStr("NewUi.CameraName"), this);
 	label->setFixedWidth(90 * getScale());
 	label->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 				     .arg(getFontStyle(18)));
@@ -413,7 +414,7 @@ void IpCameraSettingsWidget::initUi()
 	hlayout->addWidget(combobox_cameraName, 0, Qt::AlignVCenter);
 	hlayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
 
-	QLabel *label_1 = new QLabel(QString::fromLocal8Bit("RTSP"), this);
+	QLabel *label_1 = new QLabel("RTSP", this);
 	label_1->setFixedWidth(label->width());
 	label_1->setStyleSheet(label->styleSheet());
 	lineedit_rtsp = new QLineEdit(this);
@@ -421,7 +422,7 @@ void IpCameraSettingsWidget::initUi()
 	lineedit_rtsp->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
-	lineedit_rtsp->setPlaceholderText(QString::fromLocal8Bit("输入RTSP"));
+	lineedit_rtsp->setPlaceholderText(QTStr("NewUi.Input") + "RTSP");
 	lineedit_rtsp->setFont(getFont(18));
 	QPalette palette = lineedit_rtsp->palette();
 	palette.setColor(QPalette::Normal, QPalette::PlaceholderText, QColor(170, 170, 170));
@@ -437,8 +438,8 @@ void IpCameraSettingsWidget::initUi()
 	hlayout_1->addWidget(lineedit_rtsp, 0, Qt::AlignVCenter);
 	hlayout_1->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
 
-	QLabel *label_2 = new QLabel(QString::fromLocal8Bit("码率"), this);
-	QLabel *label_3 = new QLabel(QString::fromLocal8Bit("帧率"), this);
+	QLabel *label_2 = new QLabel(QTStr("NewUi.Rate"), this);
+	QLabel *label_3 = new QLabel(QTStr("NewUi.Fps"), this);
 	label_2->setFixedWidth(label->width());
 	label_3->setFixedWidth(36 * getScale());
 	label_2->setStyleSheet(label->styleSheet());
@@ -465,8 +466,8 @@ void IpCameraSettingsWidget::initUi()
 	hlayout_2->addWidget(combobox_fps, 0, Qt::AlignVCenter);
 	hlayout_2->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
 
-	QLabel *label_4 = new QLabel(QString::fromLocal8Bit("编码"), this);
-	QLabel *label_5 = new QLabel(QString::fromLocal8Bit("分辨率"), this);
+	QLabel *label_4 = new QLabel(QTStr("NewUi.Encode"), this);
+	QLabel *label_5 = new QLabel(QTStr("NewUi.Resolution"), this);
 	label_4->setFixedWidth(label->width());
 	label_5->setFixedWidth(64 * getScale());
 	label_4->setStyleSheet(label->styleSheet());
@@ -520,7 +521,7 @@ void USBCameraSettingsWidget::initData(
 
 void USBCameraSettingsWidget::initUi()
 {
-	QLabel *label = new QLabel(QString::fromLocal8Bit("摄像头名称"), this);
+	QLabel *label = new QLabel(QTStr("NewUi.CameraName"), this);
 	label->setFixedWidth(90 * getScale());
 	label->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 				     .arg(getFontStyle(18)));
@@ -539,8 +540,8 @@ void USBCameraSettingsWidget::initUi()
 	hlayout->addWidget(combobox_cameraName, 0, Qt::AlignVCenter);
 	hlayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
 
-	QLabel *label_1 = new QLabel(QString::fromLocal8Bit("码率"), this);
-	QLabel *label_2 = new QLabel(QString::fromLocal8Bit("帧率"), this);
+	QLabel *label_1 = new QLabel(QTStr("NewUi.Rate"), this);
+	QLabel *label_2 = new QLabel(QTStr("NewUi.Fps"), this);
 	label_1->setFixedWidth(label->width());
 	label_2->setFixedWidth(36 * getScale());
 	label_1->setStyleSheet(label->styleSheet());
@@ -567,8 +568,8 @@ void USBCameraSettingsWidget::initUi()
 	hlayout_1->addWidget(combobox_fps, 0, Qt::AlignVCenter);
 	hlayout_1->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
 
-	QLabel *label_3 = new QLabel(QString::fromLocal8Bit("编码"), this);
-	QLabel *label_4 = new QLabel(QString::fromLocal8Bit("分辨率"), this);
+	QLabel *label_3 = new QLabel(QTStr("NewUi.Encode"), this);
+	QLabel *label_4 = new QLabel(QTStr("NewUi.Resolution"), this);
 	label_3->setFixedWidth(label->width());
 	label_4->setFixedWidth(64 * getScale());
 	label_3->setStyleSheet(label->styleSheet());
@@ -722,9 +723,9 @@ void ScenesSettingsPanel::initUi()
 
 	QLabel *label_title = new QLabel(frame_top);
 	if (itemCategory == accrecorder::source::SceneItem::Category::kMain)
-		label_title->setText(QString::fromLocal8Bit("添加主画面"));
+		label_title->setText(QTStr("NewUi.AddMainScreen"));
 	else if (itemCategory == accrecorder::source::SceneItem::Category::kPiP)
-		label_title->setText(QString::fromLocal8Bit("添加画中画"));
+		label_title->setText(QTStr("NewUi.AddPip"));
 	label_title->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(22, FontWeight::Blod)));
 
@@ -744,7 +745,7 @@ void ScenesSettingsPanel::initUi()
 	auto frame_tab = new QFrame(this);
 	frame_tab->setFixedHeight(80 * getScale());
 
-	tabBtn_1 = new QPushButton(QString::fromLocal8Bit("板书"), frame_tab);
+	tabBtn_1 = new QPushButton(QTStr("NewUi.Blackboard"), frame_tab);
 	tabBtn_1->setCheckable(true);
 	tabBtn_1->setFixedSize(168 * getScale(), 36 * getScale());
 	tabBtn_1->installEventFilter(this);
@@ -761,7 +762,7 @@ void ScenesSettingsPanel::initUi()
 		this->setFixedSize(612 * getScale(), 496 * getScale());
 	});
 
-	tabBtn_2 = new QPushButton(QString(tr("IP Camera")), frame_tab);
+	tabBtn_2 = new QPushButton(("IP Camera"), frame_tab);
 	tabBtn_2->setCheckable(true);
 	tabBtn_2->setFixedSize(168 * getScale(), 36 * getScale());
 	tabBtn_2->installEventFilter(this);
@@ -776,7 +777,7 @@ void ScenesSettingsPanel::initUi()
 		this->setFixedSize(612 * getScale(), 537 * getScale());
 	});
 
-	tabBtn_3 = new QPushButton(QString(tr("USB Camera")), frame_tab);
+	tabBtn_3 = new QPushButton(("USB Camera"), frame_tab);
 	tabBtn_3->setCheckable(true);
 	tabBtn_3->setFixedSize(168 * getScale(), 36 * getScale());
 	tabBtn_3->installEventFilter(this);
@@ -811,7 +812,7 @@ void ScenesSettingsPanel::initUi()
 	frame_bottom->setFixedHeight(121 * getScale());
 
 	pBtnCancel = new QPushButton(this);
-	pBtnCancel->setText(QString::fromLocal8Bit("取消"));
+	pBtnCancel->setText(QTStr("NewUi.Cancel"));
 	pBtnCancel->setFixedSize(139 * getScale(), 51 * getScale());
 	pBtnCancel->installEventFilter(this);
 	pBtnCancel->setStyleSheet(
@@ -827,7 +828,7 @@ void ScenesSettingsPanel::initUi()
 	});
 
 	pBtnYes = new QPushButton(this);
-	pBtnYes->setText(QString::fromLocal8Bit("确认添加"));
+	pBtnYes->setText(QTStr("NewUi.ConfirmAdd"));
 	pBtnYes->setFixedSize(139 * getScale(), 51 * getScale());
 	pBtnYes->installEventFilter(this);
 	pBtnYes->setStyleSheet(
@@ -936,7 +937,8 @@ AudioSettingsPanel::AudioSettingsPanel(accrecorder::manager::OBSSourceManager *m
 void AudioSettingsPanel::initUi()
 {
 	QLabel *label_title = new QLabel(this);
-	label_title->setText(QString::fromLocal8Bit("音频设置"));
+	label_title->setText(QTStr("NewUi.AudioSettings"));
+	
 	label_title->setStyleSheet( QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(22, FontWeight::Blod)));
 	label_title->setFixedSize(89 * getScale(), 23 * getScale());
@@ -959,7 +961,7 @@ void AudioSettingsPanel::initUi()
 	//connect(combobox_autio, &ComboBox::itemIndexChanged, this, [=](){});
 
 	QPushButton *pBtnCancel = new QPushButton(this);
-	pBtnCancel->setText(QString::fromLocal8Bit("取消"));
+	pBtnCancel->setText(QTStr("NewUi.Cancel"));
 	pBtnCancel->setFixedSize(120 * getScale(), 40 * getScale());
 	pBtnCancel->move(120 * getScale(), 177 * getScale());
 	pBtnCancel->installEventFilter(this);
@@ -974,7 +976,7 @@ void AudioSettingsPanel::initUi()
 	});
 
 	QPushButton *pBtnYes = new QPushButton(this);
-	pBtnYes->setText(QString::fromLocal8Bit("确认"));
+	pBtnYes->setText(QTStr("NewUi.Confirm"));
 	pBtnYes->setFixedSize(pBtnCancel->width(), pBtnCancel->height());
 	pBtnYes->move(260 * getScale(), pBtnCancel->y());
 	pBtnYes->installEventFilter(this);
@@ -1024,7 +1026,7 @@ StreamingSettingsPanel::StreamingSettingsPanel(accrecorder::manager::OBSSourceMa
 void StreamingSettingsPanel::initUi()
 {
 	QLabel *label_title = new QLabel(this);
-	label_title->setText(QString::fromLocal8Bit("推流设置"));
+	label_title->setText(QTStr("NewUi.StreamingSettings"));
 	label_title->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(22, FontWeight::Blod)));
 	label_title->setFixedSize(89 * getScale(), 23 * getScale());
@@ -1042,21 +1044,21 @@ void StreamingSettingsPanel::initUi()
 	pBtn_close->installEventFilter(this);
 
 	QLabel *label_rtsp1 = new QLabel(this);
-	label_rtsp1->setText(QString::fromLocal8Bit("RTMP1"));
+	label_rtsp1->setText("RTMP1");
 	label_rtsp1->setFixedSize(70 * getScale(), 15 * getScale());
 	label_rtsp1->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(18)));
 	label_rtsp1->move(31 * getScale(), 87 * getScale());
 
 	QLabel *label_rtsp2 = new QLabel(this);
-	label_rtsp2->setText(QString::fromLocal8Bit("RTMP2"));
+	label_rtsp2->setText("RTMP2");
 	label_rtsp2->setFixedSize(70 * getScale(), 15 * getScale());
 	label_rtsp2->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(18)));
 	label_rtsp2->move(31 * getScale(), 205 * getScale());
 
 	QLabel *label_rtsp3 = new QLabel(this);
-	label_rtsp3->setText(QString::fromLocal8Bit("RTMP3"));
+	label_rtsp3->setText("RTMP3");
 	label_rtsp3->setFixedSize(70 * getScale(), 15 * getScale());
 	label_rtsp3->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(18)));
@@ -1068,7 +1070,7 @@ void StreamingSettingsPanel::initUi()
 	lineedit_rtsp1->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
-	lineedit_rtsp1->setPlaceholderText(QString::fromLocal8Bit("输入RTMP1"));
+	lineedit_rtsp1->setPlaceholderText(QTStr("NewUi.Input") + "RTMP1");
 	lineedit_rtsp1->move(30 * getScale(), 123 * getScale());
 	QPalette palette = lineedit_rtsp1->palette();
 	palette.setColor(QPalette::PlaceholderText, QColor(170, 170, 170));
@@ -1080,7 +1082,7 @@ void StreamingSettingsPanel::initUi()
 	lineedit_rtsp2->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
-	lineedit_rtsp2->setPlaceholderText(QString::fromLocal8Bit("输入RTMP2"));
+	lineedit_rtsp2->setPlaceholderText(QTStr("NewUi.Input") + "RTMP2");
 	lineedit_rtsp2->setFont(getFont(18));
 	lineedit_rtsp2->move(30 * getScale(), 241 * getScale());
 	lineedit_rtsp2->setPalette(lineedit_rtsp1->palette());
@@ -1091,7 +1093,7 @@ void StreamingSettingsPanel::initUi()
 	lineedit_rtsp3->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
-	lineedit_rtsp3->setPlaceholderText(QString::fromLocal8Bit("输入RTMP3"));
+	lineedit_rtsp3->setPlaceholderText(QTStr("NewUi.Input") + "RTMP3");
 	lineedit_rtsp3->setFont(getFont(18));
 	lineedit_rtsp3->move(30 * getScale(), 359 * getScale());
 	lineedit_rtsp3->setPalette(lineedit_rtsp1->palette());
@@ -1159,7 +1161,7 @@ void StreamingSettingsPanel::initUi()
 	group->addButton(checkbox_rtsp3);
 
 	QPushButton *pBtnCancel = new QPushButton(this);
-	pBtnCancel->setText(QString::fromLocal8Bit("取消"));
+	pBtnCancel->setText(QTStr("NewUi.Cancel"));
 	pBtnCancel->setFixedSize(120 * getScale(), 40 * getScale());
 	pBtnCancel->move(70 * getScale(), 450 * getScale());
 	pBtnCancel->installEventFilter(this);
@@ -1174,7 +1176,7 @@ void StreamingSettingsPanel::initUi()
 	});
 
 	QPushButton *pBtnYes = new QPushButton(this);
-	pBtnYes->setText(QString::fromLocal8Bit("确定"));
+	pBtnYes->setText(QTStr("NewUi.Confirm"));
 	pBtnYes->setFixedSize(pBtnCancel->width(), pBtnCancel->height());
 	pBtnYes->move(210 * getScale(), pBtnCancel->y());
 	pBtnYes->installEventFilter(this);

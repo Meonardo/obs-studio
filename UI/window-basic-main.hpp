@@ -864,12 +864,13 @@ private:
 	OBSPanel *subScenePanel;
 	OBSPanel *audioPanel;
 	QFrame *frame_cover;
+	OBSDock *allSettingsDocker;
 	accrecorder::manager::OBSSourceManager *sourceManager;
 
 	void showSceneSettingsPanel(accrecorder::source::SceneItem::Category);
 
 protected:
-	bool event(QEvent *event);
+	bool eventFilter(QObject *obj, QEvent *event);
 private slots:
 	void showAudioSettingsPanel();
 	void showStreamingPanel();

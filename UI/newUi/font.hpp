@@ -12,7 +12,6 @@ enum FontWeight {
 	Light = 290
 };
 
-/*获取缩放比例*/
 static qreal getScale()
 {
 	static int m_scale = 0;
@@ -39,13 +38,11 @@ static QString getFontStyle(int pixSize = 12, FontWeight weight = FontWeight::Re
 	return QString("font: %1 %2px 'Microsoft YaHei UI';").arg(weight).arg(pixSize * getScale());
 }
 
-/*获取圆角矩形Path*/
 static QPainterPath getRoundRectPath(const QRectF &rect, qreal topLeftRadius,
 				     qreal topRightRadius,
 				     qreal bottomLeftRadius,
 				     qreal bottomRightRadius)
 {
-	//偏离值(给圆角的开始和结束点设置一个偏离值，可以使圆角看起来更圆滑)
 	qreal topLeftSubValue = topLeftRadius > 5 ? topLeftRadius * 1.5 / 12.0
 						  : 0;
 	qreal topRightSubValue =
@@ -55,7 +52,7 @@ static QPainterPath getRoundRectPath(const QRectF &rect, qreal topLeftRadius,
 	qreal bottomLeftSubValue =
 		bottomLeftRadius > 5 ? bottomLeftRadius * 1.5 / 12.0 : 0;
 	qreal subValue = topLeftSubValue;
-	//如果四个角偏离值不相等，不做偏离
+
 	if (subValue != topRightSubValue || subValue != bottomRightSubValue ||
 	    subValue != bottomLeftSubValue)
 		subValue = 0;

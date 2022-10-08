@@ -426,12 +426,12 @@ OBSBasic::OBSBasic(QWidget *parent)
 	ui->actionMainRedo->setShortcutContext(Qt::ApplicationShortcut);
 
 	//hide all docking panes
-	ui->toggleScenes->setChecked(true);
-	ui->toggleSources->setChecked(true);
-	ui->toggleMixer->setChecked(true);
-	ui->toggleTransitions->setChecked(true);
-	ui->toggleControls->setChecked(true);
-	ui->toggleStats->setChecked(true);
+	ui->toggleScenes->setChecked(false);
+	ui->toggleSources->setChecked(false);
+	ui->toggleMixer->setChecked(false);
+	ui->toggleTransitions->setChecked(false);
+	ui->toggleControls->setChecked(false);
+	ui->toggleStats->setChecked(false);
 
 	QPoint curPos;
 
@@ -10283,8 +10283,9 @@ void OBSBasic::createUi()
 	//label->setText(tr("直播窗口"));
 	//label->setStyleSheet(QString("QLabel{ background-color: '#444444'; color: '#FFFFFF';  %1}").arg(getFontStyle(14)));
 
-	auto testDock = new OBSDock(this);
-	this->addDockWidget(Qt::BottomDockWidgetArea, testDock);
+	allSettingsDocker = new OBSDock(this);
+	allSettingsDocker->installEventFilter(this);
+	this->addDockWidget(Qt::BottomDockWidgetArea, allSettingsDocker);
 	
 	auto frame_tool = new QFrame(this);
 	//frame_tool->setFixedSize(this->width(), 284 * getScale());
@@ -10293,7 +10294,14 @@ void OBSBasic::createUi()
 	frame_tool->setObjectName("frame_tool");
 	frame_tool->setStyleSheet("#frame_tool{background-color: '#222222';}");
 
-	testDock->setWidget(frame_tool);
+	allSettingsDocker->setWidget(frame_tool);
+	allSettingsDocker->setWindowFlag(Qt::FramelessWindowHint);
+	QWidget *titleBarWidget = allSettingsDocker->titleBarWidget();
+	QWidget *emptyWidget = new QWidget;
+	emptyWidget->setFixedHeight(0);
+	allSettingsDocker->setTitleBarWidget(emptyWidget);
+	titleBarWidget->deleteLater();
+
 	this->resize(1280 * getScale(), 768 * getScale());
 	//auto layout_main = new QVBoxLayout(frame_main);
 	//int margin = 4 * getScale();
@@ -10325,19 +10333,19 @@ void OBSBasic::createUi()
 	layout_tool->addWidget(toolbar);
 	layout_tool->addWidget(frame_panel);
 
-	scenePanel = new OBSPanel(QString::fromLocal8Bit("主画面"), frame_panel);
+	scenePanel = new OBSPanel(QTStr("NewUi.MainScreen"), frame_panel);
 	scenePanel->setMinimumWidth(416 * getScale());
 	connect(scenePanel, &OBSPanel::addClicked, this, [=]() {
 		this->showSceneSettingsPanel(accrecorder::source::SceneItem::Category::kMain);
 	});
 
-	subScenePanel = new OBSPanel(QString::fromLocal8Bit("画中画"), frame_panel);
+	subScenePanel = new OBSPanel(QTStr("NewUi.Pip"), frame_panel);
 	subScenePanel->setMinimumWidth(416 * getScale());
 	connect(subScenePanel, &OBSPanel::addClicked, this, [=]() {
 		this->showSceneSettingsPanel(accrecorder::source::SceneItem::Category::kPiP);
 	});
 
-	audioPanel = new OBSPanel(QString::fromLocal8Bit("音轨"), frame_panel);
+	audioPanel = new OBSPanel(QTStr("NewUi.AudioTrack"), frame_panel);
 	audioPanel->setMinimumWidth(416 * getScale());
 	connect(audioPanel, &OBSPanel::addClicked, this,
 		&OBSBasic::showAudioSettingsPanel);
@@ -10349,14 +10357,17 @@ void OBSBasic::createUi()
 	layout_panel->addWidget(subScenePanel);
 	layout_panel->addWidget(audioPanel);
 
-	frame_cover = new QFrame(this);
+	frame_cover = new QFrame(allSettingsDocker);
+	frame_cover->setWindowFlags(Qt::FramelessWindowHint);
 	frame_cover->setStyleSheet("QFrame{background-color: transparent;}");
-	frame_cover->setFixedSize(this->width(), this->height());
+	frame_cover->setFixedSize(allSettingsDocker->width(), allSettingsDocker->height());
 	frame_cover->hide();
 }
 
 void OBSBasic::initData()
 {
+	this->resize(1280 * getScale(), 768 * getScale());
+
 	sourceManager = new accrecorder::manager::OBSSourceManager;
 	scenePanel->setManager(sourceManager);
 	subScenePanel->setManager(sourceManager);
@@ -10377,12 +10388,12 @@ void OBSBasic::initData()
 	}
 }
 
-bool OBSBasic::event(QEvent *event)
+bool OBSBasic::eventFilter(QObject *obj, QEvent *event)
 {
-	if (event->type() == QEvent::Resize && frame_cover != nullptr)
-		frame_cover->setFixedSize(this->width(), this->height());
+	if (obj == allSettingsDocker && event->type() == QEvent::Resize && frame_cover != nullptr)
+		frame_cover->setFixedSize(allSettingsDocker->width(), allSettingsDocker->height());
 		
-	return OBSMainWindow::event(event);
+	return OBSMainWindow::eventFilter(obj, event);
 }
 
 void OBSBasic::showSceneSettingsPanel(accrecorder::source::SceneItem::Category categoty)
