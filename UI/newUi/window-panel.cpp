@@ -165,7 +165,10 @@ void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 		panelItemList.removeOne(pitem);
 		contentWidgetLayout->removeWidget(pitem);
 		itemCount--;
-		scrollAreaContentWidget->setFixedSize(hscrollArea->width(), 56 * getScale() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
+
+		scrollAreaContentWidget->setFixedHeight(panelItem->height() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
+		hscrollArea->verticalScrollBar()->setValue(scrollAreaContentWidget->height());
+
 		checkBoxGroup->removeButton(pitem->getCheckButton());
 		pitem->deleteLater();
 
@@ -176,28 +179,47 @@ void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 
 	contentWidgetLayout->insertWidget(itemCount, panelItem);
 	checkBoxGroup->addButton(panelItem->getCheckButton());
-
-	//if (0 == itemCount) {
-	//	contentWidgetLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
-	//}
 	contentWidgetLayout->setStretch(contentWidgetLayout->count() - 1, 1);
 
 	itemCount++;
-	scrollAreaContentWidget->setFixedSize(hscrollArea->width(), 56 * getScale() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
+	scrollAreaContentWidget->setFixedHeight(panelItem->height() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
 	hscrollArea->verticalScrollBar()->setValue(scrollAreaContentWidget->height());
 
 	if (!item->GetSettings().hidden)
 		panelItem->getCheckButton()->setChecked(true);
 }
 
-void OBSPanel::addAudioItem(QWidget *item)
+void OBSPanel::addAudioItem(VolControl *item)
 {
+	foreach(auto volItem, volItemList) {
+		if (volItem->GetName().compare(item->GetName()) == 0)
+			return;
+	}
+	volItemList.append(item);
+
+	connect(item, &VolControl::ConfigClicked, this, [=]() {
+		VolControl *volItem = static_cast<VolControl*>(sender());
+		contentWidgetLayout->removeWidget(volItem);
+		itemCount--;
+
+		scrollAreaContentWidget->setFixedHeight(item->height() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
+		hscrollArea->verticalScrollBar()->setValue(scrollAreaContentWidget->height());
+
+		volItemList.removeOne(volItem);
+
+		volItem->deleteLater();
+	});
+
+	
+	item->setFixedHeight(105 * getScale());
+	
 	contentWidgetLayout->insertWidget(itemCount, item);
+	contentWidgetLayout->setStretch(contentWidgetLayout->count() - 1, 1);
+
 	itemCount++;
-	scrollAreaContentWidget->setFixedSize(hscrollArea->width(), 56 * getScale() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
+	scrollAreaContentWidget->setFixedHeight(item->height() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
 	hscrollArea->verticalScrollBar()->setValue(scrollAreaContentWidget->height());
 
-	//
 }
 
 void OBSPanel::paintEvent(QPaintEvent *event)
@@ -238,12 +260,12 @@ void OBSPanel::initUi()
 	layout_top->addWidget(label_title, 1);
 	layout_top->addWidget(pBtn_add, 0, Qt::AlignVCenter);
 
-	QFrame *frame = new QFrame();
-	frame->setObjectName("frame");
-	frame->setStyleSheet("#frame{background-color: rgb(68, 68, 68); border-radius: 0px;}");
-	frame->setMinimumHeight(199 * getScale());
+	listFrame = new QFrame();
+	listFrame->setObjectName("listFrame");
+	listFrame->setStyleSheet("#listFrame{background-color: rgb(68, 68, 68); border-radius: 0px;}");
+	listFrame->setMinimumHeight(199 * getScale());
 
-	QHBoxLayout *frame_layout = new QHBoxLayout(frame);
+	QHBoxLayout *frame_layout = new QHBoxLayout(listFrame);
 	frame_layout->setContentsMargins(0, 0, 0, 0);
 	frame_layout->setSpacing(0);
 
@@ -253,6 +275,10 @@ void OBSPanel::initUi()
 	contentWidgetLayout->setContentsMargins(0, 0, 0, 0);
 	contentWidgetLayout->setSpacing(0);
 	contentWidgetLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
+	contentWidgetLayout->setDirection(QBoxLayout::TopToBottom);
+	QPalette palette(scrollAreaContentWidget->palette());
+	palette.setBrush(QPalette::Background, QBrush(QColor(68, 68, 68, 0)));
+	scrollAreaContentWidget->setPalette(palette);
 
 	hscrollArea = new HScrollArea(this);
 	hscrollArea->setWidgetResizable(true);
@@ -294,7 +320,7 @@ void OBSPanel::initUi()
 	layout->setContentsMargins(0, 0, 0, 0);
 	layout->setSpacing(1 * getScale());
 	layout->addWidget(frame_top, 0);
-	layout->addWidget(frame, 1);
+	layout->addWidget(listFrame, 1);
 	layout->setStretch(1, 1);
 }
 
