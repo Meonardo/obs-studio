@@ -34,11 +34,11 @@ ScreenSceneItem::ScreenSceneItem(std::string &name)
 	  should_apply_changes_(false)
 {
 	settings_.lock = false;
-	settings_.pos.x = 0;
-	settings_.pos.y = 0;
+	settings_.pos.x = -1;
+	settings_.pos.y = -1;
 	settings_.hidden = false;
-	settings_.scale.x = 1.0f;
-	settings_.scale.y = 1.0f;
+	settings_.scale.x = 0.f;
+	settings_.scale.y = 0.f;
 }
 
 ScreenSceneItem::~ScreenSceneItem() {}
@@ -165,11 +165,11 @@ IPCameraSceneItem::IPCameraSceneItem(std::string &name, std::string &url,
 	  should_apply_changes_(false)
 {
 	settings_.lock = false;
-	settings_.pos.x = 0;
-	settings_.pos.y = 0;
+	settings_.pos.x = -1;
+	settings_.pos.y = -1;
 	settings_.hidden = false;
-	settings_.scale.x = 1.0f;
-	settings_.scale.y = 1.0f;
+	settings_.scale.x = 0.f;
+	settings_.scale.y = 0.f;
 }
 
 IPCameraSceneItem::~IPCameraSceneItem() {}
@@ -318,11 +318,11 @@ CameraSceneItem::CameraSceneItem(std::string &name)
 	: name_(name), should_apply_changes_(false)
 {
 	settings_.lock = false;
-	settings_.pos.x = 0;
-	settings_.pos.y = 0;
+	settings_.pos.x = -1;
+	settings_.pos.y = -1;
 	settings_.hidden = false;
-	settings_.scale.x = 1.0f;
-	settings_.scale.y = 1.0f;
+	settings_.scale.x = 0.f;
+	settings_.scale.y = 0.f;
 }
 
 CameraSceneItem::~CameraSceneItem() {}
@@ -489,8 +489,8 @@ AudioSceneItem::AudioSceneItem(std::string &name)
 	: name_(name), should_apply_changes_(false)
 {
 	settings_.lock = false;
-	settings_.pos.x = 0;
-	settings_.pos.y = 0;
+	settings_.pos.x = -1;
+	settings_.pos.y = -1;
 	settings_.hidden = false;
 	settings_.scale.x = 0.f;
 	settings_.scale.y = 0.f;
@@ -714,15 +714,19 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 	}
 
 	obs_sceneitem_defer_update_begin(sceneItem);
-	// visability
+	// visibility
 	obs_sceneitem_set_visible(sceneItem, !item->GetSettings().hidden);
 	// transform
 	vec2 newPosition = item->GetSettings().pos;
-	obs_sceneitem_set_pos(sceneItem, &newPosition);
+	if (newPosition.x >= 0 && newPosition.y >= 0) {
+		obs_sceneitem_set_pos(sceneItem, &newPosition);
+	}
 	obs_sceneitem_set_alignment(sceneItem, 5);
 	// scale
 	vec2 newScale = item->GetSettings().scale;
-	obs_sceneitem_set_scale(sceneItem, &newScale);
+	if (newScale.x > 0 && newScale.y > 0 ) {
+		obs_sceneitem_set_scale(sceneItem, &newScale);
+	}
 	// lock
 	obs_sceneitem_set_locked(sceneItem, item->GetSettings().lock);
 	obs_sceneitem_defer_update_end(sceneItem);
