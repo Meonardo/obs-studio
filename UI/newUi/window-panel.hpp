@@ -12,16 +12,16 @@
 #include "obs-source-manager.h"
 #include "volume-control.hpp"
 
-class OBSPanelItem : public QWidget
-{
+class OBSPanelItem : public QWidget {
 	Q_OBJECT
 public:
-	OBSPanelItem(int type, const QString &name, int index, QWidget *parent = nullptr);
+	OBSPanelItem(int type, const QString &name, int index,
+		     QWidget *parent = nullptr);
 	void setChecked(bool checked) { checkbox->setChecked(checked); }
 	inline QAbstractButton *getCheckButton() { return checkbox; }
-	void setIndex(int index) {m_index = index;}
+	void setIndex(int index) { m_index = index; }
 
- private:
+private:
 	int m_type;
 	int m_index;
 	QString m_name;
@@ -30,9 +30,10 @@ public:
 	QLabel *label_icon = nullptr;
 	QLabel *label_name = nullptr;
 	QCheckBox *checkbox = nullptr;
-	
+
 	void initUi();
 	void setIcon(bool checked);
+
 protected:
 	void paintEvent(QPaintEvent *event);
 	bool event(QEvent *e);
@@ -42,15 +43,17 @@ signals:
 	void deleteItem(int);
 };
 
-class OBSPanel : public QWidget
-{
+class OBSPanel : public QWidget {
 	Q_OBJECT
 public:
 	OBSPanel(const QString &title, QWidget *parent);
 	~OBSPanel() {}
 	void addItem(accrecorder::source::SceneItem *item);
 	void addAudioItem(VolControl *item);
-	void setManager(accrecorder::manager::OBSSourceManager *manager) { sourceManager = manager; }
+	void setManager(accrecorder::manager::OBSSourceManager *manager)
+	{
+		sourceManager = manager;
+	}
 
 private:
 	QString m_title;
@@ -67,11 +70,11 @@ private:
 	accrecorder::manager::OBSSourceManager *sourceManager;
 
 	void initUi();
+
 protected:
 	void paintEvent(QPaintEvent *event) override;
 	virtual bool eventFilter(QObject *obj, QEvent *event) override;
 
 signals:
 	void addClicked();
-
 };

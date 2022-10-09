@@ -23,17 +23,23 @@
 #include <qfontmetrics.h>
 #include <qcheckbox.h>
 
-
 /************************************** ComboBox item widget ****************************/
-class ComboBoxItemWidget : public QWidget
-{
+class ComboBoxItemWidget : public QWidget {
 	Q_OBJECT
 public:
-	explicit ComboBoxItemWidget(int index, int width, int height, bool hideLine = false, QWidget *parent = nullptr);
-	void setText(const QString &text) { if (pBtn_text != nullptr) pBtn_text->setText(text); }
+	explicit ComboBoxItemWidget(int index, int width, int height,
+				    bool hideLine = false,
+				    QWidget *parent = nullptr);
+	void setText(const QString &text)
+	{
+		if (pBtn_text != nullptr)
+			pBtn_text->setText(text);
+	}
 	inline QPushButton *getBtn() { return pBtn_text; }
+
 protected:
 	void paintEvent(QPaintEvent *event) override;
+
 private:
 	QPushButton *pBtn_text = nullptr;
 	int itemIndex;
@@ -42,8 +48,7 @@ signals:
 };
 
 /************************************** Combobox View ****************************/
-class ComboBoxView : public QWidget
-{
+class ComboBoxView : public QWidget {
 	Q_OBJECT
 public:
 	ComboBoxView(QWidget *parent = nullptr);
@@ -51,11 +56,15 @@ public:
 	void addItems(QStringList list);
 	void setMaxDisplayCount(int count);
 	inline int getCurrentIndex() { return currentIndex; }
-	void setFixedWidth(int w) { QWidget::setFixedWidth( w + 2 * shadowBorder); }
+	void setFixedWidth(int w)
+	{
+		QWidget::setFixedWidth(w + 2 * shadowBorder);
+	}
 
 protected:
 	void paintEvent(QPaintEvent *event) override;
 	bool event(QEvent *e) override;
+
 private:
 	int itemCount = 0;
 	int shadowBorder = 0;
@@ -64,7 +73,7 @@ private:
 	int itemHeight = 0;
 	QListWidget *listWidget = nullptr;
 	QButtonGroup *itemGroup = nullptr;
-	QMap<QListWidgetItem *, ComboBoxItemWidget*> itemMap;
+	QMap<QListWidgetItem *, ComboBoxItemWidget *> itemMap;
 signals:
 	void viewHide();
 	void itemIndexChanged(int, QString);
@@ -100,13 +109,17 @@ signals:
 };
 
 /************************************** Scene settings widget ****************************/
-class SceneSettingsWidget : public QWidget
-{
+class SceneSettingsWidget : public QWidget {
 	Q_OBJECT
 public:
-	SceneSettingsWidget(QWidget *parent = nullptr) : QWidget(parent){ this->initUi(); }
-	void initData(std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>> screenItems);
-	int getSceneIndex() { return combobox_scenes->currentIndex();  }
+	SceneSettingsWidget(QWidget *parent = nullptr) : QWidget(parent)
+	{
+		this->initUi();
+	}
+	void initData(std::vector<
+		      std::shared_ptr<accrecorder::source::ScreenSceneItem>>
+			      screenItems);
+	int getSceneIndex() { return combobox_scenes->currentIndex(); }
 
 private:
 	ComboBox *combobox_scenes = nullptr;
@@ -121,11 +134,20 @@ private:
 class IpCameraSettingsWidget : public QWidget {
 	Q_OBJECT
 public:
-	IpCameraSettingsWidget(QWidget *parent = nullptr) : QWidget(parent) { this->initUi(); }
+	IpCameraSettingsWidget(QWidget *parent = nullptr) : QWidget(parent)
+	{
+		this->initUi();
+	}
 	void initData();
 
-	std::string getRTSPURL() { return lineedit_rtsp->text().toStdString(); };
-	std::string getCameraName() { return combobox_cameraName->getText().toStdString(); }
+	std::string getRTSPURL()
+	{
+		return lineedit_rtsp->text().toStdString();
+	}
+	std::string getCameraName()
+	{
+		return combobox_cameraName->getText().toStdString();
+	}
 
 private:
 	ComboBox *combobox_cameraName = nullptr;
@@ -142,8 +164,13 @@ private:
 class USBCameraSettingsWidget : public QWidget {
 	Q_OBJECT
 public:
-	USBCameraSettingsWidget(QWidget *parent = nullptr) : QWidget(parent){ this->initUi(); }
-	void initData(std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>> usbCameraSource);
+	USBCameraSettingsWidget(QWidget *parent = nullptr) : QWidget(parent)
+	{
+		this->initUi();
+	}
+	void initData(std::vector<
+		      std::shared_ptr<accrecorder::source::CameraSceneItem>>
+			      usbCameraSource);
 	int getSceneIndex() { return combobox_cameraName->currentIndex(); }
 
 private:
@@ -153,7 +180,8 @@ private:
 	ComboBox *combobox_encode = nullptr;
 	ComboBox *combobox_resolution = nullptr;
 
-	QMap<QString, std::shared_ptr<accrecorder::source::CameraSceneItem>> mapCameraSource;
+	QMap<QString, std::shared_ptr<accrecorder::source::CameraSceneItem>>
+		mapCameraSource;
 
 	void initUi();
 
@@ -162,8 +190,7 @@ private slots:
 };
 
 /************************************** Basic panel ****************************/
-class BasicPanel : public QWidget
-{
+class BasicPanel : public QWidget {
 	Q_OBJECT
 public:
 	explicit BasicPanel(QWidget *parent = nullptr) : QWidget(parent)
@@ -173,6 +200,7 @@ public:
 		this->setAttribute(Qt::WA_TranslucentBackground, true);
 	}
 	~BasicPanel() {}
+
 protected:
 	virtual void paintEvent(QPaintEvent *event) override;
 	virtual bool eventFilter(QObject *obj, QEvent *event) override;
@@ -184,12 +212,12 @@ private:
 };
 
 /************************************** add scene panel ****************************/
-class ScenesSettingsPanel : public BasicPanel
-{
+class ScenesSettingsPanel : public BasicPanel {
 	Q_OBJECT
 public:
 	ScenesSettingsPanel(accrecorder::manager::OBSSourceManager *manager,
-		       accrecorder::source::SceneItem::Category categroy, QWidget *parent = nullptr);
+			    accrecorder::source::SceneItem::Category categroy,
+			    QWidget *parent = nullptr);
 	~ScenesSettingsPanel() {}
 
 private:
@@ -225,11 +253,11 @@ signals:
 };
 
 /************************************** audio panel ****************************/
-class AudioSettingsPanel : public BasicPanel
-{
+class AudioSettingsPanel : public BasicPanel {
 	Q_OBJECT
 public:
-	AudioSettingsPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent = nullptr);
+	AudioSettingsPanel(accrecorder::manager::OBSSourceManager *manager,
+			   QWidget *parent = nullptr);
 	~AudioSettingsPanel() {}
 
 private:
@@ -245,7 +273,7 @@ class StreamingSettingsPanel : public BasicPanel {
 	Q_OBJECT
 public:
 	StreamingSettingsPanel(accrecorder::manager::OBSSourceManager *manager,
-		      QWidget *parent = nullptr);
+			       QWidget *parent = nullptr);
 	~StreamingSettingsPanel() {}
 
 private:

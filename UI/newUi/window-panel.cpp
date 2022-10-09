@@ -4,7 +4,8 @@
 #include <qscrollbar.h>
 #include "font.hpp"
 
-OBSPanelItem::OBSPanelItem(int type, const QString &name, int index, QWidget *parent)
+OBSPanelItem::OBSPanelItem(int type, const QString &name, int index,
+			   QWidget *parent)
 	: m_type(type), m_name(name), m_index(index), QWidget(parent)
 {
 	this->installEventFilter(this);
@@ -22,13 +23,16 @@ void OBSPanelItem::initUi()
 
 	frame = new QFrame(this);
 	frame->setObjectName("frame");
-	frame->setStyleSheet(QString("#frame{ background-color: transparent; border-radius: 0px; "
-		"border: 1px solid transparent; border-top-color: %1}").arg(0 == m_index ? "rgb(85, 85, 85, 0);" : "rgb(85, 85, 85);"));
+	frame->setStyleSheet(
+		QString("#frame{ background-color: transparent; border-radius: 0px; "
+			"border: 1px solid transparent; border-top-color: %1}")
+			.arg(0 == m_index ? "rgb(85, 85, 85, 0);"
+					  : "rgb(85, 85, 85);"));
 
 	hlayout->addWidget(label_icon, 0, Qt::AlignVCenter);
-	hlayout->addSpacerItem(new QSpacerItem(16 * getScale(), 1, QSizePolicy::Fixed));
+	hlayout->addSpacerItem(
+		new QSpacerItem(16 * getScale(), 1, QSizePolicy::Fixed));
 	hlayout->addWidget(frame, 0, Qt::AlignVCenter);
-
 
 	QHBoxLayout *frame_layout = new QHBoxLayout(frame);
 	frame_layout->setContentsMargins(0, 0, 0, 0);
@@ -36,8 +40,10 @@ void OBSPanelItem::initUi()
 
 	label_name = new QLabel(frame);
 	label_name->setText(m_name);
-	label_name->setStyleSheet(QString("QLabel{color:rgb(0,184,169); %1}"
-					"QLabel::disabled{color: rgb(255, 255, 255);}").arg(getFontStyle(14)));
+	label_name->setStyleSheet(
+		QString("QLabel{color:rgb(0,184,169); %1}"
+			"QLabel::disabled{color: rgb(255, 255, 255);}")
+			.arg(getFontStyle(14)));
 
 	checkbox = new QCheckBox(frame);
 	checkbox->setFixedSize(16 * getScale(), 16 * getScale());
@@ -66,16 +72,21 @@ void OBSPanelItem::initUi()
 
 	QPushButton *pBtn_delete = new QPushButton(frame);
 	pBtn_delete->setFixedSize(16 * getScale(), 16 * getScale());
-	pBtn_delete->setStyleSheet(QString("QPushButton{ border-image: url(':/res/images/newUi/delete@2x.png'); "
+	pBtn_delete->setStyleSheet(
+		QString("QPushButton{ border-image: url(':/res/images/newUi/delete@2x.png'); "
 			"min-width: %1; min-height:%2px; padding:0px; border: 1px solid transparent; background-color: transparent;}"
 			"QPushButton::hover{ border-image: url(':/res/images/newUi/delete2@2x.png');}")
-			.arg(16 * getScale()).arg(16 * getScale()));
-	connect(pBtn_delete, &QPushButton::clicked, this,[=]() { emit deleteItem(m_index); });
+			.arg(16 * getScale())
+			.arg(16 * getScale()));
+	connect(pBtn_delete, &QPushButton::clicked, this,
+		[=]() { emit deleteItem(m_index); });
 
 	frame_layout->addWidget(label_name, 0, Qt::AlignVCenter);
-	frame_layout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
+	frame_layout->addSpacerItem(
+		new QSpacerItem(1, 1, QSizePolicy::Expanding));
 	frame_layout->addWidget(checkbox, 0, Qt::AlignVCenter);
-	frame_layout->addSpacerItem(new QSpacerItem(12 * getScale(), 1, QSizePolicy::Fixed));
+	frame_layout->addSpacerItem(
+		new QSpacerItem(12 * getScale(), 1, QSizePolicy::Fixed));
 	//frame_layout->addWidget(pBtn_edit, 0, Qt::AlignVCenter);
 	//frame_layout->addSpacerItem(new QSpacerItem(16 * getScale(), 1, QSizePolicy::Fixed));
 	frame_layout->addWidget(pBtn_delete, 0, Qt::AlignVCenter);
@@ -87,19 +98,25 @@ void OBSPanelItem::setIcon(bool checked)
 {
 	if (0 == m_type) {
 		if (!checked)
-			label_icon->setPixmap(QPixmap(":/res/images/newUi/banshu@2x.png"));
+			label_icon->setPixmap(
+				QPixmap(":/res/images/newUi/banshu@2x.png"));
 		else
-			label_icon->setPixmap(QPixmap(":/res/images/newUi/banshu2@2x.png"));
+			label_icon->setPixmap(
+				QPixmap(":/res/images/newUi/banshu2@2x.png"));
 	} else if (1 == m_type) {
 		if (!checked)
-			label_icon->setPixmap(QPixmap(":/res/images/newUi/ipcamera@2x.png"));
+			label_icon->setPixmap(
+				QPixmap(":/res/images/newUi/ipcamera@2x.png"));
 		else
-			label_icon->setPixmap(QPixmap(":/res/images/newUi/ipcamera2@2x.png"));
+			label_icon->setPixmap(
+				QPixmap(":/res/images/newUi/ipcamera2@2x.png"));
 	} else if (2 == m_type) {
 		if (!checked)
-			label_icon->setPixmap(QPixmap(":/res/images/newUi/usbcamera@2x.png"));
+			label_icon->setPixmap(
+				QPixmap(":/res/images/newUi/usbcamera@2x.png"));
 		else
-			label_icon->setPixmap(QPixmap(":/res/images/newUi/usbcamera2@2x.png"));
+			label_icon->setPixmap(QPixmap(
+				":/res/images/newUi/usbcamera2@2x.png"));
 	}
 	if (nullptr != label_name)
 		label_name->setEnabled(checked);
@@ -115,7 +132,7 @@ bool OBSPanelItem::event(QEvent *e)
 {
 	if (e->type() == QEvent::Resize && nullptr != frame)
 		frame->setFixedHeight(this->height());
-		
+
 	return QWidget::event(e);
 }
 
@@ -124,7 +141,7 @@ OBSPanel::OBSPanel(const QString &title, QWidget *parent)
 {
 	this->installEventFilter(this);
 	this->initUi();
-	
+
 	checkBoxGroup = new QButtonGroup(this);
 	checkBoxGroup->setExclusive(true);
 }
@@ -135,28 +152,37 @@ void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 	int type = 0;
 	if (item->type() == accrecorder::source::SceneItem::Type::kScreen)
 		type = 0;
-	else if (item->type() ==accrecorder::source::SceneItem::Type::kIPCamera)
+	else if (item->type() ==
+		 accrecorder::source::SceneItem::Type::kIPCamera)
 		type = 1;
 	else if (item->type() == accrecorder::source::SceneItem::Type::kCamera)
 		type = 2;
 
-	OBSPanelItem *panelItem = new OBSPanelItem(type, QString::fromStdString(item->Name()), itemCount, this);
+	OBSPanelItem *panelItem = new OBSPanelItem(
+		type, QString::fromStdString(item->Name()), itemCount, this);
 	panelItem->setFixedHeight(56 * getScale());
 	panelItemList.append(panelItem);
 
-	connect(panelItem, &OBSPanelItem::itemCheckedStateChanged, this, [=](int index, bool checked) {
-		if (0 <= index && index < sceneItemList.size()) {
-			accrecorder::source::SceneItem *sceneItem = sceneItemList[index];
-			sceneItem->Hide(!checked);
-			if (sceneItem->category() == accrecorder::source::SceneItem::Category::kMain)
-				sceneItem->Lock(true);
-			else if (sceneItem->category() == accrecorder::source::SceneItem::Category::kPiP)
-				sceneItem->Lock(false);
-			sourceManager->ApplySceneItemSettingsUpdate(sceneItem);
-		}
-	});
+	connect(panelItem, &OBSPanelItem::itemCheckedStateChanged, this,
+		[=](int index, bool checked) {
+			if (0 <= index && index < sceneItemList.size()) {
+				accrecorder::source::SceneItem *sceneItem =
+					sceneItemList[index];
+				sceneItem->Hide(!checked);
+				if (sceneItem->category() ==
+				    accrecorder::source::SceneItem::Category::
+					    kMain)
+					sceneItem->Lock(true);
+				else if (sceneItem->category() ==
+					 accrecorder::source::SceneItem::
+						 Category::kPiP)
+					sceneItem->Lock(false);
+				sourceManager->ApplySceneItemSettingsUpdate(
+					sceneItem);
+			}
+		});
 
-	connect(panelItem, &OBSPanelItem::deleteItem, this, [=](int index){
+	connect(panelItem, &OBSPanelItem::deleteItem, this, [=](int index) {
 		accrecorder::source::SceneItem *item = sceneItemList[index];
 		sceneItemList.removeOne(item);
 		sourceManager->Remove(item);
@@ -166,13 +192,16 @@ void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 		contentWidgetLayout->removeWidget(pitem);
 		itemCount--;
 
-		scrollAreaContentWidget->setFixedHeight(panelItem->height() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
-		hscrollArea->verticalScrollBar()->setValue(scrollAreaContentWidget->height());
+		scrollAreaContentWidget->setFixedHeight(
+			panelItem->height() * itemCount +
+			contentWidgetLayout->spacing() * (itemCount - 1));
+		hscrollArea->verticalScrollBar()->setValue(
+			scrollAreaContentWidget->height());
 
 		checkBoxGroup->removeButton(pitem->getCheckButton());
 		pitem->deleteLater();
 
-		for (int i = 0; i < itemCount; i++) {	//Reorder
+		for (int i = 0; i < itemCount; i++) { //Reorder
 			panelItemList[i]->setIndex(i);
 		}
 	});
@@ -182,8 +211,11 @@ void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 	contentWidgetLayout->setStretch(contentWidgetLayout->count() - 1, 1);
 
 	itemCount++;
-	scrollAreaContentWidget->setFixedHeight(panelItem->height() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
-	hscrollArea->verticalScrollBar()->setValue(scrollAreaContentWidget->height());
+	scrollAreaContentWidget->setFixedHeight(
+		panelItem->height() * itemCount +
+		contentWidgetLayout->spacing() * (itemCount - 1));
+	hscrollArea->verticalScrollBar()->setValue(
+		scrollAreaContentWidget->height());
 
 	if (!item->GetSettings().hidden)
 		panelItem->getCheckButton()->setChecked(true);
@@ -191,35 +223,40 @@ void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 
 void OBSPanel::addAudioItem(VolControl *item)
 {
-	foreach(auto volItem, volItemList) {
+	foreach(auto volItem, volItemList)
+	{
 		if (volItem->GetName().compare(item->GetName()) == 0)
 			return;
 	}
 	volItemList.append(item);
 
 	connect(item, &VolControl::ConfigClicked, this, [=]() {
-		VolControl *volItem = static_cast<VolControl*>(sender());
+		VolControl *volItem = static_cast<VolControl *>(sender());
 		contentWidgetLayout->removeWidget(volItem);
 		itemCount--;
 
-		scrollAreaContentWidget->setFixedHeight(item->height() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
-		hscrollArea->verticalScrollBar()->setValue(scrollAreaContentWidget->height());
+		scrollAreaContentWidget->setFixedHeight(
+			item->height() * itemCount +
+			contentWidgetLayout->spacing() * (itemCount - 1));
+		hscrollArea->verticalScrollBar()->setValue(
+			scrollAreaContentWidget->height());
 
 		volItemList.removeOne(volItem);
 
 		volItem->deleteLater();
 	});
 
-	
 	item->setFixedHeight(105 * getScale());
-	
+
 	contentWidgetLayout->insertWidget(itemCount, item);
 	contentWidgetLayout->setStretch(contentWidgetLayout->count() - 1, 1);
 
 	itemCount++;
-	scrollAreaContentWidget->setFixedHeight(item->height() * itemCount + contentWidgetLayout->spacing() * (itemCount - 1));
-	hscrollArea->verticalScrollBar()->setValue(scrollAreaContentWidget->height());
-
+	scrollAreaContentWidget->setFixedHeight(item->height() * itemCount +
+						contentWidgetLayout->spacing() *
+							(itemCount - 1));
+	hscrollArea->verticalScrollBar()->setValue(
+		scrollAreaContentWidget->height());
 }
 
 void OBSPanel::paintEvent(QPaintEvent *event)
@@ -235,25 +272,30 @@ bool OBSPanel::eventFilter(QObject *obj, QEvent *event)
 {
 	if (obj == hscrollArea && event->type() == QEvent::Resize) {
 		scrollAreaContentWidget->setFixedWidth(hscrollArea->width());
-	} 
+	}
 	return QWidget::eventFilter(obj, event);
 }
 
 void OBSPanel::initUi()
 {
 	QFrame *frame_top = new QFrame(this);
-	frame_top->setStyleSheet("QFrame{background-color: '#444444'; border-radius: 0px;}");
+	frame_top->setStyleSheet(
+		"QFrame{background-color: '#444444'; border-radius: 0px;}");
 	frame_top->setFixedHeight(40 * getScale());
 
 	QLabel *label_title = new QLabel(frame_top);
 	label_title->setText(m_title);
-	label_title->setStyleSheet(QString("QLabel{ color: white; %1}").arg(getFontStyle(14)));
+	label_title->setStyleSheet(
+		QString("QLabel{ color: white; %1}").arg(getFontStyle(14)));
 
 	QPushButton *pBtn_add = new QPushButton(frame_top);
 	pBtn_add->setFixedSize(24 * getScale(), 24 * getScale());
-	pBtn_add->setStyleSheet(QString("QPushButton{ border-image: url(':/res/images/newUi/tianjia@2x.png'); "
-						"min-width: %1; min-height:%1px; padding:0px; border: none; background-color: transparent;}").arg(24 * getScale()));
-	connect(pBtn_add, &QPushButton::clicked, this, [=](){ emit addClicked(); });
+	pBtn_add->setStyleSheet(
+		QString("QPushButton{ border-image: url(':/res/images/newUi/tianjia@2x.png'); "
+			"min-width: %1; min-height:%1px; padding:0px; border: none; background-color: transparent;}")
+			.arg(24 * getScale()));
+	connect(pBtn_add, &QPushButton::clicked, this,
+		[=]() { emit addClicked(); });
 
 	auto layout_top = new QHBoxLayout(frame_top);
 	layout_top->setContentsMargins(16 * getScale(), 0, 16 * getScale(), 0);
@@ -262,7 +304,8 @@ void OBSPanel::initUi()
 
 	listFrame = new QFrame();
 	listFrame->setObjectName("listFrame");
-	listFrame->setStyleSheet("#listFrame{background-color: rgb(68, 68, 68); border-radius: 0px;}");
+	listFrame->setStyleSheet(
+		"#listFrame{background-color: rgb(68, 68, 68); border-radius: 0px;}");
 	listFrame->setMinimumHeight(199 * getScale());
 
 	QHBoxLayout *frame_layout = new QHBoxLayout(listFrame);
@@ -274,7 +317,8 @@ void OBSPanel::initUi()
 	contentWidgetLayout = new QVBoxLayout(scrollAreaContentWidget);
 	contentWidgetLayout->setContentsMargins(0, 0, 0, 0);
 	contentWidgetLayout->setSpacing(0);
-	contentWidgetLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
+	contentWidgetLayout->addSpacerItem(
+		new QSpacerItem(1, 1, QSizePolicy::Expanding));
 	contentWidgetLayout->setDirection(QBoxLayout::TopToBottom);
 	QPalette palette(scrollAreaContentWidget->palette());
 	palette.setBrush(QPalette::Background, QBrush(QColor(68, 68, 68, 0)));
@@ -282,8 +326,10 @@ void OBSPanel::initUi()
 
 	hscrollArea = new HScrollArea(this);
 	hscrollArea->setWidgetResizable(true);
-	hscrollArea->setStyleSheet("QScrollArea{border:none; background-color: rgb(68, 68, 68, 0); border-radius: 0px;}");
-	hscrollArea->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+	hscrollArea->setStyleSheet(
+		"QScrollArea{border:none; background-color: rgb(68, 68, 68, 0); border-radius: 0px;}");
+	hscrollArea->setSizePolicy(
+		QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 	hscrollArea->setWidget(scrollAreaContentWidget);
 	hscrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 	hscrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -315,7 +361,6 @@ void OBSPanel::initUi()
 
 	frame_layout->addWidget(hscrollArea);
 
-
 	auto layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
 	layout->setSpacing(1 * getScale());
@@ -323,4 +368,3 @@ void OBSPanel::initUi()
 	layout->addWidget(listFrame, 1);
 	layout->setStretch(1, 1);
 }
-

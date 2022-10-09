@@ -3,7 +3,8 @@
 #include "obs-app.hpp"
 
 /********************************** ComboBoxItemWidget ***************************************************/
-ComboBoxItemWidget::ComboBoxItemWidget(int index, int width, int height, bool hideLine, QWidget *parent)
+ComboBoxItemWidget::ComboBoxItemWidget(int index, int width, int height,
+				       bool hideLine, QWidget *parent)
 	: itemIndex(index), QWidget(parent)
 {
 	this->setFixedSize(width, height);
@@ -14,18 +15,24 @@ ComboBoxItemWidget::ComboBoxItemWidget(int index, int width, int height, bool hi
 	int margin = 20 * getScale();
 	pBtn_text = new QPushButton(this);
 	pBtn_text->setCheckable(true);
-	pBtn_text->setStyleSheet(QString("QPushButton{background-color: transparent; color: rgb(68, 68, 68); border:none; "
-													"border-radius: none; text-align: left; padding-left: %1px; %2}"
-									"QPushButton::checked {color: rgb(46, 105, 240);}"
-									"QPushButton::hover{background-color: rgb(239, 243, 254);}").arg(margin).arg(getFontStyle(16)));
-	connect(pBtn_text, &QPushButton::clicked, this, [=]() {emit btnClicked(itemIndex, pBtn_text->text());});
+	pBtn_text->setStyleSheet(
+		QString("QPushButton{background-color: transparent; color: rgb(68, 68, 68); border:none; "
+			"border-radius: none; text-align: left; padding-left: %1px; %2}"
+			"QPushButton::checked {color: rgb(46, 105, 240);}"
+			"QPushButton::hover{background-color: rgb(239, 243, 254);}")
+			.arg(margin)
+			.arg(getFontStyle(16)));
+	connect(pBtn_text, &QPushButton::clicked, this,
+		[=]() { emit btnClicked(itemIndex, pBtn_text->text()); });
 
 	QLabel *label_line = new QLabel(this);
 	label_line->setFixedSize(width - margin * 2, 1 * getScale());
 	if (!hideLine)
-		label_line->setStyleSheet("QLabel{background-color: rgb(224, 224, 224); }");
+		label_line->setStyleSheet(
+			"QLabel{background-color: rgb(224, 224, 224); }");
 	else
-		label_line->setStyleSheet("QLabel{background-color: transparent;}");
+		label_line->setStyleSheet(
+			"QLabel{background-color: transparent;}");
 
 	pBtn_text->setFixedHeight(height - label_line->height());
 	layout->addWidget(pBtn_text);
@@ -35,15 +42,16 @@ ComboBoxItemWidget::ComboBoxItemWidget(int index, int width, int height, bool hi
 void ComboBoxItemWidget::paintEvent(QPaintEvent *event)
 {
 	QPainter painter(this);
-	painter.fillRect(this->rect(),QBrush(QColor(241, 58, 164, 0)));
+	painter.fillRect(this->rect(), QBrush(QColor(241, 58, 164, 0)));
 	return QWidget::paintEvent(event);
- }
+}
 
 /********************************** ComboBoxView ***************************************************/
- ComboBoxView::ComboBoxView(QWidget *parent) : QWidget(parent)
+ComboBoxView::ComboBoxView(QWidget *parent) : QWidget(parent)
 {
-	this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint |
-				Qt::Popup | Qt::NoDropShadowWindowHint);
+	this->setWindowFlags(Qt::FramelessWindowHint |
+			     Qt::WindowStaysOnTopHint | Qt::Popup |
+			     Qt::NoDropShadowWindowHint);
 	this->setAttribute(Qt::WA_TranslucentBackground, true);
 	this->setAttribute(Qt::WA_NoMouseReplay, true);
 	this->hide();
@@ -55,11 +63,11 @@ void ComboBoxItemWidget::paintEvent(QPaintEvent *event)
 
 	listWidget = new QListWidget(this);
 	listWidget->setStyleSheet(
-	QString("QListWidget{border:none; background-color: transparent; padding: 0px; }"
-		"QListWidget::item{padding: 0px;}"
-		"QListWidget::Item:hover{background-color: transparent; }"
-		"QScrollBar:vertical{width:%1px; background-color: rgb(170, 170, 170);}")
-		.arg(6 * getScale()));
+		QString("QListWidget{border:none; background-color: transparent; padding: 0px; }"
+			"QListWidget::item{padding: 0px;}"
+			"QListWidget::Item:hover{background-color: transparent; }"
+			"QScrollBar:vertical{width:%1px; background-color: rgb(170, 170, 170);}")
+			.arg(6 * getScale()));
 	listWidget->setContentsMargins(0, 0, 0, 0);
 	listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	listWidget->setMaximumHeight(itemHeight * maxDisplayCount);
@@ -69,8 +77,9 @@ void ComboBoxItemWidget::paintEvent(QPaintEvent *event)
 	listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
 	QHBoxLayout *layout = new QHBoxLayout(this);
-	layout->setContentsMargins(shadowBorder, shadowBorder, shadowBorder, shadowBorder);
-	layout->addWidget(listWidget);	
+	layout->setContentsMargins(shadowBorder, shadowBorder, shadowBorder,
+				   shadowBorder);
+	layout->addWidget(listWidget);
 
 	itemGroup = new QButtonGroup(this);
 	itemGroup->setExclusive(true);
@@ -86,7 +95,7 @@ void ComboBoxView::addItems(QStringList textList)
 		}
 		int count = listWidget->count();
 		for (int i = 0; i < count; i++) {
-			QListWidgetItem * item = listWidget->takeItem(0);
+			QListWidgetItem *item = listWidget->takeItem(0);
 			delete item;
 		}
 		itemMap.clear();
@@ -95,13 +104,15 @@ void ComboBoxView::addItems(QStringList textList)
 	QAbstractButton *firstItem = nullptr;
 	for (int i = 0; i < textList.size(); i++) {
 		QListWidgetItem *item = new QListWidgetItem(listWidget);
-		ComboBoxItemWidget *itemWidget = new ComboBoxItemWidget(i, this->width(), itemHeight,
-					(i == textList.size() - 1) ? true : false, listWidget);
-		connect(itemWidget, &ComboBoxItemWidget::btnClicked, this, [=](int index, QString text){
-			currentIndex = index;
-			this->hide();
-			emit itemIndexChanged(index, text);
-		});
+		ComboBoxItemWidget *itemWidget = new ComboBoxItemWidget(
+			i, this->width(), itemHeight,
+			(i == textList.size() - 1) ? true : false, listWidget);
+		connect(itemWidget, &ComboBoxItemWidget::btnClicked, this,
+			[=](int index, QString text) {
+				currentIndex = index;
+				this->hide();
+				emit itemIndexChanged(index, text);
+			});
 		itemWidget->setText(textList.at(i));
 		listWidget->addItem(item);
 		listWidget->setItemWidget(item, itemWidget);
@@ -115,7 +126,8 @@ void ComboBoxView::addItems(QStringList textList)
 	if (itemCount <= maxDisplayCount)
 		this->setFixedHeight(itemHeight * itemCount + shadowBorder * 2);
 	else
-		this->setFixedHeight(itemHeight * maxDisplayCount + shadowBorder * 2);
+		this->setFixedHeight(itemHeight * maxDisplayCount +
+				     shadowBorder * 2);
 
 	if (nullptr != firstItem)
 		firstItem->click();
@@ -127,7 +139,7 @@ void ComboBoxView::setMaxDisplayCount(int count)
 	maxDisplayCount = count;
 }
 
-void ComboBoxView::paintEvent(QPaintEvent *event) 
+void ComboBoxView::paintEvent(QPaintEvent *event)
 {
 	QPainter painter(this);
 	painter.setRenderHint(QPainter::Antialiasing);
@@ -194,14 +206,16 @@ bool ComboBoxView::event(QEvent *e)
 	} else if (e->type() == QEvent::HideToParent) {
 		emit viewHide();
 	}
-	
+
 	return QWidget::event(e);
 }
 
 /********************************** ComboBox ***************************************************/
-ComboBox::ComboBox( QWidget *parent) : QFrame(parent)
+ComboBox::ComboBox(QWidget *parent) : QFrame(parent)
 {
-	this->setStyleSheet(QString("QFrame{background-color: rgb(240,240,240); border-radius: %1px;}").arg(4 * getScale()));
+	this->setStyleSheet(
+		QString("QFrame{background-color: rgb(240,240,240); border-radius: %1px;}")
+			.arg(4 * getScale()));
 	this->initUi();
 }
 
@@ -212,22 +226,24 @@ void ComboBox::addItems(QStringList textList)
 
 	if (nullptr == view) {
 		view = new ComboBoxView(this);
-		connect(view, &ComboBoxView::itemIndexChanged, this, [=](int index, QString text) {
-			m_Index = index;
-			this->setText(text);
-			emit itemIndexChanged(text);
-		});
+		connect(view, &ComboBoxView::itemIndexChanged, this,
+			[=](int index, QString text) {
+				m_Index = index;
+				this->setText(text);
+				emit itemIndexChanged(text);
+			});
 		view->setFixedWidth(this->width());
 
 		connect(view, &ComboBoxView::viewHide, this, [=]() {
 			if (this->checked) {
 				checked = false;
 				if (label_icon != nullptr)
-					label_icon->setPixmap(QPixmap(":/res/images/newUi/arrow@2x.png"));
+					label_icon->setPixmap(QPixmap(
+						":/res/images/newUi/arrow@2x.png"));
 			}
 		});
 	}
-	
+
 	view->addItems(textList);
 }
 
@@ -239,15 +255,20 @@ bool ComboBox::event(QEvent *e)
 			checked = !checked;
 			if (checked) {
 				if (label_icon != nullptr)
-					label_icon->setPixmap(QPixmap(":/res/images/newUi/arrow_on@2x.png"));
+					label_icon->setPixmap(QPixmap(
+						":/res/images/newUi/arrow_on@2x.png"));
 				if (view != nullptr) {
-					QPoint globalPos = mapToGlobal(QPoint(0, 0));
-					view->move(globalPos.x() - view->shadow(), globalPos.y() + this->height());
+					QPoint globalPos =
+						mapToGlobal(QPoint(0, 0));
+					view->move(
+						globalPos.x() - view->shadow(),
+						globalPos.y() + this->height());
 					view->show();
 				}
 			} else {
 				if (label_icon != nullptr)
-					label_icon->setPixmap(QPixmap(":/res/images/newUi/arrow@2x.png"));
+					label_icon->setPixmap(QPixmap(
+						":/res/images/newUi/arrow@2x.png"));
 				if (view != nullptr)
 					view->hide();
 			}
@@ -288,14 +309,16 @@ void ComboBox::setText(const QString &text)
 		int fontSize = fontMetric.width(text);
 		QString str = text;
 		if (fontSize > label_width)
-			str = fontMetric.elidedText(text, Qt::ElideRight, label_width);
+			str = fontMetric.elidedText(text, Qt::ElideRight,
+						    label_width);
 		label_text->setText(str);
 	}
 }
 
 /*********************************  SceneSettingsWidget ****************************************/
 void SceneSettingsWidget::initData(
-	std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>> screenItems)
+	std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>
+		screenItems)
 {
 	QStringList sceneList;
 	foreach(auto item, screenItems)
@@ -383,10 +406,10 @@ void SceneSettingsWidget::initUi()
 void IpCameraSettingsWidget::initData()
 {
 	QStringList ipCameraList = QStringList()
-		<< QTStr("NewUi.TeacherCloseUp")
-		<< QTStr("NewUi.TeacherPanorama")
-		<< QTStr("NewUi.StudentCloseUp")
-		<< QTStr("NewUi.StudentPanorama");
+				   << QTStr("NewUi.TeacherCloseUp")
+				   << QTStr("NewUi.TeacherPanorama")
+				   << QTStr("NewUi.StudentCloseUp")
+				   << QTStr("NewUi.StudentPanorama");
 
 	combobox_cameraName->addItems(ipCameraList);
 	combobox_rate->addItems(QStringList() << "4096kbit/s");
@@ -419,13 +442,17 @@ void IpCameraSettingsWidget::initUi()
 	label_1->setStyleSheet(label->styleSheet());
 	lineedit_rtsp = new QLineEdit(this);
 	lineedit_rtsp->setFixedSize(410 * getScale(), 51 * getScale());
-	lineedit_rtsp->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+	lineedit_rtsp->setStyleSheet(
+		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
-			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
+			"QLineEdit::disabled{color: rgb(170, 170, 170);}")
+			.arg(4 * getScale())
+			.arg(getFontStyle(18)));
 	lineedit_rtsp->setPlaceholderText(QTStr("NewUi.Input") + "RTSP");
 	lineedit_rtsp->setFont(getFont(18));
 	QPalette palette = lineedit_rtsp->palette();
-	palette.setColor(QPalette::Normal, QPalette::PlaceholderText, QColor(170, 170, 170));
+	palette.setColor(QPalette::Normal, QPalette::PlaceholderText,
+			 QColor(170, 170, 170));
 	lineedit_rtsp->setPalette(palette);
 
 	QHBoxLayout *hlayout_1 = new QHBoxLayout;
@@ -504,13 +531,15 @@ void IpCameraSettingsWidget::initUi()
 }
 
 void USBCameraSettingsWidget::initData(
-	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>> usbCameraSource)
+	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>
+		usbCameraSource)
 {
 	QStringList ipCameraList;
 	foreach(auto item, usbCameraSource)
 	{
 		ipCameraList.append(QString::fromStdString(item->Name()));
-		mapCameraSource.insert(QString::fromStdString(item->Name()), item);
+		mapCameraSource.insert(QString::fromStdString(item->Name()),
+				       item);
 	}
 	combobox_cameraName->addItems(ipCameraList);
 
@@ -617,7 +646,8 @@ void USBCameraSettingsWidget::slot_combobox_cameraName_changed(QString text)
 	itemSource->GetAvailableFps(fps);
 
 	QStringList temp;
-	foreach(std::string str, res) {
+	foreach(std::string str, res)
+	{
 		temp.append(QString::fromStdString(str));
 	}
 	combobox_resolution->addItems(temp);
@@ -655,23 +685,49 @@ void BasicPanel::paintEvent(QPaintEvent *event)
 			painter.fillPath(path, QColor(255, 255, 255));
 		if (4 == shadowBorder) {
 			switch (i) {
-			case 0: color.setAlpha(65); break;
-			case 1: color.setAlpha(25); break;
-			case 2: color.setAlpha(13); break;
-			case 3: color.setAlpha(3); break;
-			default: break;
+			case 0:
+				color.setAlpha(65);
+				break;
+			case 1:
+				color.setAlpha(25);
+				break;
+			case 2:
+				color.setAlpha(13);
+				break;
+			case 3:
+				color.setAlpha(3);
+				break;
+			default:
+				break;
 			}
 		} else if (8 == shadowBorder) {
 			switch (i) {
-			case 0: color.setAlpha(65); break;
-			case 1: color.setAlpha(35); break;
-			case 2: color.setAlpha(25); break;
-			case 3: color.setAlpha(13); break;
-			case 4: color.setAlpha(10); break;
-			case 5: color.setAlpha(8); break;
-			case 6: color.setAlpha(5); break;
-			case 7: color.setAlpha(3); break;
-			default: break;
+			case 0:
+				color.setAlpha(65);
+				break;
+			case 1:
+				color.setAlpha(35);
+				break;
+			case 2:
+				color.setAlpha(25);
+				break;
+			case 3:
+				color.setAlpha(13);
+				break;
+			case 4:
+				color.setAlpha(10);
+				break;
+			case 5:
+				color.setAlpha(8);
+				break;
+			case 6:
+				color.setAlpha(5);
+				break;
+			case 7:
+				color.setAlpha(3);
+				break;
+			default:
+				break;
 			}
 		}
 
@@ -706,8 +762,10 @@ bool BasicPanel::eventFilter(QObject *obj, QEvent *event)
 }
 
 /*********************************** Add scene panel *******************************************/
-ScenesSettingsPanel::ScenesSettingsPanel(accrecorder::manager::OBSSourceManager *manager, accrecorder::source::SceneItem::Category categroy,
-		QWidget *parent) : sourceManager(manager), itemCategory(categroy), BasicPanel(parent)
+ScenesSettingsPanel::ScenesSettingsPanel(
+	accrecorder::manager::OBSSourceManager *manager,
+	accrecorder::source::SceneItem::Category categroy, QWidget *parent)
+	: sourceManager(manager), itemCategory(categroy), BasicPanel(parent)
 {
 	this->initUi();
 	this->installEventFilter(this);
@@ -726,16 +784,20 @@ void ScenesSettingsPanel::initUi()
 		label_title->setText(QTStr("NewUi.AddMainScreen"));
 	else if (itemCategory == accrecorder::source::SceneItem::Category::kPiP)
 		label_title->setText(QTStr("NewUi.AddPip"));
-	label_title->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
+	label_title->setStyleSheet(
+		QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(22, FontWeight::Blod)));
 
 	pBtn_close = new QPushButton(frame_top);
 	pBtn_close->setFixedSize(36 * getScale(), 36 * getScale());
-	pBtn_close->setStyleSheet("QPushButton{padding: 0px; border: none; min-width: 36px; min-height: 36px;"
-					"background-color: transparent; border-image: url(':/res/images/newUi/close@2x.png');}");
-	connect(pBtn_close, &QPushButton::clicked, this, [=](){ this->close(); this->deleteLater(); });
+	pBtn_close->setStyleSheet(
+		"QPushButton{padding: 0px; border: none; min-width: 36px; min-height: 36px;"
+		"background-color: transparent; border-image: url(':/res/images/newUi/close@2x.png');}");
+	connect(pBtn_close, &QPushButton::clicked, this, [=]() {
+		this->close();
+		this->deleteLater();
+	});
 	pBtn_close->installEventFilter(this);
-
 
 	QHBoxLayout *layout_top = new QHBoxLayout(frame_top);
 	layout_top->setContentsMargins(30 * getScale(), 0, 24 * getScale(), 0);
@@ -836,7 +898,8 @@ void ScenesSettingsPanel::initUi()
 			"color: rgb(255, 255, 255); %2}")
 			.arg(6 * getScale())
 			.arg(getFontStyle(16)));
-	connect(pBtnYes, &QPushButton::clicked, this, &ScenesSettingsPanel::slot_addBtn_clicked);
+	connect(pBtnYes, &QPushButton::clicked, this,
+		&ScenesSettingsPanel::slot_addBtn_clicked);
 
 	QHBoxLayout *layout_bottom = new QHBoxLayout(frame_bottom);
 	layout_bottom->setSpacing(30 * getScale());
@@ -865,8 +928,10 @@ void ScenesSettingsPanel::initUi()
 	tabBtn_1->setChecked(true);
 
 	sceneSettingsWidget = new SceneSettingsWidget(this->stackedWidget);
-	ipCameraSettingsWidget = new IpCameraSettingsWidget(this->stackedWidget);
-	usbCameraSettingsWidget = new USBCameraSettingsWidget(this->stackedWidget);
+	ipCameraSettingsWidget =
+		new IpCameraSettingsWidget(this->stackedWidget);
+	usbCameraSettingsWidget =
+		new USBCameraSettingsWidget(this->stackedWidget);
 	this->stackedWidget->addWidget(sceneSettingsWidget);
 	this->stackedWidget->addWidget(ipCameraSettingsWidget);
 	this->stackedWidget->addWidget(usbCameraSettingsWidget);
@@ -877,12 +942,14 @@ void ScenesSettingsPanel::initUi()
 
 void ScenesSettingsPanel::initData()
 {
-	std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>> sceneSource
-			= std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>();	
+	std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>
+		sceneSource = std::vector<
+			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
 	//std::vector<std::shared_ptr<accrecorder::source::IPCameraSceneItem>> ipCameraSource
-	//		= std::vector<std::shared_ptr<accrecorder::source::IPCameraSceneItem>>();	
-	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>> usbCameraSource
-			= std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+	//		= std::vector<std::shared_ptr<accrecorder::source::IPCameraSceneItem>>();
+	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>
+		usbCameraSource = std::vector<
+			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
 	sourceManager->ListScreenItems(sceneSource);
 	sourceManager->ListCameraItems(usbCameraSource);
 
@@ -897,8 +964,9 @@ void ScenesSettingsPanel::initData()
 void ScenesSettingsPanel::slot_addBtn_clicked()
 {
 	accrecorder::source::SceneItem *screen = nullptr;
-	if (0 == stackedWidget->currentIndex()) {	//scene
-		auto items = std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
+	if (0 == stackedWidget->currentIndex()) { //scene
+		auto items = std::vector<
+			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
 		sourceManager->ListScreenItems(items);
 		// copy the item & create new one to the heap
 		screen = new accrecorder::source::ScreenSceneItem(
@@ -907,15 +975,17 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 		screen = new accrecorder::source::IPCameraSceneItem(
 			ipCameraSettingsWidget->getCameraName(),
 			ipCameraSettingsWidget->getRTSPURL(), true);
-	} else if (2 == stackedWidget->currentIndex()) {	//usb camera
-		auto items = std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+	} else if (2 == stackedWidget->currentIndex()) { //usb camera
+		auto items = std::vector<
+			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
 		sourceManager->ListCameraItems(items);
 		// copy the item & create new one to the heap
 		screen = new accrecorder::source::CameraSceneItem(
 			*items[usbCameraSettingsWidget->getSceneIndex()].get());
 	}
 
-	if (nullptr != screen && sourceManager->AttachSceneItem(screen , itemCategory)) {
+	if (nullptr != screen &&
+	    sourceManager->AttachSceneItem(screen, itemCategory)) {
 		screen->Hide(true);
 		//m_manager->ApplySceneItemPropertiesUpdate(screen);
 		sourceManager->ApplySceneItemSettingsUpdate(screen);
@@ -928,7 +998,8 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 }
 
 /*********************************** Add audio panel *******************************************/
-AudioSettingsPanel::AudioSettingsPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent)
+AudioSettingsPanel::AudioSettingsPanel(
+	accrecorder::manager::OBSSourceManager *manager, QWidget *parent)
 	: sourceManager(manager), BasicPanel(parent)
 {
 	this->installEventFilter(this);
@@ -941,16 +1012,18 @@ void AudioSettingsPanel::initUi()
 {
 	QLabel *label_title = new QLabel(this);
 	label_title->setText(QTStr("NewUi.AudioSettings"));
-	
-	label_title->setStyleSheet( QString("QLabel{color:rgb(34,34,34); %1}")
+
+	label_title->setStyleSheet(
+		QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(22, FontWeight::Blod)));
 	label_title->setFixedSize(89 * getScale(), 23 * getScale());
 	label_title->move(30 * getScale(), 24 * getScale());
-	
+
 	QPushButton *pBtn_close = new QPushButton(this);
 	pBtn_close->setFixedSize(36 * getScale(), 36 * getScale());
 	pBtn_close->move(440 * getScale(), 17 * getScale());
-	pBtn_close->setStyleSheet("QPushButton{padding: 0px; border: none; min-width: 36px; min-height: 36px;"
+	pBtn_close->setStyleSheet(
+		"QPushButton{padding: 0px; border: none; min-width: 36px; min-height: 36px;"
 		"background-color: transparent; border-image: url(':/res/images/newUi/close@2x.png');}");
 	connect(pBtn_close, &QPushButton::clicked, this, [=]() {
 		this->close();
@@ -968,7 +1041,8 @@ void AudioSettingsPanel::initUi()
 	pBtnCancel->setFixedSize(120 * getScale(), 40 * getScale());
 	pBtnCancel->move(120 * getScale(), 177 * getScale());
 	pBtnCancel->installEventFilter(this);
-	pBtnCancel->setStyleSheet(QString("QPushButton{border: %1px solid rgb(170,170,170); border-radius: %2;"
+	pBtnCancel->setStyleSheet(
+		QString("QPushButton{border: %1px solid rgb(170,170,170); border-radius: %2;"
 			"background-color: white; color: rgb(68, 68, 68); %3}")
 			.arg(1 * getScale())
 			.arg(6 * getScale())
@@ -983,17 +1057,21 @@ void AudioSettingsPanel::initUi()
 	pBtnYes->setFixedSize(pBtnCancel->width(), pBtnCancel->height());
 	pBtnYes->move(260 * getScale(), pBtnCancel->y());
 	pBtnYes->installEventFilter(this);
-	pBtnYes->setStyleSheet(QString("QPushButton{background-color: rgb(46,105,240); border-radius: %1; "
+	pBtnYes->setStyleSheet(
+		QString("QPushButton{background-color: rgb(46,105,240); border-radius: %1; "
 			"color: rgb(255, 255, 255); %2}")
 			.arg(6 * getScale())
 			.arg(getFontStyle(16)));
 	connect(pBtnYes, &QPushButton::clicked, this, [=]() {
-		std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>> audioItems =
-				std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+		std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>
+			audioItems = std::vector<std::shared_ptr<
+				accrecorder::source::AudioSceneItem>>();
 		sourceManager->ListAudioItems(audioItems);
 		// copy
-		auto input = new accrecorder::source::AudioInputItem
-			(*reinterpret_cast<accrecorder::source::AudioInputItem *>(audioItems[combobox_audio->currentIndex()].get()));
+		auto input = new accrecorder::source::AudioInputItem(
+			*reinterpret_cast<accrecorder::source::AudioInputItem *>(
+				audioItems[combobox_audio->currentIndex()]
+					.get()));
 		if (sourceManager->AttachSceneItem(input)) {
 			// success
 		}
@@ -1004,21 +1082,23 @@ void AudioSettingsPanel::initUi()
 
 void AudioSettingsPanel::initData()
 {
-	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>> audioItems =
-		std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>
+		audioItems = std::vector<
+			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
 	sourceManager->ListAudioItems(audioItems);
 
 	QStringList nameList;
-	foreach(auto item, audioItems) {
+	foreach(auto item, audioItems)
+	{
 		nameList.append(QString::fromStdString(item->Name()));
 	}
 
 	combobox_audio->addItems(nameList);
 }
 
-
 /*********************************** Push stream panel *******************************************/
-StreamingSettingsPanel::StreamingSettingsPanel(accrecorder::manager::OBSSourceManager *manager, QWidget *parent)
+StreamingSettingsPanel::StreamingSettingsPanel(
+	accrecorder::manager::OBSSourceManager *manager, QWidget *parent)
 	: sourceManager(manager), BasicPanel(parent)
 {
 	this->installEventFilter(this);
@@ -1030,7 +1110,8 @@ void StreamingSettingsPanel::initUi()
 {
 	QLabel *label_title = new QLabel(this);
 	label_title->setText(QTStr("NewUi.StreamingSettings"));
-	label_title->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
+	label_title->setStyleSheet(
+		QString("QLabel{color:rgb(34,34,34); %1}")
 			.arg(getFontStyle(22, FontWeight::Blod)));
 	label_title->setFixedSize(89 * getScale(), 23 * getScale());
 	label_title->move(30 * getScale(), 24 * getScale());
@@ -1038,7 +1119,8 @@ void StreamingSettingsPanel::initUi()
 	QPushButton *pBtn_close = new QPushButton(this);
 	pBtn_close->setFixedSize(36 * getScale(), 36 * getScale());
 	pBtn_close->move(340 * getScale(), 17 * getScale());
-	pBtn_close->setStyleSheet("QPushButton{padding: 0px; border: none; min-width: 36px; min-height: 36px;"
+	pBtn_close->setStyleSheet(
+		"QPushButton{padding: 0px; border: none; min-width: 36px; min-height: 36px;"
 		"background-color: transparent; border-image: url(':/res/images/newUi/close@2x.png');}");
 	connect(pBtn_close, &QPushButton::clicked, this, [=]() {
 		this->close();
@@ -1050,29 +1132,32 @@ void StreamingSettingsPanel::initUi()
 	label_rtsp1->setText("RTMP1");
 	label_rtsp1->setFixedSize(70 * getScale(), 15 * getScale());
 	label_rtsp1->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
-			.arg(getFontStyle(18)));
+					   .arg(getFontStyle(18)));
 	label_rtsp1->move(31 * getScale(), 87 * getScale());
 
 	QLabel *label_rtsp2 = new QLabel(this);
 	label_rtsp2->setText("RTMP2");
 	label_rtsp2->setFixedSize(70 * getScale(), 15 * getScale());
 	label_rtsp2->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
-			.arg(getFontStyle(18)));
+					   .arg(getFontStyle(18)));
 	label_rtsp2->move(31 * getScale(), 205 * getScale());
 
 	QLabel *label_rtsp3 = new QLabel(this);
 	label_rtsp3->setText("RTMP3");
 	label_rtsp3->setFixedSize(70 * getScale(), 15 * getScale());
 	label_rtsp3->setStyleSheet(QString("QLabel{color:rgb(34,34,34); %1}")
-			.arg(getFontStyle(18)));
+					   .arg(getFontStyle(18)));
 	label_rtsp3->move(31 * getScale(), 323 * getScale());
 
 	lineedit_rtsp1 = new QLineEdit(this);
 	lineedit_rtsp1->setFixedSize(340 * getScale(), 51 * getScale());
 	lineedit_rtsp1->setEnabled(true);
-	lineedit_rtsp1->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+	lineedit_rtsp1->setStyleSheet(
+		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
-			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
+			"QLineEdit::disabled{color: rgb(170, 170, 170);}")
+			.arg(4 * getScale())
+			.arg(getFontStyle(18)));
 	lineedit_rtsp1->setPlaceholderText(QTStr("NewUi.Input") + "RTMP1");
 	lineedit_rtsp1->move(30 * getScale(), 123 * getScale());
 	QPalette palette = lineedit_rtsp1->palette();
@@ -1082,9 +1167,12 @@ void StreamingSettingsPanel::initUi()
 	lineedit_rtsp2 = new QLineEdit(this);
 	lineedit_rtsp2->setFixedSize(340 * getScale(), 51 * getScale());
 	lineedit_rtsp2->setEnabled(false);
-	lineedit_rtsp2->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+	lineedit_rtsp2->setStyleSheet(
+		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
-			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
+			"QLineEdit::disabled{color: rgb(170, 170, 170);}")
+			.arg(4 * getScale())
+			.arg(getFontStyle(18)));
 	lineedit_rtsp2->setPlaceholderText(QTStr("NewUi.Input") + "RTMP2");
 	lineedit_rtsp2->setFont(getFont(18));
 	lineedit_rtsp2->move(30 * getScale(), 241 * getScale());
@@ -1093,9 +1181,12 @@ void StreamingSettingsPanel::initUi()
 	lineedit_rtsp3 = new QLineEdit(this);
 	lineedit_rtsp3->setFixedSize(340 * getScale(), 51 * getScale());
 	lineedit_rtsp3->setEnabled(false);
-	lineedit_rtsp3->setStyleSheet(QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+	lineedit_rtsp3->setStyleSheet(
+		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
-			"QLineEdit::disabled{color: rgb(170, 170, 170);}").arg(4 * getScale()).arg(getFontStyle(18)));
+			"QLineEdit::disabled{color: rgb(170, 170, 170);}")
+			.arg(4 * getScale())
+			.arg(getFontStyle(18)));
 	lineedit_rtsp3->setPlaceholderText(QTStr("NewUi.Input") + "RTMP3");
 	lineedit_rtsp3->setFont(getFont(18));
 	lineedit_rtsp3->move(30 * getScale(), 359 * getScale());
@@ -1113,7 +1204,7 @@ void StreamingSettingsPanel::initUi()
 			.arg(checkbox_rtsp1->width())
 			.arg(checkbox_rtsp1->height()));
 	checkbox_rtsp1->setChecked(true);
-	connect(checkbox_rtsp1, &QCheckBox::stateChanged, this, [=](int state){
+	connect(checkbox_rtsp1, &QCheckBox::stateChanged, this, [=](int state) {
 		if (0 == state)
 			lineedit_rtsp1->setEnabled(false);
 		else if (2 == state)
@@ -1168,7 +1259,8 @@ void StreamingSettingsPanel::initUi()
 	pBtnCancel->setFixedSize(120 * getScale(), 40 * getScale());
 	pBtnCancel->move(70 * getScale(), 450 * getScale());
 	pBtnCancel->installEventFilter(this);
-	pBtnCancel->setStyleSheet(QString("QPushButton{border: %1px solid rgb(170,170,170); border-radius: %2;"
+	pBtnCancel->setStyleSheet(
+		QString("QPushButton{border: %1px solid rgb(170,170,170); border-radius: %2;"
 			"background-color: white; color: rgb(68, 68, 68); %3}")
 			.arg(1 * getScale())
 			.arg(6 * getScale())
@@ -1183,12 +1275,13 @@ void StreamingSettingsPanel::initUi()
 	pBtnYes->setFixedSize(pBtnCancel->width(), pBtnCancel->height());
 	pBtnYes->move(210 * getScale(), pBtnCancel->y());
 	pBtnYes->installEventFilter(this);
-	pBtnYes->setStyleSheet(QString("QPushButton{background-color: rgb(46,105,240); border-radius: %1; "
+	pBtnYes->setStyleSheet(
+		QString("QPushButton{background-color: rgb(46,105,240); border-radius: %1; "
 			"color: rgb(255, 255, 255); %2}")
 			.arg(6 * getScale())
 			.arg(getFontStyle(16)));
 	connect(pBtnYes, &QPushButton::clicked, this, [=]() {
-		QString str; 
+		QString str;
 		if (checkbox_rtsp1->isChecked())
 			str = lineedit_rtsp1->text();
 		else if (checkbox_rtsp2->isChecked())
@@ -1199,7 +1292,9 @@ void StreamingSettingsPanel::initUi()
 		if (str.isEmpty())
 			return;
 
-		sourceManager->SetStreamAddress(str.toStdString(), QString().toStdString(), QString().toStdString());
+		sourceManager->SetStreamAddress(str.toStdString(),
+						QString().toStdString(),
+						QString().toStdString());
 		this->close();
 		this->deleteLater();
 	});
@@ -1208,6 +1303,7 @@ void StreamingSettingsPanel::initUi()
 void StreamingSettingsPanel::initData()
 {
 	std::string address;
-	sourceManager->GetSteamAddress(address, QString().toStdString(),  QString().toStdString());
+	sourceManager->GetSteamAddress(address, QString().toStdString(),
+				       QString().toStdString());
 	lineedit_rtsp1->setText(QString::fromStdString(address));
 }

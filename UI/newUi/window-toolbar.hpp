@@ -2,8 +2,7 @@
 
 #include <QWidget>
 
-class OBSToolbar  : public QWidget
-{
+class OBSToolbar : public QWidget {
 	Q_OBJECT
 
 public:

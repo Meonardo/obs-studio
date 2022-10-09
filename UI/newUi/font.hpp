@@ -6,11 +6,7 @@
 #include <qdebug.h>
 #include <qpainterpath.h>
 
-enum FontWeight {
-	Blod = 700,
-	Regular = 380,
-	Light = 290
-};
+enum FontWeight { Blod = 700, Regular = 380, Light = 290 };
 
 static qreal getScale()
 {
@@ -33,9 +29,12 @@ static QFont getFont(int pixSize = 12, QFont::Weight weight = QFont::Normal)
 	return font;
 }
 
-static QString getFontStyle(int pixSize = 12, FontWeight weight = FontWeight::Regular)
+static QString getFontStyle(int pixSize = 12,
+			    FontWeight weight = FontWeight::Regular)
 {
-	return QString("font: %1 %2px 'Microsoft YaHei UI';").arg(weight).arg(pixSize * getScale());
+	return QString("font: %1 %2px 'Microsoft YaHei UI';")
+		.arg(weight)
+		.arg(pixSize * getScale());
 }
 
 static QPainterPath getRoundRectPath(const QRectF &rect, qreal topLeftRadius,
