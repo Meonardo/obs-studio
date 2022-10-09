@@ -221,6 +221,20 @@ void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 		panelItem->getCheckButton()->setChecked(true);
 }
 
+void OBSPanel::removeAudioItem(VolControl *volItem)
+{
+	contentWidgetLayout->removeWidget(volItem);
+	itemCount--;
+
+	scrollAreaContentWidget->setFixedHeight(volItem->height() * itemCount +
+						contentWidgetLayout->spacing() *
+							(itemCount - 1));
+	hscrollArea->verticalScrollBar()->setValue(
+		scrollAreaContentWidget->height());
+
+	volItemList.removeOne(volItem);
+}
+
 void OBSPanel::addAudioItem(VolControl *item)
 {
 	foreach(auto volItem, volItemList)

@@ -945,8 +945,6 @@ void ScenesSettingsPanel::initData()
 	std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>
 		sceneSource = std::vector<
 			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
-	//std::vector<std::shared_ptr<accrecorder::source::IPCameraSceneItem>> ipCameraSource
-	//		= std::vector<std::shared_ptr<accrecorder::source::IPCameraSceneItem>>();
 	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>
 		usbCameraSource = std::vector<
 			std::shared_ptr<accrecorder::source::CameraSceneItem>>();

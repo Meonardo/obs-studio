@@ -3580,6 +3580,7 @@ void OBSBasic::DeactivateAudioSource(OBSSource source)
 {
 	for (size_t i = 0; i < volumes.size(); i++) {
 		if (volumes[i]->GetSource() == source) {
+			audioPanel->removeAudioItem(volumes[i]);
 			delete volumes[i];
 			volumes.erase(volumes.begin() + i);
 			break;

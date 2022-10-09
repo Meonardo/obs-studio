@@ -471,14 +471,14 @@ obs_data_t *CameraSceneItem::Properties() const
 	obs_data_t *data = obs_data_create();
 	obs_data_set_string(data, "video_device_id", device_id_.c_str());
 	//resolution
-	obs_data_set_string(data, "resolution", selected_res_.c_str());
-	// res_type
-	obs_data_set_int(data, "res_type", 1);
-	// must set last-device/id
-	obs_data_set_string(data, "last_resolution", selected_res_.c_str());
-	obs_data_set_string(data, "last_video_device_id", device_id_.c_str());
-	// frame_interval
-	obs_data_set_int(data, "frame_interval", std::get<1>(selected_fps_));
+	//obs_data_set_string(data, "resolution", selected_res_.c_str());
+	//// res_type
+	//obs_data_set_int(data, "res_type", 1);
+	//// must set last-device/id
+	//obs_data_set_string(data, "last_resolution", selected_res_.c_str());
+	//obs_data_set_string(data, "last_video_device_id", device_id_.c_str());
+	//// frame_interval
+	//obs_data_set_int(data, "frame_interval", std::get<1>(selected_fps_));
 
 	return data;
 }

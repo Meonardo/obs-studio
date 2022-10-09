@@ -50,6 +50,7 @@ public:
 	~OBSPanel() {}
 	void addItem(accrecorder::source::SceneItem *item);
 	void addAudioItem(VolControl *item);
+	void removeAudioItem(VolControl *item);
 	void setManager(accrecorder::manager::OBSSourceManager *manager)
 	{
 		sourceManager = manager;
