@@ -903,7 +903,10 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 		// copy the item & create new one to the heap
 		screen = new accrecorder::source::ScreenSceneItem(
 			*items[sceneSettingsWidget->getSceneIndex()].get());
-	} else if (1 == stackedWidget->currentIndex()) {	
+	} else if (1 == stackedWidget->currentIndex()) {
+		screen = new accrecorder::source::IPCameraSceneItem(
+			ipCameraSettingsWidget->getCameraName(),
+			ipCameraSettingsWidget->getRTSPURL(), true);
 	} else if (2 == stackedWidget->currentIndex()) {	//usb camera
 		auto items = std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>();
 		sourceManager->ListCameraItems(items);

@@ -124,6 +124,9 @@ public:
 	IpCameraSettingsWidget(QWidget *parent = nullptr) : QWidget(parent) { this->initUi(); }
 	void initData();
 
+	std::string getRTSPURL() { return lineedit_rtsp->text().toStdString(); };
+	std::string getCameraName() { return combobox_cameraName->getText().toStdString(); }
+
 private:
 	ComboBox *combobox_cameraName = nullptr;
 	QLineEdit *lineedit_rtsp = nullptr;

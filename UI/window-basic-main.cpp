@@ -2622,6 +2622,9 @@ void OBSBasic::ClearHotkeys()
 
 OBSBasic::~OBSBasic()
 {
+	if (sourceManager != nullptr)
+		delete sourceManager;
+
 	/* clear out UI event queue */
 	QApplication::sendPostedEvents(nullptr);
 	QApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
