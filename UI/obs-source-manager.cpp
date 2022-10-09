@@ -1,41 +1,5 @@
 #include "obs-source-manager.h"
 
-#include <chrono>
-#include <thread>
-#include <random>
-
-static void SplitString(std::string &source, std::string &&token,
-			std::vector<std::string> &result)
-{
-	size_t start = 0;
-	size_t end = source.find(token);
-	while (end != std::string::npos) {
-		result.emplace_back(source.substr(start, end - start));
-		start = end + token.length();
-		end = source.find(token, start);
-	}
-}
-
-static std::string GetUUID()
-{
-	static std::random_device dev;
-	static std::mt19937 rng(dev());
-
-	std::uniform_int_distribution<int> dist(0, 15);
-
-	const char *v = "0123456789abcdef";
-	const bool dash[] = {0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0};
-
-	std::string res;
-	for (int i = 0; i < 16; i++) {
-		if (dash[i])
-			res += "-";
-		res += v[dist(rng)];
-		res += v[dist(rng)];
-	}
-	return res;
-}
-
 namespace accrecorder::manager {
 OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
 {
@@ -161,7 +125,7 @@ void OBSSourceManager::LoadSceneItemFromScene(std::string &sceneName)
 				GetSettingValueWithName(settings, "pipeline",
 							pipeline);
 				auto results = std::vector<std::string>();
-				SplitString(pipeline, "=", results);
+				utils::SplitString(pipeline, "=", results);
 				if (results.size() > 1) {
 					auto tmp = results[1];
 					auto uri =
@@ -434,7 +398,7 @@ bool OBSSourceManager::ApplySceneItemSettingsUpdate(source::SceneItem *item)
 void OBSSourceManager::ListScreenItems(
 	std::vector<std::shared_ptr<source::ScreenSceneItem>> &items)
 {
-	std::string uuid = GetUUID();
+	std::string uuid = utils::GetUUID();
 	const char *tmpName = uuid.c_str();
 	const char *prop_name = "monitor";
 	const char *kind = "monitor_capture";
@@ -456,11 +420,25 @@ void OBSSourceManager::ListScreenItems(
 	for (size_t i = 0; i < count; i++) {
 		const char *name = obs_property_list_item_name(p, i);
 		int id = (int)obs_property_list_item_int(p, i);
-		blog(LOG_ERROR, "enum monitor: %s, id=%d", name, id);
+		blog(LOG_INFO, "enum monitor: %s, id=%d", name, id);
+
 		auto item = std::make_shared<source::ScreenSceneItem>(
 			std::string(name));
 		item->index = id;
 		items.push_back(item);
+
+		// eg: 3840x2160 @ 2560,-550
+		std::string name_copy = std::string(name);
+		auto vec1 = std::vector<std::string>();
+		utils::SplitString(name_copy, ":", vec1);
+		auto vec2 = std::vector<std::string>();
+		utils::SplitString(vec1.back(), "@", vec2);
+		auto size_str = vec2.front();
+		utils::Replace(size_str, " ", "");
+		auto vec3 = std::vector<std::string>();
+		utils::SplitString(size_str, "x", vec3);
+		item->size_.x = std::stof(vec3.front());
+		item->size_.y = std::stof(vec3.back());
 	}
 
 	// release properties for enum device list.
@@ -476,7 +454,7 @@ OBSSourceManager::CreateIPCameraItem(std::string &name, std::string &url)
 void OBSSourceManager::ListCameraItems(
 	std::vector<std::shared_ptr<source::CameraSceneItem>> &items)
 {
-	std::string uuid = GetUUID();
+	std::string uuid = utils::GetUUID();
 	const char *tmpName = uuid.c_str();
 
 	const char *kind = "dshow_input";
@@ -574,7 +552,7 @@ void OBSSourceManager::ListCameraItems(
 void OBSSourceManager::ListAudioItems(
 	std::vector<std::shared_ptr<source::AudioSceneItem>> &items, bool input)
 {
-	std::string uuid = GetUUID();
+	std::string uuid = utils::GetUUID();
 	const char *tmpName = uuid.c_str();
 
 	const char *prop_name = "device_id";
