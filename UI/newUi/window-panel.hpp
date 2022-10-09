@@ -51,10 +51,8 @@ public:
 	void addItem(accrecorder::source::SceneItem *item);
 	void addAudioItem(VolControl *item);
 	void removeAudioItem(VolControl *item);
-	void setManager(accrecorder::manager::OBSSourceManager *manager)
-	{
-		sourceManager = manager;
-	}
+	void setManager(accrecorder::manager::OBSSourceManager *manager);
+	void setFirstItemChecked();
 
 private:
 	QString m_title;

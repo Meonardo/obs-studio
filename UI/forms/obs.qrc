@@ -85,6 +85,10 @@
         <file>images/newUi/more@2x.png</file>
         <file>images/newUi/delete@2x.png</file>
         <file>images/newUi/delete2@2x.png</file>
+        <file>images/newUi/mute_hover@2x.png</file>
+        <file>images/newUi/mute1@2x.png</file>
+        <file>images/newUi/mute2@2x.png</file>
+        <file>images/newUi/handle@2x.png</file>
     </qresource>
     <qresource prefix="/settings">
         <file>images/settings/output.svg</file>

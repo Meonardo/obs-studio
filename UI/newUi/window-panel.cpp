@@ -235,6 +235,19 @@ void OBSPanel::removeAudioItem(VolControl *volItem)
 	volItemList.removeOne(volItem);
 }
 
+void OBSPanel::setManager(accrecorder::manager::OBSSourceManager *manager)
+{
+	sourceManager = manager;
+}
+
+void OBSPanel::setFirstItemChecked()
+{
+	if (panelItemList.size() == 1 &&
+	    !panelItemList[0]->getCheckButton()->isChecked()) {
+		panelItemList[0]->getCheckButton()->setChecked(true);
+	}
+}
+
 void OBSPanel::addAudioItem(VolControl *item)
 {
 	foreach(auto volItem, volItemList)

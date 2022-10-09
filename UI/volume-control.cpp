@@ -174,6 +174,21 @@ VolControl::VolControl(OBSSource source_, bool showConfig, bool vertical)
 	volLabel = new QLabel();
 	mute = new MuteCheckBox();
 
+	mute->setFixedSize(16 * getScale(), 14 * getScale());
+	mute->setStyleSheet(
+		QString("QCheckBox { padding: 0px; margin: 0px; min-width: %1px; min-height: %2px; background-color: transparent;}")
+			//"QCheckBox::indicator { min-width: %1px; min-height: %2px;} "
+			//"QCheckBox::indicator:checked { border-image: url(':/res/images/newUi/mute2@2x.png');} "
+			//"QCheckBox::indicator:unchecked { border-image: url(':/res/images/newUi/mute1@2x.png');} "
+			//"QCheckBox::indicator:unchecked:hover { border-image: url(':/res/images/newUi/mute_hover@2x.png');}")
+			.arg(16 * getScale())
+			.arg(14 * getScale()));
+
+	nameLabel->setStyleSheet(
+		QString("QLabel{color: white; %1}").arg(getFontStyle(14)));
+	volLabel->setStyleSheet(
+		QString("QLabel{color: white; %1}").arg(getFontStyle(12)));
+
 	QString sourceName = obs_source_get_name(source);
 	setObjectName(sourceName);
 
@@ -199,9 +214,10 @@ VolControl::VolControl(OBSSource source_, bool showConfig, bool vertical)
 			&VolControl::EmitConfigClicked);
 	}
 
+	int margin = 15 * getScale();
 	QVBoxLayout *mainLayout = new QVBoxLayout;
-	mainLayout->setContentsMargins(4, 4, 4, 4);
-	mainLayout->setSpacing(2);
+	mainLayout->setContentsMargins(margin, margin, margin, 0);
+	mainLayout->setSpacing(0);
 
 	if (vertical) {
 		QHBoxLayout *nameLayout = new QHBoxLayout;
@@ -261,20 +277,31 @@ VolControl::VolControl(OBSSource source_, bool showConfig, bool vertical)
 
 		volMeter = new VolumeMeter(nullptr, obs_volmeter, false);
 		slider = new VolumeSlider(obs_fader, Qt::Horizontal);
+		slider->setStyleSheet(
+			QString("QSlider { min-width: %2px; min-height: %2px;}"
+				"QSlider::handle:horizontal { min-width: %2px; min-height: %2px; margin-top: -%3px; margin-bottom: -%3px; "
+				" border: none;  background: transparent;  border-image: url(':/res/images/newUi/handle@2x.png')}"
+				"QSlider::groove:horizontal { alignment: center; border-radius: 0px; border: none; height: %1px;}"
+				"QSlider::sub-page:horizontal{ background: rgb(46,105,240);}"
+				"QSlider::add-page:horizontal{ background: rgb(102,102,102);}")
+				.arg(4 * getScale())
+				.arg(18 * getScale())
+				.arg(7 * getScale()));
 
-		textLayout->setContentsMargins(0, 0, 0, 0);
+		textLayout->setContentsMargins(0, 0, 0, 11 * getScale());
 		textLayout->addWidget(nameLabel);
 		textLayout->setAlignment(nameLabel, Qt::AlignLeft);
 
 		if (showConfig)
 			textLayout->addWidget(config);
 
-		volLayout->addWidget(mute);
-		volLayout->addWidget(slider);
-		volLayout->setSpacing(5);
 
-		volLayout->addWidget(volLabel);
-		volLayout->setAlignment(volLabel, Qt::AlignRight);
+		volLayout->setContentsMargins(0, 0, 0, 0);
+		volLayout->setSpacing(6 * getScale());
+		volLayout->addWidget(mute, 0, Qt::AlignVCenter);
+		volLayout->addWidget(slider, 1, Qt::AlignVCenter);
+		volLayout->addWidget(volLabel, 0, Qt::AlignVCenter);
+		
 
 		botLayout->setContentsMargins(0, 0, 0, 0);
 		botLayout->setSpacing(0);
@@ -282,7 +309,16 @@ VolControl::VolControl(OBSSource source_, bool showConfig, bool vertical)
 
 		mainLayout->addItem(textLayout);
 		mainLayout->addWidget(volMeter);
+		mainLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
+		mainLayout->setStretch(2, 1);
 		mainLayout->addItem(botLayout);
+
+		QLabel *label_line = new QLabel();
+		label_line->setFixedHeight(1 * getScale());
+		label_line->setStyleSheet("QLabel{background-color: rgb(85, 85, 85);}");
+		mainLayout->addSpacerItem(new QSpacerItem(1, 11 * getScale(),
+							  QSizePolicy::Fixed));
+		mainLayout->addWidget(label_line);
 
 		volMeter->setFocusProxy(slider);
 	}
@@ -1330,7 +1366,7 @@ void VolumeMeter::paintEvent(QPaintEvent *event)
 		// Paint window background color (as widget is opaque)
 		QColor background =
 			palette().color(QPalette::ColorRole::Window);
-		painter.fillRect(widgetRect, background);
+		painter.fillRect(widgetRect, QBrush(QColor(0, 0, 0, 0)));
 
 		if (vertical) {
 			paintVTicks(painter,

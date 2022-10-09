@@ -10405,10 +10405,13 @@ void OBSBasic::showSceneSettingsPanel(accrecorder::source::SceneItem::Category c
 	
 	connect(panel, &ScenesSettingsPanel::attachFinished, this, [=](
 			accrecorder::source::SceneItem *item, accrecorder::source::SceneItem::Category category) {
-		if (category == accrecorder::source::SceneItem::Category::kMain)
+		if (category == accrecorder::source::SceneItem::Category::kMain) {
 			scenePanel->addItem(item);
-		else if (category == accrecorder::source::SceneItem::Category::kPiP)
+			scenePanel->setFirstItemChecked();
+		}else if (category == accrecorder::source::SceneItem::Category::kPiP) {
 			subScenePanel->addItem(item);
+			subScenePanel->setFirstItemChecked();
+		}
 		panel->deleteLater();
 	});
 	panel->setFixedSize(612 * getScale(), 496 * getScale());

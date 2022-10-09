@@ -984,6 +984,11 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 
 	if (nullptr != screen &&
 	    sourceManager->AttachSceneItem(screen, itemCategory)) {
+		if (itemCategory ==
+		    accrecorder::source::SceneItem::Category::kMain)
+			screen->Lock(true);
+		else
+			screen->Lock(false);
 		screen->Hide(true);
 		//m_manager->ApplySceneItemPropertiesUpdate(screen);
 		sourceManager->ApplySceneItemSettingsUpdate(screen);
