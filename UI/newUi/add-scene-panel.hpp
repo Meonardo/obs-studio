@@ -140,10 +140,7 @@ public:
 	}
 	void initData();
 
-	std::string getRTSPURL()
-	{
-		return lineedit_rtsp->text().toStdString();
-	}
+	std::string getRTSPURL() { return lineedit_rtsp->text().toStdString(); }
 	std::string getCameraName()
 	{
 		return combobox_cameraName->getText().toStdString();
@@ -172,6 +169,9 @@ public:
 		      std::shared_ptr<accrecorder::source::CameraSceneItem>>
 			      usbCameraSource);
 	int getSceneIndex() { return combobox_cameraName->currentIndex(); }
+
+	void
+	updateDataSourceIfNeed(accrecorder::manager::OBSSourceManager *manager);
 
 private:
 	ComboBox *combobox_cameraName = nullptr;

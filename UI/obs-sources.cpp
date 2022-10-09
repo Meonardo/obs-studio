@@ -1,5 +1,55 @@
 #include "obs-sources.h"
 
+#include <chrono>
+#include <thread>
+#include <random>
+
+namespace accrecorder::utils {
+void SplitString(std::string &source, std::string &&token,
+			std::vector<std::string> &result)
+{
+	size_t start = 0;
+	size_t end = source.find(token);
+	while (end != std::string::npos) {
+		result.emplace_back(source.substr(start, end - start));
+		start = end + token.length();
+		end = source.find(token, start);
+	}
+
+	// append the last part
+	result.emplace_back(source.substr(start, source.length() - 1));
+}
+
+bool Replace(std::string &str, const std::string &from, const std::string &to)
+{
+	size_t start_pos = str.find(from);
+	if (start_pos == std::string::npos)
+		return false;
+	str.replace(start_pos, from.length(), to);
+	return true;
+}
+
+std::string GetUUID()
+{
+	static std::random_device dev;
+	static std::mt19937 rng(dev());
+
+	std::uniform_int_distribution<int> dist(0, 15);
+
+	const char *v = "0123456789abcdef";
+	const bool dash[] = {0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0};
+
+	std::string res;
+	for (int i = 0; i < 16; i++) {
+		if (dash[i])
+			res += "-";
+		res += v[dist(rng)];
+		res += v[dist(rng)];
+	}
+	return res;
+}
+} // accrecorder::utils
+
 struct CreateSceneItemData {
 	obs_source_t *source;                             // In
 	bool sceneItemEnabled;                            // In
@@ -34,11 +84,12 @@ ScreenSceneItem::ScreenSceneItem(std::string &name)
 	  should_apply_changes_(false)
 {
 	settings_.lock = false;
-	settings_.pos.x = 0;
-	settings_.pos.y = 0;
+	settings_.pos.x = -1;
+	settings_.pos.y = -1;
 	settings_.hidden = false;
-	settings_.scale.x = 1.0f;
-	settings_.scale.y = 1.0f;
+	settings_.scale.x = 0.f;
+	settings_.scale.y = 0.f;
+	size_ = {0, 0};
 }
 
 ScreenSceneItem::~ScreenSceneItem() {}
@@ -134,6 +185,11 @@ void ScreenSceneItem::UpdatePosition(vec2 pos)
 	should_apply_changes_ = true;
 }
 
+vec2 ScreenSceneItem::OrignalSize() const
+{
+	return size_;
+}
+
 bool ScreenSceneItem::ShouldApplyAnyUpdates() const
 {
 	return should_apply_changes_;
@@ -165,11 +221,12 @@ IPCameraSceneItem::IPCameraSceneItem(std::string &name, std::string &url,
 	  should_apply_changes_(false)
 {
 	settings_.lock = false;
-	settings_.pos.x = 0;
-	settings_.pos.y = 0;
+	settings_.pos.x = -1;
+	settings_.pos.y = -1;
 	settings_.hidden = false;
-	settings_.scale.x = 1.0f;
-	settings_.scale.y = 1.0f;
+	settings_.scale.x = 0.f;
+	settings_.scale.y = 0.f;
+	size_ = {1920, 1080};
 }
 
 IPCameraSceneItem::~IPCameraSceneItem() {}
@@ -219,6 +276,11 @@ Scene *IPCameraSceneItem::scene() const
 SceneItem::Settings IPCameraSceneItem::GetSettings() const
 {
 	return settings_;
+}
+
+vec2 IPCameraSceneItem::OrignalSize() const
+{
+	return size_;
 }
 
 void IPCameraSceneItem::UpdateSettings(SceneItem::Settings settings)
@@ -318,11 +380,12 @@ CameraSceneItem::CameraSceneItem(std::string &name)
 	: name_(name), should_apply_changes_(false)
 {
 	settings_.lock = false;
-	settings_.pos.x = 0;
-	settings_.pos.y = 0;
+	settings_.pos.x = -1;
+	settings_.pos.y = -1;
 	settings_.hidden = false;
-	settings_.scale.x = 1.0f;
-	settings_.scale.y = 1.0f;
+	settings_.scale.x = 0.f;
+	settings_.scale.y = 0.f;
+	size_ = {0, 0};
 }
 
 CameraSceneItem::~CameraSceneItem() {}
@@ -428,12 +491,25 @@ void CameraSceneItem::MarkUpdateCompleted()
 	should_apply_changes_ = false;
 }
 
+vec2 CameraSceneItem::OrignalSize() const
+{
+	return size_;
+}
+
 bool CameraSceneItem::SelectResolution(uint32_t idx)
 {
 	if (idx >= resolutions_.size()) {
 		return false;
 	}
 	selected_res_ = resolutions_[idx];
+
+	// after selecting resolution update its size.
+	auto vec = std::vector<std::string>();
+	utils::SplitString(selected_res_, "x", vec);
+	if (!vec.empty()) {
+		size_.x = std::stof(vec.front());
+		size_.y = std::stof(vec.back());
+	}
 
 	return true;
 }
@@ -471,14 +547,14 @@ obs_data_t *CameraSceneItem::Properties() const
 	obs_data_t *data = obs_data_create();
 	obs_data_set_string(data, "video_device_id", device_id_.c_str());
 	//resolution
-	//obs_data_set_string(data, "resolution", selected_res_.c_str());
-	//// res_type
-	//obs_data_set_int(data, "res_type", 1);
-	//// must set last-device/id
-	//obs_data_set_string(data, "last_resolution", selected_res_.c_str());
-	//obs_data_set_string(data, "last_video_device_id", device_id_.c_str());
-	//// frame_interval
-	//obs_data_set_int(data, "frame_interval", std::get<1>(selected_fps_));
+	obs_data_set_string(data, "resolution", selected_res_.c_str());
+	// res_type
+	obs_data_set_int(data, "res_type", 1);
+	// must set last-device/id
+	obs_data_set_string(data, "last_resolution", selected_res_.c_str());
+	obs_data_set_string(data, "last_video_device_id", device_id_.c_str());
+	// frame_interval
+	obs_data_set_int(data, "frame_interval", std::get<1>(selected_fps_));
 
 	return data;
 }
@@ -489,8 +565,8 @@ AudioSceneItem::AudioSceneItem(std::string &name)
 	: name_(name), should_apply_changes_(false)
 {
 	settings_.lock = false;
-	settings_.pos.x = 0;
-	settings_.pos.y = 0;
+	settings_.pos.x = -1;
+	settings_.pos.y = -1;
 	settings_.hidden = false;
 	settings_.scale.x = 0.f;
 	settings_.scale.y = 0.f;
@@ -714,15 +790,19 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 	}
 
 	obs_sceneitem_defer_update_begin(sceneItem);
-	// visability
+	// visibility
 	obs_sceneitem_set_visible(sceneItem, !item->GetSettings().hidden);
 	// transform
 	vec2 newPosition = item->GetSettings().pos;
-	obs_sceneitem_set_pos(sceneItem, &newPosition);
+	if (newPosition.x >= 0 && newPosition.y >= 0) {
+		obs_sceneitem_set_pos(sceneItem, &newPosition);
+	}
 	obs_sceneitem_set_alignment(sceneItem, 5);
 	// scale
 	vec2 newScale = item->GetSettings().scale;
-	obs_sceneitem_set_scale(sceneItem, &newScale);
+	if (newScale.x > 0 && newScale.y > 0) {
+		obs_sceneitem_set_scale(sceneItem, &newScale);
+	}
 	// lock
 	obs_sceneitem_set_locked(sceneItem, item->GetSettings().lock);
 	obs_sceneitem_defer_update_end(sceneItem);

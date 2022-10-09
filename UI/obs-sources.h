@@ -8,6 +8,13 @@
 
 #define kMainScene "MainScene"
 
+namespace accrecorder::utils {
+void SplitString(std::string &source, std::string &&token,
+			std::vector<std::string> &result);
+bool Replace(std::string &str, const std::string &from, const std::string &to);
+std::string GetUUID();
+} // accrecorder::utils
+
 namespace accrecorder::manager {
 class OBSSourceManager;
 }
@@ -26,11 +33,7 @@ public:
 		kWindow
 	};
 
-	enum Category {
-		kDefault = 0,
-		kMain,
-		kPiP
-	};
+	enum Category { kDefault = 0, kMain, kPiP };
 
 	struct Settings {
 		// position
@@ -63,6 +66,9 @@ public:
 	virtual void Lock(bool lock) = 0;
 	virtual void UpdateScale(vec2 sacle) = 0;
 	virtual void UpdatePosition(vec2 pos) = 0;
+
+	// the original size of the scene item
+	virtual vec2 OrignalSize() const = 0;
 
 	// get item properties
 	virtual obs_data_t *Properties() const = 0;
@@ -102,6 +108,8 @@ public:
 	virtual bool ShouldApplyAnyUpdates() const override;
 	virtual void MarkUpdateCompleted() override;
 
+	virtual vec2 OrignalSize() const override;
+
 	// screen index(all screens are identified by this property)
 	int index;
 	// capture screen method: Auto, DXGI, or WGC (default is auto)
@@ -117,6 +125,7 @@ private:
 	Type type_;
 	Category category_;
 	Settings settings_;
+	vec2 size_;
 	uint64_t scene_id_;
 	bool should_apply_changes_;
 
@@ -145,6 +154,8 @@ public:
 	virtual bool ShouldApplyAnyUpdates() const override;
 	virtual void MarkUpdateCompleted() override;
 
+	virtual vec2 OrignalSize() const override;
+
 	void UpdateURL(std::string &url);
 	void UpdateStopOnHide(bool state);
 
@@ -160,6 +171,7 @@ private:
 	bool should_apply_changes_;
 	std::string url_;
 	bool stop_on_hide_;
+	vec2 size_;
 
 	friend class manager::OBSSourceManager;
 };
@@ -185,6 +197,7 @@ public:
 	virtual obs_data_t *Properties() const override;
 	virtual bool ShouldApplyAnyUpdates() const override;
 	virtual void MarkUpdateCompleted() override;
+	virtual vec2 OrignalSize() const override;
 
 	// get a list of available res & fps
 	void GetAvailableResolutions(std::vector<std::string> &res) const;
@@ -204,6 +217,7 @@ private:
 	Settings settings_;
 	uint64_t scene_id_;
 	bool should_apply_changes_;
+	vec2 size_;
 
 	// device id
 	std::string device_id_;
@@ -235,6 +249,7 @@ public:
 	virtual void MarkUpdateCompleted() override;
 	virtual obs_data_t *Properties() const override;
 	virtual Category category() const override;
+	virtual vec2 OrignalSize() const override { return {0, 0}; };
 
 	virtual std::string Kind() const = 0;
 	virtual Type type() const = 0;

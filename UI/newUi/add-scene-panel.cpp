@@ -548,6 +548,28 @@ void USBCameraSettingsWidget::initData(
 	combobox_encode->addItems(QStringList() << "H264");
 }
 
+void USBCameraSettingsWidget::updateDataSourceIfNeed(
+	accrecorder::manager::OBSSourceManager *manager)
+{
+	if (mapCameraSource.empty() && manager != nullptr) {
+		auto usbCameraSource = std::vector<
+			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+		manager->ListCameraItems(usbCameraSource);
+
+		QStringList ipCameraList;
+		foreach(auto item, usbCameraSource)
+		{
+			ipCameraList.append(
+				QString::fromStdString(item->Name()));
+			mapCameraSource.insert(
+				QString::fromStdString(item->Name()), item);
+		}
+		// TODO: remove old Combox items
+
+		combobox_cameraName->addItems(ipCameraList);
+	}
+}
+
 void USBCameraSettingsWidget::initUi()
 {
 	QLabel *label = new QLabel(QTStr("NewUi.CameraName"), this);
@@ -853,6 +875,7 @@ void ScenesSettingsPanel::initUi()
 			.arg(1 * getScale()));
 	connect(tabBtn_3, &QPushButton::clicked, this, [=]() {
 		this->stackedWidget->setCurrentWidget(usbCameraSettingsWidget);
+		usbCameraSettingsWidget->updateDataSourceIfNeed(sourceManager);
 		this->setFixedSize(612 * getScale(), 496 * getScale());
 	});
 
@@ -949,7 +972,7 @@ void ScenesSettingsPanel::initData()
 		usbCameraSource = std::vector<
 			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
 	sourceManager->ListScreenItems(sceneSource);
-	sourceManager->ListCameraItems(usbCameraSource);
+	//sourceManager->ListCameraItems(usbCameraSource);
 
 	if (nullptr != sceneSettingsWidget)
 		sceneSettingsWidget->initData(sceneSource);
@@ -966,10 +989,9 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 		auto items = std::vector<
 			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
 		sourceManager->ListScreenItems(items);
-		// copy the item & create new one to the heap
 		screen = new accrecorder::source::ScreenSceneItem(
 			*items[sceneSettingsWidget->getSceneIndex()].get());
-	} else if (1 == stackedWidget->currentIndex()) {
+	} else if (1 == stackedWidget->currentIndex()) { // RTSP camera
 		screen = new accrecorder::source::IPCameraSceneItem(
 			ipCameraSettingsWidget->getCameraName(),
 			ipCameraSettingsWidget->getRTSPURL(), true);
@@ -977,7 +999,6 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 		auto items = std::vector<
 			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
 		sourceManager->ListCameraItems(items);
-		// copy the item & create new one to the heap
 		screen = new accrecorder::source::CameraSceneItem(
 			*items[usbCameraSettingsWidget->getSceneIndex()].get());
 	}
@@ -989,8 +1010,23 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 			screen->Lock(true);
 		else
 			screen->Lock(false);
+		// update settings
 		screen->Hide(true);
-		//m_manager->ApplySceneItemPropertiesUpdate(screen);
+
+		// update scale
+		vec2 size = screen->OrignalSize();
+		if (itemCategory ==
+		    accrecorder::source::SceneItem::Category::kMain) {
+			// scale to fit size: 1920*1080
+			if (size.x != 1920 || size.y != 1080) {
+				screen->UpdateScale(
+					{1920.f / size.x, 1080.0f / size.y});
+			}
+		} else {
+			// make 1/3 scale of the canvans
+			screen->UpdateScale({640.f / size.x, 360.f / size.y});
+		}
+
 		sourceManager->ApplySceneItemSettingsUpdate(screen);
 		emit attachFinished(screen, itemCategory);
 		this->close();
