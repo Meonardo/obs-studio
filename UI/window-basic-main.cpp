@@ -8792,14 +8792,14 @@ void OBSBasic::on_actionFullscreenInterface_triggered()
 
 void OBSBasic::UpdateTitleBar()
 {
-	stringstream name;
+	/*stringstream name;
 
 	const char *profile =
 		config_get_string(App()->GlobalConfig(), "Basic", "Profile");
 	const char *sceneCollection = config_get_string(
 		App()->GlobalConfig(), "Basic", "SceneCollection");
 
-	name << "accrecorder ";
+	name << "obs ";*/
 	/*if (previewProgramMode)
 		name << "Studio ";
 
@@ -8810,7 +8810,7 @@ void OBSBasic::UpdateTitleBar()
 	/*name << " - " << Str("TitleBar.Profile") << ": " << profile;
 	name << " - " << Str("TitleBar.Scenes") << ": " << sceneCollection;*/
 
-	setWindowTitle(QT_UTF8(name.str().c_str()));
+	setWindowTitle(QTStr("NewUi.Main.Title"));
 }
 
 int OBSBasic::GetProfilePath(char *path, size_t size, const char *file) const
