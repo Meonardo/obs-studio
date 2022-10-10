@@ -7515,6 +7515,14 @@ void OBSBasic::OnVirtualCamStop(int)
 	OnDeactivate();
 }
 
+void OBSBasic::ToggleMainWindowHide(bool hide)
+{
+	ToggleShowHide();
+
+	if (previewEnabled)
+		EnablePreviewDisplay(!hide);
+}
+
 void OBSBasic::on_streamButton_clicked()
 {
 	if (outputHandler->StreamingActive()) {

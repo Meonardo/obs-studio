@@ -688,6 +688,8 @@ public slots:
 	void OnVirtualCamStart();
 	void OnVirtualCamStop(int code);
 
+	void ToggleMainWindowHide(bool hide);
+
 	void SaveProjectDeferred();
 	void SaveProject();
 
