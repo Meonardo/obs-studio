@@ -3529,9 +3529,13 @@ void OBSBasic::ActivateAudioSource(OBSSource source)
 	if (!obs_source_audio_active(source))
 		return;
 
+	const char *source_id = obs_source_get_id(source);
+	bool showControlBtn = strcmp(source_id, "wasapi_input_capture") == 0 ||
+			      strcmp(source_id, "wasapi_outpur_capture") == 0;
+
 	bool vertical = config_get_bool(GetGlobalConfig(), "BasicWindow",
 					"VerticalVolControl");
-	VolControl *vol = new VolControl(source, true, vertical);
+	VolControl *vol = new VolControl(source, showControlBtn, vertical);
 
 	vol->EnableSlider(!SourceVolumeLocked(source));
 
