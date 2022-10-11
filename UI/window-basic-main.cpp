@@ -836,8 +836,8 @@ void OBSBasic::CreateDefaultScene(bool firstStart)
 
 	OBSSceneAutoRelease scene = obs_scene_create(Str("Basic.Scene"));
 
-	if (firstStart)
-		CreateFirstRunSources();
+	/*if (firstStart)
+		CreateFirstRunSources();*/
 
 	SetCurrentScene(scene, true);
 
