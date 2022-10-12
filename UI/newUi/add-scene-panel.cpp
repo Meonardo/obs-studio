@@ -829,12 +829,13 @@ ScenesSettingsPanel::ScenesSettingsPanel(
 	connect(m_timer, &QTimer::timeout, this, [=]() {
 		m_timer->stop();
 		usbCameraSettingsWidget->updateDataSourceIfNeed(sourceManager);
+		m_timer->deleteLater();
+		m_timer = nullptr;
 	});
 }
 
 void ScenesSettingsPanel::show()
 {
-	m_timer->start(100);
 	BasicPanel::show();
 }
 
@@ -919,6 +920,8 @@ void ScenesSettingsPanel::initUi()
 			.arg(1 * getScale()));
 	connect(tabBtn_3, &QPushButton::clicked, this, [=]() {
 		this->stackedWidget->setCurrentWidget(usbCameraSettingsWidget);
+		if (nullptr != m_timer)
+			m_timer->start(100);
 		//usbCameraSettingsWidget->updateDataSourceIfNeed(sourceManager);
 		this->setFixedSize(612 * getScale(), 496 * getScale());
 	});

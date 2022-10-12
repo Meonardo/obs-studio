@@ -89,6 +89,7 @@
         <file>images/newUi/mute1@2x.png</file>
         <file>images/newUi/mute2@2x.png</file>
         <file>images/newUi/handle@2x.png</file>
+        <file>images/newUi/settings2@2x.png</file>
     </qresource>
     <qresource prefix="/settings">
         <file>images/settings/output.svg</file>

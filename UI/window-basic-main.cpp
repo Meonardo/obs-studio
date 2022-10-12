@@ -10433,7 +10433,8 @@ void OBSBasic::showSceneSettingsPanel(accrecorder::source::SceneItem::Category c
 		panel->deleteLater();
 	});
 	panel->setFixedSize(612 * getScale(), 496 * getScale());
-	panel->move((this->width() - panel->width()) / 2, (this->height() - panel->height())/2);
+	panel->move(this->x() + (this->width() - panel->width()) / 2,
+		    this->y() + (this->height() - panel->height()) / 2);
 	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
 	panel->show();
 
@@ -10445,8 +10446,8 @@ void OBSBasic::showAudioSettingsPanel()
 {
 	auto panel = new AudioSettingsPanel(sourceManager);
 	panel->setFixedSize(500 * getScale(), 245 * getScale());
-	panel->move((this->width() - panel->width()) / 2,
-		    (this->height() - panel->height()) / 2);
+	panel->move(this->x() + (this->width() - panel->width()) / 2,
+		    this->y() + (this->height() - panel->height()) / 2);
 	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
 	panel->show();
 
@@ -10458,8 +10459,8 @@ void OBSBasic::showStreamingPanel()
 {
 	auto panel = new StreamingSettingsPanel(sourceManager);
 	panel->setFixedSize(400 * getScale(), 508 * getScale());
-	panel->move((this->width() - panel->width()) / 2,
-		    (this->height() - panel->height()) / 2);
+	panel->move(this->x() + (this->width() - panel->width()) / 2,
+		    this->y() + (this->height() - panel->height()) / 2);
 	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
 	panel->show();
 }
