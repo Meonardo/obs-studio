@@ -45,6 +45,7 @@
 #include "newUi/window-toolbar.hpp"
 #include "newUi/font.hpp"
 #include "newUi/add-scene-panel.hpp"
+#include "newUi/window-titlebar.hpp"
 /* add by luoweidong end*/
 
 #include <obs-frontend-internal.hpp>
@@ -867,6 +868,7 @@ private:
 	OBSPanel *audioPanel;
 	QFrame *frame_cover;
 	OBSDock *allSettingsDocker;
+
 	accrecorder::manager::OBSSourceManager *sourceManager;
 
 	void showSceneSettingsPanel(accrecorder::source::SceneItem::Category);

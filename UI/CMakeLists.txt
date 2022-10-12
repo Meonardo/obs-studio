@@ -293,7 +293,9 @@ target_sources(
     newUi/window-panel.hpp
     newUi/window-panel.cpp
     newUi/add-scene-panel.hpp
-    newUi/add-scene-panel.cpp)
+    newUi/add-scene-panel.cpp
+    newUi/window-titlebar.hpp
+    newUi/window-titlebar.cpp)
 #add by luoweidong end
 
 target_sources(

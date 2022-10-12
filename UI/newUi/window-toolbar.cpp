@@ -90,7 +90,6 @@ void OBSToolbar::initUi()
 
 	QPushButton *pBtn_settings_stream = new QPushButton(this);
 	pBtn_settings_stream->setFixedSize(16 * getScale(), 16 * getScale());
-	pBtn_settings_stream->setEnabled(false);
 	pBtn_settings_stream->setStyleSheet(
 		QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
 			"border-image: url(':/res/images/newUi/settings@2x.png'); "
@@ -110,10 +109,10 @@ void OBSToolbar::initUi()
 			.arg(checkbox_stream->height()));
 	connect(checkbox_stream, &QCheckBox::stateChanged, this,
 		[=](int state) {
-			if (0 == state)
-				pBtn_settings_stream->setEnabled(false);
-			else
-				pBtn_settings_stream->setEnabled(true);
+			//if (0 == state)
+			//	pBtn_settings_stream->setEnabled(false);
+			//else
+			//	pBtn_settings_stream->setEnabled(true);
 		});
 
 	QLabel *label_settings_stream = new QLabel(this);

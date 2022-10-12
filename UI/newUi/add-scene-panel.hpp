@@ -22,6 +22,7 @@
 #include "obs-source-manager.h"
 #include <qfontmetrics.h>
 #include <qcheckbox.h>
+#include <qtimer.h>
 
 /************************************** ComboBox item widget ****************************/
 class ComboBoxItemWidget : public QWidget {
@@ -36,6 +37,7 @@ public:
 			pBtn_text->setText(text);
 	}
 	inline QPushButton *getBtn() { return pBtn_text; }
+	void setBtnEnabled(bool enabled) { pBtn_text->setEnabled(enabled); }
 
 protected:
 	void paintEvent(QPaintEvent *event) override;
@@ -53,7 +55,7 @@ class ComboBoxView : public QWidget {
 public:
 	ComboBoxView(QWidget *parent = nullptr);
 	inline int shadow() { return shadowBorder; }
-	void addItems(QStringList list);
+	void addItems(QStringList list, QList<int> titleIndexList = QList<int>());
 	void setMaxDisplayCount(int count);
 	inline int getCurrentIndex() { return currentIndex; }
 	void setFixedWidth(int w)
@@ -86,7 +88,7 @@ public:
 	explicit ComboBox(QWidget *parent = nullptr);
 	bool isChecked() { return checked; }
 	void setMaxDisplayCount(int count) { view->setMaxDisplayCount(count); }
-	void addItems(QStringList textList);
+	void addItems(QStringList textList, QList<int> titleIndexList = QList<int>());
 	inline QString getText() { return label_text->text(); }
 	inline int currentIndex() { return m_Index; }
 
@@ -145,6 +147,7 @@ public:
 	{
 		return combobox_cameraName->getText().toStdString();
 	}
+	void setEmptyStyle();
 
 private:
 	ComboBox *combobox_cameraName = nullptr;
@@ -169,6 +172,7 @@ public:
 		      std::shared_ptr<accrecorder::source::CameraSceneItem>>
 			      usbCameraSource);
 	int getSceneIndex() { return combobox_cameraName->currentIndex(); }
+	accrecorder::source::CameraSceneItem *getCurrentCameraSource();
 
 	void
 	updateDataSourceIfNeed(accrecorder::manager::OBSSourceManager *manager);
@@ -180,6 +184,8 @@ private:
 	ComboBox *combobox_encode = nullptr;
 	ComboBox *combobox_resolution = nullptr;
 
+	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>
+		usbCameraSource;
 	QMap<QString, std::shared_ptr<accrecorder::source::CameraSceneItem>>
 		mapCameraSource;
 
@@ -219,6 +225,7 @@ public:
 			    accrecorder::source::SceneItem::Category categroy,
 			    QWidget *parent = nullptr);
 	~ScenesSettingsPanel() {}
+	void show();
 
 private:
 	QPushButton *pBtn_close = nullptr;
@@ -229,6 +236,7 @@ private:
 	QPushButton *pBtnCancel = nullptr;
 	QPushButton *pBtnYes = nullptr;
 	QFrame *frame_top = nullptr;
+	QTimer *m_timer = nullptr;
 
 	SceneSettingsWidget *sceneSettingsWidget = nullptr;
 	IpCameraSettingsWidget *ipCameraSettingsWidget = nullptr;
@@ -239,6 +247,8 @@ private:
 
 	accrecorder::manager::OBSSourceManager *sourceManager;
 	accrecorder::source::SceneItem::Category itemCategory;
+	std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>> sceneItems;
+	//std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>> cameraItems;
 
 private:
 	void initUi();
@@ -263,7 +273,7 @@ public:
 private:
 	ComboBox *combobox_audio = nullptr;
 	accrecorder::manager::OBSSourceManager *sourceManager;
-
+	QList<std::shared_ptr<accrecorder::source::AudioSceneItem>> allAudioItems;
 	void initUi();
 	void initData();
 };

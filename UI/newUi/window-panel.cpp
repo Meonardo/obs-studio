@@ -148,6 +148,10 @@ OBSPanel::OBSPanel(const QString &title, QWidget *parent)
 
 void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 {
+	foreach(auto sceneItem, sceneItemList) {
+		if (sceneItem->Name().compare(item->Name()) == 0)
+			return;	
+	}
 	sceneItemList.append(item);
 	int type = 0;
 	if (item->type() == accrecorder::source::SceneItem::Type::kScreen)
@@ -233,6 +237,19 @@ void OBSPanel::removeAudioItem(VolControl *volItem)
 		scrollAreaContentWidget->height());
 
 	volItemList.removeOne(volItem);
+}
+
+void OBSPanel::setManager(accrecorder::manager::OBSSourceManager *manager)
+{
+	sourceManager = manager;
+}
+
+void OBSPanel::setFirstItemChecked()
+{
+	if (panelItemList.size() == 1 &&
+	    !panelItemList[0]->getCheckButton()->isChecked()) {
+		panelItemList[0]->getCheckButton()->setChecked(true);
+	}
 }
 
 void OBSPanel::addAudioItem(VolControl *item)

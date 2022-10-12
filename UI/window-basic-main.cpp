@@ -2274,7 +2274,7 @@ void OBSBasic::ShowWhatsNew(const QString &url)
 	dlg->resize(700, 600);
 
 	Qt::WindowFlags flags = dlg->windowFlags();
-	Qt::WindowFlags helpFlag = Qt::WindowContextHelpButtonHint;
+	Qt::WindowFlags helpFlag = Qt::WindowContextHelpButtonHint | Qt::WindowCloseButtonHint;
 	dlg->setWindowFlags(flags & (~helpFlag));
 
 	QCefWidget *cefWidget = cef->create_widget(nullptr, info_url);
@@ -10248,7 +10248,7 @@ void OBSBasic::createUi()
 	//this->setFixedWidth(1280 * getScale());
 	//this->setFixedHeight(768 * getScale());
 	////this->setAttribute(Qt::WA_TranslucentBackground, true);
-	//this->setWindowFlags(Qt::FramelessWindowHint);
+	this->setWindowFlags(Qt::FramelessWindowHint);
 
 	//QFrame *frame = new QFrame(ui->centralwidget);
 	//frame->setObjectName("mainframe");
@@ -10297,6 +10297,12 @@ void OBSBasic::createUi()
 	//label->setFixedHeight(40 * getScale());
 	//label->setText(tr("直播窗口"));
 	//label->setStyleSheet(QString("QLabel{ background-color: '#444444'; color: '#FFFFFF';  %1}").arg(getFontStyle(14)));
+
+	auto titleBar = new TitleBar(QTStr("NewUi.Guide") + QTStr("NewUi.Settings"), this);
+	titleBar->setFixedHeight(30 * getScale());
+	QVBoxLayout *mainLayout = (QVBoxLayout *)ui->centralwidget->layout();
+	mainLayout->insertWidget(0, titleBar);
+	mainLayout->setContentsMargins(0, 0, 0, 0);
 
 	allSettingsDocker = new OBSDock(this);
 	allSettingsDocker->installEventFilter(this);
@@ -10407,7 +10413,7 @@ bool OBSBasic::eventFilter(QObject *obj, QEvent *event)
 {
 	if (obj == allSettingsDocker && event->type() == QEvent::Resize && frame_cover != nullptr)
 		frame_cover->setFixedSize(allSettingsDocker->width(), allSettingsDocker->height());
-		
+
 	return OBSMainWindow::eventFilter(obj, event);
 }
 
@@ -10417,10 +10423,13 @@ void OBSBasic::showSceneSettingsPanel(accrecorder::source::SceneItem::Category c
 	
 	connect(panel, &ScenesSettingsPanel::attachFinished, this, [=](
 			accrecorder::source::SceneItem *item, accrecorder::source::SceneItem::Category category) {
-		if (category == accrecorder::source::SceneItem::Category::kMain)
+		if (category == accrecorder::source::SceneItem::Category::kMain) {
 			scenePanel->addItem(item);
-		else if (category == accrecorder::source::SceneItem::Category::kPiP)
+			scenePanel->setFirstItemChecked();
+		}else if (category == accrecorder::source::SceneItem::Category::kPiP) {
 			subScenePanel->addItem(item);
+			subScenePanel->setFirstItemChecked();
+		}
 		panel->deleteLater();
 	});
 	panel->setFixedSize(612 * getScale(), 496 * getScale());
