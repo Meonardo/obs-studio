@@ -63,7 +63,14 @@ public:
 	// stop streaming
 	bool StopStreaming();
 
+	// add the target item to a group by its category
+	// kMain = kMainGroup
+	// kPiP = kPiPGroup
+	bool AddSceneItemToGroup(source::SceneItem *item,
+				 source::SceneItem::Category category);
+
 private:
+	void LoadGroups(std::vector<obs_source_t *> &groups);
 	void LoadSceneItemFromScene(std::string &sceneName);
 	void RemoveScene(std::string &name);
 	obs_scene_t *CreateScene(std::string &name);

@@ -7,10 +7,12 @@
 #include <obs-frontend-api.h>
 
 #define kMainScene "MainScene"
+#define kMainGroup "MainGroup"
+#define kPiPGroup "PiPGroup"
 
 namespace accrecorder::utils {
 void SplitString(std::string &source, std::string &&token,
-			std::vector<std::string> &result);
+		 std::vector<std::string> &result);
 bool Replace(std::string &str, const std::string &from, const std::string &to);
 std::string GetUUID();
 } // accrecorder::utils
@@ -78,6 +80,8 @@ public:
 	// mark the update completed
 	virtual void MarkUpdateCompleted() = 0;
 
+	virtual void SetCategory(Category c) = 0;
+
 protected:
 	virtual Scene *scene() const = 0;
 };
@@ -119,6 +123,7 @@ public:
 
 protected:
 	virtual Scene *scene() const override;
+	virtual void SetCategory(Category c) override;
 
 private:
 	std::string name_;
@@ -161,6 +166,7 @@ public:
 
 protected:
 	virtual Scene *scene() const override;
+	virtual void SetCategory(Category c) override;
 
 private:
 	std::string name_;
@@ -209,6 +215,7 @@ public:
 
 protected:
 	virtual Scene *scene() const override;
+	virtual void SetCategory(Category c) override;
 
 private:
 	std::string name_;
@@ -256,6 +263,7 @@ public:
 
 protected:
 	AudioSceneItem(std::string &name);
+	virtual void SetCategory(Category c) override {};
 	virtual ~AudioSceneItem();
 
 	virtual Scene *scene() const override;
@@ -307,6 +315,10 @@ private:
 	obs_scene_t *scene_;
 
 	std::vector<SceneItem *> items_;
+
+	// obs group manipulates
+	void CreateGroups();
+	bool CreateGroup(const char *name);
 
 	obs_sceneitem_t *CreateSceneItem(obs_source_t *source,
 					 obs_scene_t *scene,

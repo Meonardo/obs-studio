@@ -6,7 +6,7 @@
 
 namespace accrecorder::utils {
 void SplitString(std::string &source, std::string &&token,
-			std::vector<std::string> &result)
+		 std::vector<std::string> &result)
 {
 	size_t start = 0;
 	size_t end = source.find(token);
@@ -141,6 +141,11 @@ SceneItem::Settings ScreenSceneItem::GetSettings() const
 	return settings_;
 }
 
+void ScreenSceneItem::SetCategory(Category c)
+{
+	category_ = c;
+}
+
 void ScreenSceneItem::UpdateSettings(SceneItem::Settings settings)
 {
 	vec2_copy(&settings_.pos, &settings.pos);
@@ -266,6 +271,11 @@ SceneItem::Type IPCameraSceneItem::type() const
 SceneItem::Category IPCameraSceneItem::category() const
 {
 	return category_;
+}
+
+void IPCameraSceneItem::SetCategory(Category c)
+{
+	category_ = c;
 }
 
 Scene *IPCameraSceneItem::scene() const
@@ -427,6 +437,11 @@ SceneItem::Category CameraSceneItem::category() const
 	return category_;
 }
 
+void CameraSceneItem::SetCategory(Category c)
+{
+	category_ = c;
+}
+
 Scene *CameraSceneItem::scene() const
 {
 	return nullptr;
@@ -570,6 +585,7 @@ AudioSceneItem::AudioSceneItem(std::string &name)
 	settings_.hidden = false;
 	settings_.scale.x = 0.f;
 	settings_.scale.y = 0.f;
+	category_ = kDefault;
 }
 
 AudioSceneItem::~AudioSceneItem() {}
@@ -774,6 +790,25 @@ bool Scene::Detach(SceneItem *item, bool deleteIt)
 	return false;
 }
 
+bool Scene::CreateGroup(const char *name)
+{
+	obs_source_t *ret = obs_get_source_by_name(name);
+	if (ret) {
+		blog(LOG_ERROR, "group with name %s already attached!", name);
+		return false;
+	}
+
+	auto groupItem = obs_scene_add_group(scene_, name);
+
+	return groupItem != nullptr;
+}
+
+void Scene::CreateGroups()
+{
+	CreateGroup(kMainGroup);
+	CreateGroup(kPiPGroup);
+}
+
 bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 {
 	if (!item->ShouldApplyAnyUpdates()) {
@@ -781,9 +816,27 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 		return false;
 	}
 
-	// dont use autorelease!!!
-	obs_sceneitem_t *sceneItem =
-		obs_scene_find_sceneitem_by_id(scene_, item->SceneID());
+	// if the item belongs to kMain or kPiP category,
+	// do the follow steps to find the scene item:
+	// a. get the group from the scene;
+	// b. get the item in the group;
+	obs_sceneitem_t *sceneItem = nullptr;
+	if (item->category() == source::SceneItem::Category::kMain) {
+		auto group = obs_scene_get_group(scene_, kMainGroup);
+		auto groupItem = obs_sceneitem_group_get_scene(group);
+		sceneItem = obs_scene_find_sceneitem_by_id(groupItem,
+							   item->SceneID());
+	} else if (item->category() == source::SceneItem::Category::kPiP) {
+		auto group = obs_scene_get_group(scene_, kPiPGroup);
+		auto groupItem = obs_sceneitem_group_get_scene(group);
+		sceneItem = obs_scene_find_sceneitem_by_id(groupItem,
+							   item->SceneID());
+	} else {
+		// audio items
+		sceneItem =
+			obs_scene_find_sceneitem_by_id(scene_, item->SceneID());
+	}
+
 	if (sceneItem == nullptr) {
 		blog(LOG_ERROR, "can not find the scene item in the scene!");
 		return false;
