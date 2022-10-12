@@ -101,11 +101,11 @@ bool TitleBar::eventFilter(QObject *obj, QEvent *event)
 	} else if (obj == this && event->type() == QEvent::MouseButtonRelease) {
 		QMouseEvent *mouseevent = static_cast<QMouseEvent *>(event);
 		if (mouseevent->button() == Qt::LeftButton) {
-			if (mousePressed && !dragSize && mouseevent->globalPos().y() <= 5 &&
-			    mainWindow->screen()->geometry() !=
-				    mainWindow->geometry()) {
-				pBtn_fullScreen_clicked_slot();
-			}
+			//if (mousePressed && !dragSize && mouseevent->globalPos().y() <= 5 &&
+			//    mainWindow->screen()->geometry() !=
+			//	    mainWindow->geometry()) {
+			//	pBtn_fullScreen_clicked_slot();
+			//}
 			mousePressed = false;
 		}
 	} else if (obj == this && event->type() == QEvent::MouseMove) {

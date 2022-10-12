@@ -66,7 +66,8 @@ void OBSToolbar::initUi()
 	pBtn_settings_ai->setStyleSheet(
 		QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
 			"border-image: url(':/res/images/newUi/settings@2x.png'); "
-			"min-width: %1; min-height: %1;}")
+			"min-width: %1; min-height: %1;} "
+			"QPushButton::hover{border-image: url(':/res/images/newUi/settings2@2x.png');}")
 			.arg(16 * getScale()));
 	pBtn_settings_ai->setEnabled(false);
 	pBtn_settings_ai->hide();
@@ -93,7 +94,8 @@ void OBSToolbar::initUi()
 	pBtn_settings_stream->setStyleSheet(
 		QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
 			"border-image: url(':/res/images/newUi/settings@2x.png'); "
-			"min-width: %1; min-height: %1;}")
+			"min-width: %1; min-height: %1;}"
+			"QPushButton::hover{border-image: url(':/res/images/newUi/settings2@2x.png');}")
 			.arg(16 * getScale()));
 	connect(pBtn_settings_stream, &QPushButton::clicked, this,
 		[=]() { emit showStreamPanel(); });
