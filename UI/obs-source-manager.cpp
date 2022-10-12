@@ -1,4 +1,5 @@
 #include "obs-source-manager.h"
+#include "obs-app.hpp"
 
 namespace accrecorder::manager {
 OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
@@ -620,9 +621,10 @@ void OBSSourceManager::ListAudioItems(
 		blog(LOG_ERROR, "enum audio device(%s): %s, id=%s",
 		     input ? "input" : "output", name, id);
 
-		std::string s_name(name);
+		QString q_name(name);
+		auto comp_str = QTStr("Basic.Settings.Advanced.Audio.MonitoringDevice.Default");
 		// do not show default device for now
-		if (s_name == "default")
+		if (q_name == comp_str)
 			continue;
 		if (input) {
 			auto item = std::make_shared<source::AudioInputItem>(
