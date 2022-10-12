@@ -78,7 +78,7 @@ bool TitleBar::eventFilter(QObject *obj, QEvent *event)
 		if (mouseevent->button() == Qt::LeftButton) {
 			mousePressed = true;
 			pressedPos = mouseevent->pos();
-			if (mainWindow->screen()->geometry() ==
+			if (mainWindow->screen()->availableGeometry() ==
 			    mainWindow->geometry()) {
 				x_scale = (qreal)pressedPos.x() / mainWindow->width();
 			}
@@ -159,7 +159,7 @@ bool TitleBar::eventFilter(QObject *obj, QEvent *event)
 		{
 			y_offset = globalPos.y() - pressedPos.y();
 			QScreen *screen = mainWindow->screen();
-			if (screen->geometry() == mainWindow->geometry()) {
+			if (screen->availableGeometry() == mainWindow->geometry()) {
 				int x, y, w, h;
 				if (mainWindow->property("normal_width")
 					    .toInt() <= 0) {
@@ -197,7 +197,7 @@ bool TitleBar::eventFilter(QObject *obj, QEvent *event)
 void TitleBar::pBtn_fullScreen_clicked_slot()
 {
 	QScreen *screen = mainWindow->screen();
-	if (screen->geometry() == mainWindow->geometry()) {
+	if (screen->availableGeometry() == mainWindow->geometry()) {
 		if (mainWindow->property("normal_width").toInt() <= 0) {
 			QRect normalRect = mainWindow->normalGeometry();
 			mainWindow->setProperty("normal_width",
@@ -219,7 +219,7 @@ void TitleBar::pBtn_fullScreen_clicked_slot()
 		mainWindow->setProperty("normal_x", mainWindow->x());
 		mainWindow->setProperty("normal_y", mainWindow->y());
 
-		mainWindow->setGeometry(screen->geometry());
+		mainWindow->setGeometry(screen->availableGeometry());
 	}
 }
 
