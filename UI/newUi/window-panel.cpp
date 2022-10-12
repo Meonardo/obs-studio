@@ -148,6 +148,10 @@ OBSPanel::OBSPanel(const QString &title, QWidget *parent)
 
 void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 {
+	foreach(auto sceneItem, sceneItemList) {
+		if (sceneItem->Name().compare(item->Name()) == 0)
+			return;	
+	}
 	sceneItemList.append(item);
 	int type = 0;
 	if (item->type() == accrecorder::source::SceneItem::Type::kScreen)

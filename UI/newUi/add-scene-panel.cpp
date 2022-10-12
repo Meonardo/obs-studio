@@ -19,7 +19,8 @@ ComboBoxItemWidget::ComboBoxItemWidget(int index, int width, int height,
 		QString("QPushButton{background-color: transparent; color: rgb(68, 68, 68); border:none; "
 			"border-radius: none; text-align: left; padding-left: %1px; %2}"
 			"QPushButton::checked {color: rgb(46, 105, 240);}"
-			"QPushButton::hover{background-color: rgb(239, 243, 254);}")
+			"QPushButton::hover{background-color: rgb(239, 243, 254);}"
+			"QPushButton::disabled{text-align: center;}")
 			.arg(margin)
 			.arg(getFontStyle(16)));
 	connect(pBtn_text, &QPushButton::clicked, this,
@@ -85,7 +86,7 @@ ComboBoxView::ComboBoxView(QWidget *parent) : QWidget(parent)
 	itemGroup->setExclusive(true);
 }
 
-void ComboBoxView::addItems(QStringList textList)
+void ComboBoxView::addItems(QStringList textList, QList<int> titleIndexList)
 {
 	if (itemMap.keys().size() > 0) {
 		foreach(ComboBoxItemWidget * itemWidget, itemMap.values())
@@ -118,8 +119,14 @@ void ComboBoxView::addItems(QStringList textList)
 		listWidget->setItemWidget(item, itemWidget);
 		itemMap.insert(item, itemWidget);
 		itemGroup->addButton(itemWidget->getBtn());
-		if (0 == i)
+		foreach(int titleIndex, titleIndexList) {
+			if (titleIndex == i)
+				itemWidget->setBtnEnabled(false);
+		}
+		if (titleIndexList.size() > 0 && 1 == i)
 			firstItem = itemWidget->getBtn();
+		else if (i == 0)
+			firstItem = itemWidget->getBtn();	
 	}
 
 	itemCount = textList.size();
@@ -219,7 +226,7 @@ ComboBox::ComboBox(QWidget *parent) : QFrame(parent)
 	this->initUi();
 }
 
-void ComboBox::addItems(QStringList textList)
+void ComboBox::addItems(QStringList textList, QList<int> titleIndexList)
 {
 	if (textList.isEmpty())
 		return;
@@ -244,7 +251,7 @@ void ComboBox::addItems(QStringList textList)
 		});
 	}
 
-	view->addItems(textList);
+	view->addItems(textList, titleIndexList);
 }
 
 bool ComboBox::event(QEvent *e)
@@ -418,6 +425,16 @@ void IpCameraSettingsWidget::initData()
 	combobox_resolution->addItems(QStringList() << "1080p");
 }
 
+void IpCameraSettingsWidget::setEmptyStyle()
+{
+	lineedit_rtsp->setStyleSheet(
+		QString("QLineEdit{ background-color:rgb(240,240,240); border: 1px solid red; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+			"QLineEdit::hover{background-color: rgb(240,240,240);}"
+			"QLineEdit::disabled{color: rgb(170, 170, 170);}")
+			.arg(4 * getScale())
+			.arg(getFontStyle(18)));
+}
+
 void IpCameraSettingsWidget::initUi()
 {
 	QLabel *label = new QLabel(QTStr("NewUi.CameraName"), this);
@@ -534,25 +551,36 @@ void USBCameraSettingsWidget::initData(
 	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>
 		usbCameraSource)
 {
-	QStringList ipCameraList;
-	foreach(auto item, usbCameraSource)
-	{
-		ipCameraList.append(QString::fromStdString(item->Name()));
-		mapCameraSource.insert(QString::fromStdString(item->Name()),
-				       item);
-	}
-	combobox_cameraName->addItems(ipCameraList);
+	// use updateDataSourceIfNeed
+	//QStringList ipCameraList;
+	//foreach(auto item, usbCameraSource)
+	//{
+	//	ipCameraList.append(QString::fromStdString(item->Name()));
+	//	mapCameraSource.insert(QString::fromStdString(item->Name()),
+	//			       item);
+	//}
+	//combobox_cameraName->addItems(ipCameraList);
 
-	combobox_fps->addItems(QStringList() << "30Hz");
-	combobox_rate->addItems(QStringList() << "4093kbit/s");
-	combobox_encode->addItems(QStringList() << "H264");
+	//combobox_fps->addItems(QStringList() << "30Hz");
+	//combobox_rate->addItems(QStringList() << "4093kbit/s");
+	//combobox_encode->addItems(QStringList() << "H264");
+}
+
+accrecorder::source::CameraSceneItem *
+USBCameraSettingsWidget::getCurrentCameraSource()
+{
+	if (usbCameraSource.size() <= 0 )
+		return nullptr;
+
+	return usbCameraSource[combobox_cameraName
+				       ->currentIndex()].get();
 }
 
 void USBCameraSettingsWidget::updateDataSourceIfNeed(
 	accrecorder::manager::OBSSourceManager *manager)
 {
 	if (mapCameraSource.empty() && manager != nullptr) {
-		auto usbCameraSource = std::vector<
+		usbCameraSource = std::vector<
 			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
 		manager->ListCameraItems(usbCameraSource);
 
@@ -567,6 +595,10 @@ void USBCameraSettingsWidget::updateDataSourceIfNeed(
 		// TODO: remove old Combox items
 
 		combobox_cameraName->addItems(ipCameraList);
+
+		combobox_fps->addItems(QStringList() << "30Hz");
+		combobox_rate->addItems(QStringList() << "4093kbit/s");
+		combobox_encode->addItems(QStringList() << "H264");
 	}
 }
 
@@ -788,10 +820,22 @@ ScenesSettingsPanel::ScenesSettingsPanel(
 	accrecorder::manager::OBSSourceManager *manager,
 	accrecorder::source::SceneItem::Category categroy, QWidget *parent)
 	: sourceManager(manager), itemCategory(categroy), BasicPanel(parent)
-{
+{	
 	this->initUi();
 	this->installEventFilter(this);
 	this->initData();
+
+	m_timer = new QTimer(this);
+	connect(m_timer, &QTimer::timeout, this, [=]() {
+		m_timer->stop();
+		usbCameraSettingsWidget->updateDataSourceIfNeed(sourceManager);
+	});
+}
+
+void ScenesSettingsPanel::show()
+{
+	m_timer->start(100);
+	BasicPanel::show();
 }
 
 void ScenesSettingsPanel::initUi()
@@ -875,7 +919,7 @@ void ScenesSettingsPanel::initUi()
 			.arg(1 * getScale()));
 	connect(tabBtn_3, &QPushButton::clicked, this, [=]() {
 		this->stackedWidget->setCurrentWidget(usbCameraSettingsWidget);
-		usbCameraSettingsWidget->updateDataSourceIfNeed(sourceManager);
+		//usbCameraSettingsWidget->updateDataSourceIfNeed(sourceManager);
 		this->setFixedSize(612 * getScale(), 496 * getScale());
 	});
 
@@ -965,42 +1009,44 @@ void ScenesSettingsPanel::initUi()
 
 void ScenesSettingsPanel::initData()
 {
-	std::vector<std::shared_ptr<accrecorder::source::ScreenSceneItem>>
-		sceneSource = std::vector<
+	sceneItems = std::vector<
 			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
-	std::vector<std::shared_ptr<accrecorder::source::CameraSceneItem>>
-		usbCameraSource = std::vector<
-			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
-	sourceManager->ListScreenItems(sceneSource);
-	//sourceManager->ListCameraItems(usbCameraSource);
+	//cameraItems = std::vector<
+	//		std::shared_ptr<accrecorder::source::CameraSceneItem>>();
+	sourceManager->ListScreenItems(sceneItems);
+	//sourceManager->ListCameraItems(cameraItems);
 
 	if (nullptr != sceneSettingsWidget)
-		sceneSettingsWidget->initData(sceneSource);
+		sceneSettingsWidget->initData(sceneItems);
 	if (nullptr != ipCameraSettingsWidget)
 		ipCameraSettingsWidget->initData();
-	if (nullptr != usbCameraSettingsWidget)
-		usbCameraSettingsWidget->initData(usbCameraSource);
+	//if (nullptr != usbCameraSettingsWidget)
+	//	usbCameraSettingsWidget->initData(cameraItems);
 }
 
 void ScenesSettingsPanel::slot_addBtn_clicked()
 {
 	accrecorder::source::SceneItem *screen = nullptr;
 	if (0 == stackedWidget->currentIndex()) { //scene
-		auto items = std::vector<
-			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
-		sourceManager->ListScreenItems(items);
 		screen = new accrecorder::source::ScreenSceneItem(
-			*items[sceneSettingsWidget->getSceneIndex()].get());
+			*sceneItems[sceneSettingsWidget->getSceneIndex()].get());
 	} else if (1 == stackedWidget->currentIndex()) { // RTSP camera
+		QString strRtsp = QString::fromStdString(ipCameraSettingsWidget->getRTSPURL());
+		if (strRtsp.isEmpty()) {
+			ipCameraSettingsWidget->setEmptyStyle();
+			return;
+		}
+		
 		screen = new accrecorder::source::IPCameraSceneItem(
 			ipCameraSettingsWidget->getCameraName(),
 			ipCameraSettingsWidget->getRTSPURL(), true);
 	} else if (2 == stackedWidget->currentIndex()) { //usb camera
-		auto items = std::vector<
-			std::shared_ptr<accrecorder::source::CameraSceneItem>>();
-		sourceManager->ListCameraItems(items);
+		accrecorder::source::CameraSceneItem *cameraSource =
+			usbCameraSettingsWidget->getCurrentCameraSource();
+		if (cameraSource == nullptr)
+			return; 
 		screen = new accrecorder::source::CameraSceneItem(
-			*items[usbCameraSettingsWidget->getSceneIndex()].get());
+			*usbCameraSettingsWidget->getCurrentCameraSource());
 	}
 
 	if (nullptr != screen &&
@@ -1122,17 +1168,32 @@ void AudioSettingsPanel::initUi()
 void AudioSettingsPanel::initData()
 {
 	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>
-		audioItems = std::vector<
-			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
-	sourceManager->ListAudioItems(audioItems);
-
+		audioInuputItems = std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>
+		audioOutputItems = std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+	sourceManager->ListAudioItems(audioInuputItems);
+	sourceManager->ListAudioItems(audioOutputItems, false);
 	QStringList nameList;
-	foreach(auto item, audioItems)
+	QList<int> titleIndexList;
+
+	if (audioInuputItems.size() > 0) {
+		titleIndexList.append(0);
+		nameList.append(QTStr("NewUi.AudioInput"));
+	}	
+	foreach(auto item, audioInuputItems)
+	{
+		nameList.append(QString::fromStdString(item->Name()));
+	}
+	if (audioOutputItems.size() > 0) {
+		titleIndexList.append(nameList.size());
+		nameList.append(QTStr("NewUi.AudioOutput"));	
+	}
+	foreach(auto item, audioOutputItems)
 	{
 		nameList.append(QString::fromStdString(item->Name()));
 	}
 
-	combobox_audio->addItems(nameList);
+	combobox_audio->addItems(nameList, titleIndexList);
 }
 
 /*********************************** Push stream panel *******************************************/

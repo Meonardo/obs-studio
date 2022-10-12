@@ -276,6 +276,7 @@ VolControl::VolControl(OBSSource source_, bool showConfig, bool vertical)
 		QHBoxLayout *botLayout = new QHBoxLayout;
 
 		volMeter = new VolumeMeter(nullptr, obs_volmeter, false);
+
 		slider = new VolumeSlider(obs_fader, Qt::Horizontal);
 		slider->setStyleSheet(
 			QString("QSlider { min-width: %2px; min-height: %2px;}"
@@ -785,7 +786,7 @@ VolumeMeter::VolumeMeter(QWidget *parent, obs_volmeter_t *obs_volmeter,
 	backgroundErrorColor.setRgb(0x7f, 0x26, 0x26);   // Dark red
 	foregroundNominalColor.setRgb(0x25, 0xbe, 0x9a); // Bright green
 	foregroundWarningColor.setRgb(0xff, 0xff, 0x4c); // Bright yellow
-	foregroundErrorColor.setRgb(0xff, 0x4c, 0x4c);   // Bright red
+	foregroundErrorColor.setRgb(0xff, 0x4c, 0x4c);   // Bright red 
 
 	setBackgroundNominalColor(backgroundNominalColor);
 	setForegroundNominalColor(foregroundNominalColor);
@@ -900,7 +901,8 @@ inline void VolumeMeter::doLayout()
 	tickFont = font();
 	QFontInfo info(tickFont);
 	tickFont.setPointSizeF(info.pointSizeF() * meterFontScaling);
-	QFontMetrics metrics(tickFont);
+	//QFontMetrics metrics(tickFont);
+	QFontMetrics metrics(getFont(12));
 	if (vertical) {
 		// Each meter channel is meterThickness pixels wide, plus one pixel
 		// between channels, but not after the last.
@@ -1042,9 +1044,12 @@ void VolumeMeter::paintHTicks(QPainter &painter, int x, int y, int width)
 {
 	qreal scale = width / minimumLevel;
 
-	painter.setFont(tickFont);
+	//painter.setFont(tickFont);
+	painter.setFont(getFont(12));
 	QFontMetrics metrics(tickFont);
-	painter.setPen(majorTickColor);
+	//painter.setPen(majorTickColor);
+	QColor penColor = QColor(204, 204, 204);
+	painter.setPen(penColor);
 
 	// Draw major tick lines and numeric indicators.
 	for (int i = 0; i >= minimumLevel; i -= 5) {
@@ -1061,17 +1066,19 @@ void VolumeMeter::paintHTicks(QPainter &painter, int x, int y, int width)
 			if (pos < 0)
 				pos = 0;
 		}
-		painter.drawText(pos, y + 4 + metrics.capHeight(), str);
+		painter.drawText(pos, y + 7 * getScale() + metrics.capHeight(),
+				 str);
 
-		painter.drawLine(position, y, position, y + 2);
+		painter.drawLine(position, y, position, y + 4 * getScale());
 	}
 
 	// Draw minor tick lines.
-	painter.setPen(minorTickColor);
+	//painter.setPen(minorTickColor);
+	painter.setPen(QColor(102, 102, 102));
 	for (int i = 0; i >= minimumLevel; i--) {
 		int position = int(x + width - (i * scale) - 1);
 		if (i % 5 != 0)
-			painter.drawLine(position, y, position, y + 1);
+			painter.drawLine(position, y, position, y + 3 * getScale());
 	}
 }
 
@@ -1366,7 +1373,7 @@ void VolumeMeter::paintEvent(QPaintEvent *event)
 		// Paint window background color (as widget is opaque)
 		QColor background =
 			palette().color(QPalette::ColorRole::Window);
-		painter.fillRect(widgetRect, QBrush(QColor(0, 0, 0, 0)));
+		painter.fillRect(widgetRect, QBrush(QColor(68, 68, 68)));
 
 		if (vertical) {
 			paintVTicks(painter,
