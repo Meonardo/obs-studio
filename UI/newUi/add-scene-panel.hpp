@@ -273,7 +273,7 @@ public:
 private:
 	ComboBox *combobox_audio = nullptr;
 	accrecorder::manager::OBSSourceManager *sourceManager;
-
+	QList<std::shared_ptr<accrecorder::source::AudioSceneItem>> allAudioItems;
 	void initUi();
 	void initData();
 };

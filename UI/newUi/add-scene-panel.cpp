@@ -1148,15 +1148,10 @@ void AudioSettingsPanel::initUi()
 			.arg(6 * getScale())
 			.arg(getFontStyle(16)));
 	connect(pBtnYes, &QPushButton::clicked, this, [=]() {
-		std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>
-			audioItems = std::vector<std::shared_ptr<
-				accrecorder::source::AudioSceneItem>>();
-		sourceManager->ListAudioItems(audioItems);
 		// copy
 		auto input = new accrecorder::source::AudioInputItem(
 			*reinterpret_cast<accrecorder::source::AudioInputItem *>(
-				audioItems[combobox_audio->currentIndex()]
-					.get()));
+				allAudioItems[combobox_audio->currentIndex()].get()));
 		if (sourceManager->AttachSceneItem(input)) {
 			// success
 		}
@@ -1171,6 +1166,7 @@ void AudioSettingsPanel::initData()
 		audioInuputItems = std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
 	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>
 		audioOutputItems = std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+	
 	sourceManager->ListAudioItems(audioInuputItems);
 	sourceManager->ListAudioItems(audioOutputItems, false);
 	QStringList nameList;
@@ -1179,18 +1175,22 @@ void AudioSettingsPanel::initData()
 	if (audioInuputItems.size() > 0) {
 		titleIndexList.append(0);
 		nameList.append(QTStr("NewUi.AudioInput"));
+		allAudioItems.append(nullptr);
 	}	
 	foreach(auto item, audioInuputItems)
 	{
 		nameList.append(QString::fromStdString(item->Name()));
+		allAudioItems.append(item);
 	}
 	if (audioOutputItems.size() > 0) {
 		titleIndexList.append(nameList.size());
-		nameList.append(QTStr("NewUi.AudioOutput"));	
+		nameList.append(QTStr("NewUi.AudioOutput"));
+		allAudioItems.append(nullptr);
 	}
 	foreach(auto item, audioOutputItems)
 	{
 		nameList.append(QString::fromStdString(item->Name()));
+		allAudioItems.append(item);
 	}
 
 	combobox_audio->addItems(nameList, titleIndexList);
