@@ -642,6 +642,12 @@ struct OBSStudioAPI : obs_frontend_callbacks {
 		return Str(string);
 	}
 
+	void obs_frontend_toggle_main_window_hidden(bool hide) override
+	{
+		QMetaObject::invokeMethod(main, "ToggleMainWindowHide",
+					  Q_ARG(bool, hide));
+	}
+
 	void on_load(obs_data_t *settings) override
 	{
 		for (size_t i = saveCallbacks.size(); i > 0; i--) {

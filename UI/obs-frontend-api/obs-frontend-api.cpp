@@ -571,3 +571,9 @@ const char *obs_frontend_get_locale_string(const char *string)
 	return !!callbacks_valid() ? c->obs_frontend_get_locale_string(string)
 				   : nullptr;
 }
+
+void obs_frontend_toggle_main_window_hidden(bool hide)
+{
+	if (callbacks_valid())
+		c->obs_frontend_toggle_main_window_hidden(hide);
+}

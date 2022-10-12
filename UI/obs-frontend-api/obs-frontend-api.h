@@ -229,6 +229,8 @@ EXPORT void obs_frontend_open_source_interaction(obs_source_t *source);
 EXPORT char *obs_frontend_get_current_record_output_path(void);
 EXPORT const char *obs_frontend_get_locale_string(const char *string);
 
+EXPORT void obs_frontend_toggle_main_window_hidden(bool hidden);
+
 /* ------------------------------------------------------------------------- */
 
 #ifdef __cplusplus

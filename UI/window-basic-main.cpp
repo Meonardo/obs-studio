@@ -836,8 +836,8 @@ void OBSBasic::CreateDefaultScene(bool firstStart)
 
 	OBSSceneAutoRelease scene = obs_scene_create(Str("Basic.Scene"));
 
-	if (firstStart)
-		CreateFirstRunSources();
+	/*if (firstStart)
+		CreateFirstRunSources();*/
 
 	SetCurrentScene(scene, true);
 
@@ -3529,9 +3529,13 @@ void OBSBasic::ActivateAudioSource(OBSSource source)
 	if (!obs_source_audio_active(source))
 		return;
 
+	const char *source_id = obs_source_get_id(source);
+	bool showControlBtn = strcmp(source_id, "wasapi_input_capture") == 0 ||
+			      strcmp(source_id, "wasapi_outpur_capture") == 0;
+
 	bool vertical = config_get_bool(GetGlobalConfig(), "BasicWindow",
 					"VerticalVolControl");
-	VolControl *vol = new VolControl(source, true, vertical);
+	VolControl *vol = new VolControl(source, showControlBtn, vertical);
 
 	vol->EnableSlider(!SourceVolumeLocked(source));
 
@@ -7515,6 +7519,14 @@ void OBSBasic::OnVirtualCamStop(int)
 	OnDeactivate();
 }
 
+void OBSBasic::ToggleMainWindowHide(bool hide)
+{
+	ToggleShowHide();
+
+	if (previewEnabled)
+		EnablePreviewDisplay(!hide);
+}
+
 void OBSBasic::on_streamButton_clicked()
 {
 	if (outputHandler->StreamingActive()) {
@@ -8792,14 +8804,14 @@ void OBSBasic::on_actionFullscreenInterface_triggered()
 
 void OBSBasic::UpdateTitleBar()
 {
-	stringstream name;
+	/*stringstream name;
 
 	const char *profile =
 		config_get_string(App()->GlobalConfig(), "Basic", "Profile");
 	const char *sceneCollection = config_get_string(
 		App()->GlobalConfig(), "Basic", "SceneCollection");
 
-	name << "accrecorder ";
+	name << "obs ";*/
 	/*if (previewProgramMode)
 		name << "Studio ";
 
@@ -8810,7 +8822,7 @@ void OBSBasic::UpdateTitleBar()
 	/*name << " - " << Str("TitleBar.Profile") << ": " << profile;
 	name << " - " << Str("TitleBar.Scenes") << ": " << sceneCollection;*/
 
-	setWindowTitle(QT_UTF8(name.str().c_str()));
+	setWindowTitle(QTStr("NewUi.Main.Title"));
 }
 
 int OBSBasic::GetProfilePath(char *path, size_t size, const char *file) const
