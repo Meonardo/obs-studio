@@ -1,4 +1,5 @@
 #include "window-titlebar.hpp"
+#include "window-basic-main.hpp"
 
 #include "font.hpp"
 
@@ -34,7 +35,15 @@ TitleBar::TitleBar(const QString &title, QMainWindow *window)
 	pBtn_close->installEventFilter(this);
 	pBtn_close->setMouseTracking(true);
 	connect(pBtn_close, &QPushButton::clicked, this,
-		[=]() { mainWindow->showMinimized(); });
+		[=]() {
+			#if DEBUG
+			mainWindow->showMinimized();
+			#else
+			auto window = reinterpret_cast<OBSBasic *>(mainWindow);
+			if (window != nullptr)
+				window->ToggleMainWindowHide(true);
+			#endif
+		});
 
 	QHBoxLayout *layout_title = new QHBoxLayout(this);
 	layout_title->setContentsMargins(20 * getScale(), 0,

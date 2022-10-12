@@ -787,7 +787,7 @@ bool Scene::Detach(SceneItem *item, bool deleteIt)
 		delete item;
 		item = nullptr;
 	}
-	return false;
+	return true;
 }
 
 bool Scene::CreateGroup(const char *name)
@@ -816,27 +816,28 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 		return false;
 	}
 
-	// if the item belongs to kMain or kPiP category,
-	// do the follow steps to find the scene item:
-	// a. get the group from the scene;
-	// b. get the item in the group;
-	obs_sceneitem_t *sceneItem = nullptr;
-	if (item->category() == source::SceneItem::Category::kMain) {
-		auto group = obs_scene_get_group(scene_, kMainGroup);
-		auto groupItem = obs_sceneitem_group_get_scene(group);
-		sceneItem = obs_scene_find_sceneitem_by_id(groupItem,
-							   item->SceneID());
-	} else if (item->category() == source::SceneItem::Category::kPiP) {
-		auto group = obs_scene_get_group(scene_, kPiPGroup);
-		auto groupItem = obs_sceneitem_group_get_scene(group);
-		sceneItem = obs_scene_find_sceneitem_by_id(groupItem,
-							   item->SceneID());
-	} else {
-		// audio items
-		sceneItem =
-			obs_scene_find_sceneitem_by_id(scene_, item->SceneID());
-	}
-
+	//// if the item belongs to kMain or kPiP category,
+	//// do the follow steps to find the scene item:
+	//// a. get the group from the scene;
+	//// b. get the item in the group;
+	//obs_sceneitem_t *sceneItem = nullptr;
+	//if (item->category() == source::SceneItem::Category::kMain) {
+	//	auto group = obs_scene_get_group(scene_, kMainGroup);
+	//	auto groupItem = obs_sceneitem_group_get_scene(group);
+	//	sceneItem = obs_scene_find_sceneitem_by_id(groupItem,
+	//						   item->SceneID());
+	//} else if (item->category() == source::SceneItem::Category::kPiP) {
+	//	auto group = obs_scene_get_group(scene_, kPiPGroup);
+	//	auto groupItem = obs_sceneitem_group_get_scene(group);
+	//	sceneItem = obs_scene_find_sceneitem_by_id(groupItem,
+	//						   item->SceneID());
+	//} else {
+	//	// audio items
+	//	sceneItem =
+	//		obs_scene_find_sceneitem_by_id(scene_, item->SceneID());
+	//}
+	obs_sceneitem_t *sceneItem = obs_scene_find_sceneitem_by_id(
+		scene_, item->SceneID());
 	if (sceneItem == nullptr) {
 		blog(LOG_ERROR, "can not find the scene item in the scene!");
 		return false;
@@ -864,6 +865,30 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 	item->MarkUpdateCompleted();
 
 	return true;
+}
+
+int Scene::FindFirstPiPSceneItemIndex() {
+	auto vec = std::vector<SceneItem *>();
+	for (auto &item : items_) {
+		if (item->category() == SceneItem::Category::kPiP)
+			vec.emplace_back(item);
+	}
+	if (vec.empty())
+		return -1;
+
+	std::sort(vec.begin(), vec.end(),
+		  [](SceneItem *item1, SceneItem *item2) {
+			  return item1->SceneID() < item2->SceneID();
+		});
+	auto target = vec.front();
+	if (target == nullptr)
+		return -1;
+	OBSSceneItemAutoRelease sceneItem =
+		obs_scene_find_sceneitem_by_id(scene_, target->SceneID());
+	if (sceneItem == nullptr)
+		return -1;
+
+	return obs_sceneitem_get_order_position(sceneItem);
 }
 
 obs_sceneitem_t *Scene::CreateSceneItem(obs_source_t *source,

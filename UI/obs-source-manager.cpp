@@ -11,14 +11,14 @@ OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
 		main_scene_ = new source::Scene(sceneName,
 						obs_scene_from_source(scene));
 		// load groups
-		auto groups = std::vector<obs_source_t *>();
-		LoadGroups(groups);
+		//auto groups = std::vector<obs_source_t *>();
+		//LoadGroups(groups);
 
-		for (auto &group : groups) {
-			std::string gourpName = obs_source_get_name(group);
-			// load scene from the scene
-			LoadSceneItemFromScene(gourpName);
-		}
+		//for (auto &group : groups) {
+		//	std::string gourpName = obs_source_get_name(group);
+		//	// load scene from the scene
+		//	LoadSceneItemFromScene(gourpName);
+		//}
 
 		LoadSceneItemFromScene(sceneName);
 	} else {
@@ -32,7 +32,7 @@ OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
 		main_scene_ = new source::Scene(sceneName, newScene);
 
 		// create groups
-		main_scene_->CreateGroups();
+		//main_scene_->CreateGroups();
 	}
 
 	// make current
@@ -369,7 +369,18 @@ bool OBSSourceManager::AttachSceneItem(source::SceneItem *item,
 		AddAudioMixFilter(audioItem);
 	} else {
 		// add to its group by default after attached to the scene
-		AddSceneItemToGroup(item, category);
+		// AddSceneItemToGroup(item, category);
+		if (category == source::SceneItem::Category::kMain) {
+			int idx = main_scene_->FindFirstPiPSceneItemIndex();
+			if (idx >= 0) {
+				auto sceneItem =
+					obs_scene_find_sceneitem_by_id(main_scene_->scene_, item->SceneID());
+				if (sceneItem != nullptr) {
+					obs_sceneitem_set_order_position(
+						sceneItem, idx);
+				}
+			}
+		}
 	}
 
 	return true;
@@ -696,6 +707,8 @@ bool OBSSourceManager::Remove(source::SceneItem *item)
 		return false;
 
 	// remove from obs source tree
+	auto sceneItem = obs_scene_find_sceneitem_by_id(main_scene_->scene_, item->SceneID());
+	obs_sceneitem_remove(sceneItem);
 	OBSSourceAutoRelease input = ValidateInput(item->Name());
 	obs_source_remove(input);
 

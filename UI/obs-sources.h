@@ -310,6 +310,8 @@ public:
 	bool Detach(SceneItem *item, bool deleteIt = false);
 	bool ApplySceneItemSettingsUpdate(SceneItem *item);
 
+	int FindFirstPiPSceneItemIndex();
+
 private:
 	std::string name_;
 	obs_scene_t *scene_;
