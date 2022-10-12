@@ -1073,8 +1073,8 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 			screen->UpdateScale({640.f / size.x, 360.f / size.y});
 		}
 
-		sourceManager->ApplySceneItemSettingsUpdate(screen);
-		emit attachFinished(screen, itemCategory);
+		if (sourceManager->ApplySceneItemSettingsUpdate(screen))
+			emit attachFinished(screen, itemCategory);
 		this->close();
 	} else {
 		this->close();
