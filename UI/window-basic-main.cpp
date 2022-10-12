@@ -10248,7 +10248,7 @@ void OBSBasic::createUi()
 	//this->setFixedWidth(1280 * getScale());
 	//this->setFixedHeight(768 * getScale());
 	////this->setAttribute(Qt::WA_TranslucentBackground, true);
-	this->setWindowFlags(Qt::FramelessWindowHint);
+	this->setWindowFlags(Qt::FramelessWindowHint );
 
 	//QFrame *frame = new QFrame(ui->centralwidget);
 	//frame->setObjectName("mainframe");
