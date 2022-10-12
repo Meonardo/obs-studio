@@ -9,7 +9,16 @@ OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
 		// save it.
 		main_scene_ = new source::Scene(sceneName,
 						obs_scene_from_source(scene));
-		// load scene from the scene
+		// load groups
+		auto groups = std::vector<obs_source_t *>();
+		LoadGroups(groups);
+
+		for (auto &group : groups) {
+			std::string gourpName = obs_source_get_name(group);
+			// load scene from the scene
+			LoadSceneItemFromScene(gourpName);
+		}
+
 		LoadSceneItemFromScene(sceneName);
 	} else {
 		// create new one.
@@ -20,6 +29,9 @@ OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
 		}
 		// save it.
 		main_scene_ = new source::Scene(sceneName, newScene);
+
+		// create groups
+		main_scene_->CreateGroups();
 	}
 
 	// make current
@@ -53,6 +65,23 @@ void OBSSourceManager::AvailableSceneItems(
 	for (auto &item : main_scene_->items_) {
 		items.push_back(item);
 	}
+}
+
+void OBSSourceManager::LoadGroups(std::vector<obs_source_t *> &groups)
+{
+	auto cb = [](void *priv_data, obs_source_t *scene) {
+		auto ret =
+			static_cast<std::vector<obs_source_t *> *>(priv_data);
+
+		if (!obs_source_is_group(scene))
+			return true;
+
+		ret->emplace_back(scene);
+
+		return true;
+	};
+
+	obs_enum_scenes(cb, &groups);
 }
 
 void OBSSourceManager::LoadSceneItemFromScene(std::string &sceneName)
@@ -197,8 +226,13 @@ void OBSSourceManager::LoadSceneItemFromScene(std::string &sceneName)
 	};
 
 	// enum scene item and save it to the scene object.
-	obs_scene_enum_items(obs_scene_from_source(scene), cb,
-			     &main_scene_->items_);
+	if (sceneName == kMainScene) {
+		obs_scene_enum_items(obs_scene_from_source(scene), cb,
+				     &main_scene_->items_);
+	} else {
+		obs_scene_enum_items(obs_group_from_source(scene), cb,
+				     &main_scene_->items_);
+	}
 
 	bool hasCameraItem = false;
 	for (const auto &item : main_scene_->items_) {
@@ -325,12 +359,16 @@ bool OBSSourceManager::AttachSceneItem(source::SceneItem *item,
 		return false;
 	}
 
+	item->SetCategory(category);
 	main_scene_->Attach(item, category);
 
 	// add audio monitor filter by default
 	if (dynamic_cast<source::AudioSceneItem *>(item)) {
 		auto audioItem = dynamic_cast<source::AudioSceneItem *>(item);
 		AddAudioMixFilter(audioItem);
+	} else {
+		// add to its group by default after attached to the scene
+		AddSceneItemToGroup(item, category);
 	}
 
 	return true;
@@ -603,6 +641,32 @@ void OBSSourceManager::ListAudioItems(
 	obs_properties_destroy(props);
 }
 
+bool OBSSourceManager::AddSceneItemToGroup(source::SceneItem *item,
+					   source::SceneItem::Category category)
+{
+	OBSSourceAutoRelease source = ValidateInput(item->Name());
+	if (source == nullptr)
+		return false;
+	obs_sceneitem_t *scene_item =
+		obs_scene_sceneitem_from_source(main_scene_->scene_, source);
+	if (scene_item == nullptr)
+		return false;
+
+	if (category == source::SceneItem::Category::kMain) {
+		obs_sceneitem_t *group =
+			obs_scene_get_group(main_scene_->scene_, kMainGroup);
+		if (group != nullptr) {
+			obs_sceneitem_group_add_item(group, scene_item);
+		}
+	} else if (category == source::SceneItem::Category::kPiP) {
+		obs_sceneitem_t *group =
+			obs_scene_get_group(main_scene_->scene_, kPiPGroup);
+		if (group != nullptr) {
+			obs_sceneitem_group_add_item(group, scene_item);
+		}
+	}
+}
+
 source::SceneItem *OBSSourceManager::GetSceneItemByName(std::string &name)
 {
 	if (!IsMainSceneCreated())
@@ -846,16 +910,17 @@ bool OBSSourceManager::SetStreamAddress(std::string &addr,
 }
 
 void OBSSourceManager::GetSteamAddress(std::string &address,
-				     std::string &username,
-		     std::string &passwd)
+				       std::string &username,
+				       std::string &passwd)
 {
 	OBSService currentStreamService = obs_frontend_get_streaming_service();
 	OBSDataAutoRelease currentStreamServiceSettings =
 		obs_service_get_settings(currentStreamService);
 
-  address = obs_data_get_string(currentStreamServiceSettings , "server");
-	username = obs_data_get_string(currentStreamServiceSettings, "username");
-  passwd = obs_data_get_string(currentStreamServiceSettings, "password");
+	address = obs_data_get_string(currentStreamServiceSettings, "server");
+	username =
+		obs_data_get_string(currentStreamServiceSettings, "username");
+	passwd = obs_data_get_string(currentStreamServiceSettings, "password");
 }
 
 bool OBSSourceManager::StartStreaming()
