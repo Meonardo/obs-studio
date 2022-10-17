@@ -577,3 +577,8 @@ void obs_frontend_toggle_main_window_hidden(bool hide)
 	if (callbacks_valid())
 		c->obs_frontend_toggle_main_window_hidden(hide);
 }
+
+bool obs_frontend_is_theme_dark(void)
+{
+	return !!callbacks_valid() ? c->obs_frontend_is_theme_dark() : false;
+}

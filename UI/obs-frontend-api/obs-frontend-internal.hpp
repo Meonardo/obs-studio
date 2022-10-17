@@ -147,6 +147,7 @@ struct obs_frontend_callbacks {
 	obs_frontend_get_locale_string(const char *string) = 0;
 
 	virtual void obs_frontend_toggle_main_window_hidden(bool hide) = 0;
+	virtual bool obs_frontend_is_theme_dark(void) = 0;
 };
 
 EXPORT void

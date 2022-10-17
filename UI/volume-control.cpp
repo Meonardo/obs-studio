@@ -296,27 +296,30 @@ VolControl::VolControl(OBSSource source_, bool showConfig, bool vertical)
 		if (showConfig)
 			textLayout->addWidget(config);
 
-
 		volLayout->setContentsMargins(0, 0, 0, 0);
 		volLayout->setSpacing(6 * getScale());
 		volLayout->addWidget(mute, 0, Qt::AlignVCenter);
 		volLayout->addWidget(slider, 1, Qt::AlignVCenter);
 		volLayout->addWidget(volLabel, 0, Qt::AlignVCenter);
-		
 
 		botLayout->setContentsMargins(0, 0, 0, 0);
-		botLayout->setSpacing(0);
-		botLayout->addLayout(volLayout);
+		botLayout->setSpacing(5);
+		botLayout->addWidget(slider);
+		botLayout->addWidget(mute);
+		botLayout->setAlignment(slider, Qt::AlignVCenter);
+		botLayout->setAlignment(mute, Qt::AlignVCenter);
 
 		mainLayout->addItem(textLayout);
 		mainLayout->addWidget(volMeter);
-		mainLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
+		mainLayout->addSpacerItem(
+			new QSpacerItem(1, 1, QSizePolicy::Expanding));
 		mainLayout->setStretch(2, 1);
 		mainLayout->addItem(botLayout);
 
 		QLabel *label_line = new QLabel();
 		label_line->setFixedHeight(1 * getScale());
-		label_line->setStyleSheet("QLabel{background-color: rgb(85, 85, 85);}");
+		label_line->setStyleSheet(
+			"QLabel{background-color: rgb(85, 85, 85);}");
 		mainLayout->addSpacerItem(new QSpacerItem(1, 11 * getScale(),
 							  QSizePolicy::Fixed));
 		mainLayout->addWidget(label_line);
@@ -786,7 +789,7 @@ VolumeMeter::VolumeMeter(QWidget *parent, obs_volmeter_t *obs_volmeter,
 	backgroundErrorColor.setRgb(0x7f, 0x26, 0x26);   // Dark red
 	foregroundNominalColor.setRgb(0x25, 0xbe, 0x9a); // Bright green
 	foregroundWarningColor.setRgb(0xff, 0xff, 0x4c); // Bright yellow
-	foregroundErrorColor.setRgb(0xff, 0x4c, 0x4c);   // Bright red 
+	foregroundErrorColor.setRgb(0xff, 0x4c, 0x4c);   // Bright red
 
 	setBackgroundNominalColor(backgroundNominalColor);
 	setForegroundNominalColor(foregroundNominalColor);
@@ -1078,7 +1081,8 @@ void VolumeMeter::paintHTicks(QPainter &painter, int x, int y, int width)
 	for (int i = 0; i >= minimumLevel; i--) {
 		int position = int(x + width - (i * scale) - 1);
 		if (i % 5 != 0)
-			painter.drawLine(position, y, position, y + 3 * getScale());
+			painter.drawLine(position, y, position,
+					 y + 3 * getScale());
 	}
 }
 
@@ -1124,6 +1128,19 @@ void VolumeMeter::ClipEnding()
 	clipping = false;
 }
 
+inline int VolumeMeter::convertToInt(float number)
+{
+	constexpr int min = std::numeric_limits<int>::min();
+	constexpr int max = std::numeric_limits<int>::max();
+
+	if (number > max)
+		return max;
+	else if (number < min)
+		return min;
+	else
+		return int(number);
+}
+
 void VolumeMeter::paintHMeter(QPainter &painter, int x, int y, int width,
 			      int height, float magnitude, float peak,
 			      float peakHold)
@@ -1133,11 +1150,11 @@ void VolumeMeter::paintHMeter(QPainter &painter, int x, int y, int width,
 	QMutexLocker locker(&dataMutex);
 	int minimumPosition = x + 0;
 	int maximumPosition = x + width;
-	int magnitudePosition = int(x + width - (magnitude * scale));
-	int peakPosition = int(x + width - (peak * scale));
-	int peakHoldPosition = int(x + width - (peakHold * scale));
-	int warningPosition = int(x + width - (warningLevel * scale));
-	int errorPosition = int(x + width - (errorLevel * scale));
+	int magnitudePosition = x + width - convertToInt(magnitude * scale);
+	int peakPosition = x + width - convertToInt(peak * scale);
+	int peakHoldPosition = x + width - convertToInt(peakHold * scale);
+	int warningPosition = x + width - convertToInt(warningLevel * scale);
+	int errorPosition = x + width - convertToInt(errorLevel * scale);
 
 	int nominalLength = warningPosition - minimumPosition;
 	int warningLength = errorPosition - warningPosition;
@@ -1245,11 +1262,11 @@ void VolumeMeter::paintVMeter(QPainter &painter, int x, int y, int width,
 	QMutexLocker locker(&dataMutex);
 	int minimumPosition = y + 0;
 	int maximumPosition = y + height;
-	int magnitudePosition = int(y + height - (magnitude * scale));
-	int peakPosition = int(y + height - (peak * scale));
-	int peakHoldPosition = int(y + height - (peakHold * scale));
-	int warningPosition = int(y + height - (warningLevel * scale));
-	int errorPosition = int(y + height - (errorLevel * scale));
+	int magnitudePosition = y + height - convertToInt(magnitude * scale);
+	int peakPosition = y + height - convertToInt(peak * scale);
+	int peakHoldPosition = y + height - convertToInt(peakHold * scale);
+	int warningPosition = y + height - convertToInt(warningLevel * scale);
+	int errorPosition = y + height - convertToInt(errorLevel * scale);
 
 	int nominalLength = warningPosition - minimumPosition;
 	int warningLength = errorPosition - warningPosition;
