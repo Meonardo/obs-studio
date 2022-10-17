@@ -10265,58 +10265,7 @@ void OBSBasic::ResetProxyStyleSliders()
 
 void OBSBasic::createUi()
 {
-	//this->setFixedWidth(1280 * getScale());
-	//this->setFixedHeight(768 * getScale());
-	////this->setAttribute(Qt::WA_TranslucentBackground, true);
 	this->setWindowFlags(Qt::FramelessWindowHint );
-
-	//QFrame *frame = new QFrame(ui->centralwidget);
-	//frame->setObjectName("mainframe");
-	//frame->setStyleSheet(QString("#mainframe {"
-	//				 "background-color: '#FFFFFF';"
-	//			     "border-radius: %1px;"
-	//			     "}").arg(12 * getScale()));
-
-	//QVBoxLayout *vlayout = new QVBoxLayout(ui->centralwidget);
-	//vlayout->setSpacing(0);
-	//vlayout->setMargin(0);
-	//vlayout->addWidget(frame);
-
-	///********** Title ***********/
-	//auto frame_top = new QFrame(frame);
-	//frame_top->setFixedHeight(70 * getScale());
-	//frame_top->setStyleSheet("QFrame{ background-color: transparent; }");
-
-	//auto label_title = new QLabel(frame_top);
-	//label_title->setText(tr("导播设置"));
-	//label_title->setStyleSheet(QString("QLabel{ color: '#222222'; %1}").arg(getFontStyle(22, FontWeight::Blod)));
-
-	//auto pBtn_fullScreen = new QLabel(frame_top);
-	//pBtn_fullScreen->setFixedSize(36 * getScale(), 36 * getScale());
-	//pBtn_fullScreen->setStyleSheet("QLabel{border-image: url(':/res/images/newUi/fullscreen@2x.png'); }");
-
-	//pBtn_close = new QLabel(frame_top);
-	//pBtn_close->setFixedSize(36 * getScale(), 36 * getScale());
-	//pBtn_close->setStyleSheet("QLabel{border-image: url(':/res/images/newUi/close@2x.png');}");
-	//pBtn_close->installEventFilter(this);
-
-	//auto layout_top = new QHBoxLayout(frame_top);
-	//layout_top->setSpacing(18 * getScale());
-	//layout_top->setContentsMargins(22 * getScale(), 0, 14 * getScale(), 0);
-	//layout_top->addWidget(label_title);
-	//layout_top->addWidget(pBtn_fullScreen);
-	//layout_top->addWidget(pBtn_close);
-	//
-
-	///****************** main ********************/
-	//auto frame_main= new QFrame(frame);
-	//frame_main->setStyleSheet("QFrame{background-color: '#222222';}");
-
-	//auto label = new QLabel(frame_main);
-	//label->setContentsMargins(16 * getScale(), 0, 0, 0);
-	//label->setFixedHeight(40 * getScale());
-	//label->setText(tr("直播窗口"));
-	//label->setStyleSheet(QString("QLabel{ background-color: '#444444'; color: '#FFFFFF';  %1}").arg(getFontStyle(14)));
 
 	auto titleBar = new TitleBar(QTStr("NewUi.Guide") + QTStr("NewUi.Settings"), this);
 	titleBar->setFixedHeight(30 * getScale());
@@ -10329,9 +10278,6 @@ void OBSBasic::createUi()
 	this->addDockWidget(Qt::BottomDockWidgetArea, allSettingsDocker);
 	
 	auto frame_tool = new QFrame(this);
-	//frame_tool->setFixedSize(this->width(), 284 * getScale());
-	//frame_tool->move((this->width() - frame_tool->width())/2,
-	//		 this->height() - frame_tool->height());
 	frame_tool->setObjectName("frame_tool");
 	frame_tool->setStyleSheet("#frame_tool{background-color: '#222222';}");
 
@@ -10342,22 +10288,6 @@ void OBSBasic::createUi()
 	emptyWidget->setFixedHeight(0);
 	allSettingsDocker->setTitleBarWidget(emptyWidget);
 	titleBarWidget->deleteLater();
-
-	this->resize(1280 * getScale(), 768 * getScale());
-	//auto layout_main = new QVBoxLayout(frame_main);
-	//int margin = 4 * getScale();
-	//layout_main->setContentsMargins(margin, margin, margin, margin);
-	//layout_main->setSpacing(1 * getScale());
-	//layout_main->addWidget(label, 0);
-	//layout_main->addWidget(ui->contextContainer, 1);
-	//layout_main->addWidget(frame_tool, 0);
-
-	//QVBoxLayout *frame_layout = new QVBoxLayout(frame);
-	//frame_layout->setSpacing(0);
-	//margin = 8 * getScale();
-	//frame_layout->setContentsMargins(margin, 0, margin, margin);
-	//frame_layout->addWidget(frame_top, 0);
-	//frame_layout->addWidget(frame_main, 1);
 
 	/**************** tool ******************/
 	auto toolbar = new OBSToolbar(frame_tool);
@@ -10375,28 +10305,27 @@ void OBSBasic::createUi()
 	layout_tool->addWidget(frame_panel);
 
 	scenePanel = new OBSPanel(QTStr("NewUi.MainScreen"), frame_panel);
-	scenePanel->setMinimumWidth(416 * getScale());
 	connect(scenePanel, &OBSPanel::addClicked, this, [=]() {
 		this->showSceneSettingsPanel(accrecorder::source::SceneItem::Category::kMain);
 	});
 
 	subScenePanel = new OBSPanel(QTStr("NewUi.Pip"), frame_panel);
-	subScenePanel->setMinimumWidth(416 * getScale());
 	connect(subScenePanel, &OBSPanel::addClicked, this, [=]() {
 		this->showSceneSettingsPanel(accrecorder::source::SceneItem::Category::kPiP);
 	});
 
 	audioPanel = new OBSPanel(QTStr("NewUi.AudioTrack"), frame_panel);
-	audioPanel->setMinimumWidth(416 * getScale());
 	connect(audioPanel, &OBSPanel::addClicked, this,
 		&OBSBasic::showAudioSettingsPanel);
 
-	auto layout_panel = new QHBoxLayout(frame_panel);
+	auto layout_panel = new QHBoxLayout();
 	layout_panel->setSpacing(6 * getScale());
 	layout_panel->setContentsMargins(0, 0, 0, 0);
 	layout_panel->addWidget(scenePanel);
 	layout_panel->addWidget(subScenePanel);
 	layout_panel->addWidget(audioPanel);
+	layout_panel->setSizeConstraint(QLayout::SetMinimumSize);
+	frame_panel->setLayout(layout_panel);
 
 	frame_cover = new QFrame(allSettingsDocker);
 	frame_cover->setWindowFlags(Qt::FramelessWindowHint);
@@ -10407,8 +10336,6 @@ void OBSBasic::createUi()
 
 void OBSBasic::initData()
 {
-	this->resize(1280 * getScale(), 768 * getScale());
-
 	sourceManager = new accrecorder::manager::OBSSourceManager;
 	scenePanel->setManager(sourceManager);
 	subScenePanel->setManager(sourceManager);
