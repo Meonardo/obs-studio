@@ -44,7 +44,8 @@ function Build-OBS {
         Write-Step "Done with generating solution file, please open sln file and build."
 
         Invoke-External explorer "${BuildDirectoryActual}"
-    } else {
+    }
+    else {
         Ensure-Directory ${CheckoutDir}
         Write-Step "Build OBS targets..."
 
@@ -69,7 +70,7 @@ function Configure-OBS {
     $BuildDirectoryActual = "${BuildDirectory}$(if (${BuildArch} -eq "x64") { "64" } else { "32" })"
     $GeneratorPlatform = "$(if (${BuildArch} -eq "x64") { "x64" } else { "Win32" })"
     
-    $QTDIR_BASE = "E:\\Qt\\5.15.2\"
+    $QTDIR_BASE = "D:\\Programs\\Qt\\5.15.2\"
     $QTDIR = "${QTDIR_BASE}$(if (${BuildArch} -eq "x64") { "msvc2019_64" } else { "msvc2019" })"
 
     $CmakeCommand = @(
@@ -130,9 +131,9 @@ function Print-Usage {
     $Lines | Write-Host
 }
 
-if(!(Test-Path variable:_RunObsBuildScript)) {
+if (!(Test-Path variable:_RunObsBuildScript)) {
     $_ScriptName = "$($MyInvocation.MyCommand.Name)"
-    if($Help.isPresent) {
+    if ($Help.isPresent) {
         Print-Usage
         exit 0
     }
