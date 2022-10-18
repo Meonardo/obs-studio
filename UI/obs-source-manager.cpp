@@ -530,8 +530,13 @@ void OBSSourceManager::ListCameraItems(
 		const char *id = obs_property_list_item_string(p, i);
 		blog(LOG_ERROR, "enum device id: %s, id=%s", name, id);
 
-		auto item = std::make_shared<source::CameraSceneItem>(
-			std::string(name));
+		std::string name_str(name);
+		if (name_str.find("screen-capture-recorder") !=
+			    std::string::npos ||
+		    name_str.find("Virtual Camera") !=
+			    std::string::npos)
+			    continue;
+		auto item = std::make_shared<source::CameraSceneItem>(name_str);
 		item->device_id_ = std::string(id);
 
 		// make a fake selection in order to get resolution properties
