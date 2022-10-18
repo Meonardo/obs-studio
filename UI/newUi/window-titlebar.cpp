@@ -4,7 +4,7 @@
 #include "font.hpp"
 
 TitleBar::TitleBar(const QString &title, QMainWindow *window)
-	:  mainWindow(window)
+	: mainWindow(window)
 {
 	QLabel *label_title = new QLabel(this);
 	label_title->setText(title);
@@ -22,7 +22,8 @@ TitleBar::TitleBar(const QString &title, QMainWindow *window)
 			.arg(pBtn_fullScreen->height()));
 	pBtn_fullScreen->installEventFilter(this);
 	pBtn_fullScreen->setMouseTracking(true);
-	connect(pBtn_fullScreen, &QPushButton::clicked, this, &TitleBar::pBtn_fullScreen_clicked_slot);
+	connect(pBtn_fullScreen, &QPushButton::clicked, this,
+		&TitleBar::pBtn_fullScreen_clicked_slot);
 
 	auto pBtn_close = new QPushButton(this);
 	pBtn_close->setFixedSize(20 * getScale(), 20 * getScale());
@@ -34,20 +35,16 @@ TitleBar::TitleBar(const QString &title, QMainWindow *window)
 			.arg(pBtn_fullScreen->height()));
 	pBtn_close->installEventFilter(this);
 	pBtn_close->setMouseTracking(true);
-	connect(pBtn_close, &QPushButton::clicked, this,
-		[=]() {
-			#if DEBUG
-			mainWindow->showMinimized();
-			#else
-			auto window = reinterpret_cast<OBSBasic *>(mainWindow);
-			if (window != nullptr)
-				window->ToggleMainWindowHide(true);
-			#endif
-		});
+	connect(pBtn_close, &QPushButton::clicked, this, [=]() {
+		auto window = reinterpret_cast<OBSBasic *>(mainWindow);
+		if (window != nullptr) {
+			window->OnClickedHide();
+		}
+	});
 
 	QHBoxLayout *layout_title = new QHBoxLayout(this);
-	layout_title->setContentsMargins(20 * getScale(), 0,
-			15 * getScale(), 0);
+	layout_title->setContentsMargins(20 * getScale(), 0, 15 * getScale(),
+					 0);
 	layout_title->setSpacing(10 * getScale());
 	layout_title->addWidget(label_title, 1, Qt::AlignVCenter);
 	layout_title->addWidget(pBtn_fullScreen, 0, Qt::AlignVCenter);
@@ -61,7 +58,7 @@ TitleBar::TitleBar(const QString &title, QMainWindow *window)
 	this->installEventFilter(this);
 	this->setMouseTracking(true);
 
-	borderWidth = 5 * getScale();	
+	borderWidth = 5 * getScale();
 }
 
 void TitleBar::mouseDoubleClickEvent(QMouseEvent *event)
@@ -80,7 +77,8 @@ bool TitleBar::eventFilter(QObject *obj, QEvent *event)
 			pressedPos = mouseevent->pos();
 			if (mainWindow->screen()->availableGeometry() ==
 			    mainWindow->geometry()) {
-				x_scale = (qreal)pressedPos.x() / mainWindow->width();
+				x_scale = (qreal)pressedPos.x() /
+					  mainWindow->width();
 			}
 
 			dragSize = true;
@@ -92,10 +90,12 @@ bool TitleBar::eventFilter(QObject *obj, QEvent *event)
 				dragDirection = DragDirection::DragVer;
 			else if (this->cursor() == QCursor(Qt::SizeHorCursor)) {
 				if (pressedPos.x() <= borderWidth)
-					dragDirection = DragDirection::DragHorLeft;
+					dragDirection =
+						DragDirection::DragHorLeft;
 				else
-					dragDirection = DragDirection::DragHorRight;
-			}else
+					dragDirection =
+						DragDirection::DragHorRight;
+			} else
 				dragSize = false;
 		}
 	} else if (obj == this && event->type() == QEvent::MouseButtonRelease) {
@@ -115,7 +115,7 @@ bool TitleBar::eventFilter(QObject *obj, QEvent *event)
 			if (pos.x() <= borderWidth && pos.y() <= borderWidth) {
 				this->setCursor(QCursor(Qt::SizeFDiagCursor));
 			} else if (pos.x() >= (this->width() - borderWidth) &&
-				   pos.y() <= borderWidth) { 
+				   pos.y() <= borderWidth) {
 				this->setCursor(QCursor(Qt::SizeBDiagCursor));
 			} else if (pos.y() < borderWidth) {
 				this->setCursor(QCursor(Qt::SizeVerCursor));
@@ -134,32 +134,39 @@ bool TitleBar::eventFilter(QObject *obj, QEvent *event)
 			QRect rect = mainWindow->geometry();
 			if (dragDirection == DragDirection::DragHorLeft) {
 				rect.setLeft(globalPos.x() - pressedPos.x());
-			} else if (dragDirection == DragDirection::DragHorRight) {
+			} else if (dragDirection ==
+				   DragDirection::DragHorRight) {
 				//rect.setRight(globalPos.x() + mainWindow->width() - pressedPos.x());
 				rect.setRight(globalPos.x());
 			} else if (dragDirection == DragDirection::DragVer) {
 				rect.setTop(globalPos.y());
 			} else if (dragDirection == DragDirection::DragFDiag) {
-				rect.setTopLeft(QPoint(globalPos.x() - pressedPos.x(), globalPos.y() - pressedPos.y()));
+				rect.setTopLeft(
+					QPoint(globalPos.x() - pressedPos.x(),
+					       globalPos.y() - pressedPos.y()));
 			} else if (dragDirection == DragDirection::DragBDiag) {
-				rect.setTopRight(QPoint(globalPos.x() + mainWindow->width() - pressedPos.x(),
+				rect.setTopRight(QPoint(
+					globalPos.x() + mainWindow->width() -
+						pressedPos.x(),
 					globalPos.y() - pressedPos.y()));
 			}
 			if (rect.width() >= mainWindow->minimumWidth() &&
 			    rect.height() >= mainWindow->minimumHeight()) {
-				if (dragDirection == DragDirection::DragHorRight ||
+				if (dragDirection ==
+					    DragDirection::DragHorRight ||
 				    dragDirection == DragDirection::DragBDiag) {
-					pressedPos.setX(pressedPos.x() + rect.right() - mainWindow->geometry().right());
+					pressedPos.setX(
+						pressedPos.x() + rect.right() -
+						mainWindow->geometry().right());
 				}
 				mainWindow->setGeometry(rect);
 			}
 			return true;
-		}
-		else
-		{
+		} else {
 			y_offset = globalPos.y() - pressedPos.y();
 			QScreen *screen = mainWindow->screen();
-			if (screen->availableGeometry() == mainWindow->geometry()) {
+			if (screen->availableGeometry() ==
+			    mainWindow->geometry()) {
 				int x, y, w, h;
 				if (mainWindow->property("normal_width")
 					    .toInt() <= 0) {
@@ -187,10 +194,10 @@ bool TitleBar::eventFilter(QObject *obj, QEvent *event)
 			x_offset = globalPos.x() - pressedPos.x();
 			mainWindow->move(x_offset, y_offset);
 		}
-	}else if (obj != this && event->type() == QEvent::MouseMove) {
+	} else if (obj != this && event->type() == QEvent::MouseMove) {
 		this->setCursor(Qt::ArrowCursor);
 		return true;
-	} 
+	}
 	return QWidget::eventFilter(obj, event);
 }
 
@@ -222,4 +229,3 @@ void TitleBar::pBtn_fullScreen_clicked_slot()
 		mainWindow->setGeometry(screen->availableGeometry());
 	}
 }
-

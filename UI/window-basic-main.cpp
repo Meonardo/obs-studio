@@ -76,7 +76,6 @@
 #include <fstream>
 #include <sstream>
 
-
 #ifdef _WIN32
 #include "win-update/win-update.hpp"
 #include "windows.h"
@@ -727,7 +726,7 @@ void OBSBasic::Save(const char *file)
 	OBSScene scene = GetCurrentScene();
 	OBSSource curProgramScene = OBSGetStrongRef(programScene);
 	if (!curProgramScene)
-		curProgramScene = obs_scene_get_source(scene); 
+		curProgramScene = obs_scene_get_source(scene);
 
 	OBSDataArrayAutoRelease sceneOrder = SaveSceneListOrder();
 	OBSDataArrayAutoRelease transitions = SaveTransitions();
@@ -2279,7 +2278,8 @@ void OBSBasic::ShowWhatsNew(const QString &url)
 	dlg->resize(700, 600);
 
 	Qt::WindowFlags flags = dlg->windowFlags();
-	Qt::WindowFlags helpFlag = Qt::WindowContextHelpButtonHint | Qt::WindowCloseButtonHint;
+	Qt::WindowFlags helpFlag = Qt::WindowContextHelpButtonHint |
+				   Qt::WindowCloseButtonHint;
 	dlg->setWindowFlags(flags & (~helpFlag));
 
 	QCefWidget *cefWidget = cef->create_widget(nullptr, info_url);
@@ -3442,9 +3442,9 @@ void OBSBasic::VolControlContextMenu()
 {
 	VolControl *vol = reinterpret_cast<VolControl *>(sender());
 	std::string name = obs_source_get_name(vol->GetSource());
-  sourceManager->RemoveSceneItemByName(name);
+	sourceManager->RemoveSceneItemByName(name);
 
-  DeactivateAudioSource(vol->GetSource());
+	DeactivateAudioSource(vol->GetSource());
 }
 
 void OBSBasic::on_hMixerScrollArea_customContextMenuRequested()
@@ -3575,7 +3575,7 @@ void OBSBasic::ActivateAudioSource(OBSSource source)
 	InsertQObjectByName(volumes, vol);
 
 	for (auto volume : volumes) {
-		if (audioPanel != nullptr) 
+		if (audioPanel != nullptr)
 			audioPanel->addAudioItem(volume);
 		/*if (vertical)
 			ui->vVolControlLayout->addWidget(volume);
@@ -7536,12 +7536,19 @@ void OBSBasic::OnVirtualCamStop(int)
 	OnDeactivate();
 }
 
+void OBSBasic::OnClickedHide()
+{
+	api->on_event(OBS_FRONTEND_EVENT_MAIN_WINDOW_CLICK_HIDE);
+#if DEBUG
+	this->showMinimized();
+#else
+	ToggleMainWindowHide(true);
+#endif
+}
+
 void OBSBasic::ToggleMainWindowHide(bool hide)
 {
 	ToggleShowHide();
-
-	if (previewEnabled)
-		EnablePreviewDisplay(!hide);
 }
 
 void OBSBasic::on_streamButton_clicked()
@@ -10265,9 +10272,10 @@ void OBSBasic::ResetProxyStyleSliders()
 
 void OBSBasic::createUi()
 {
-	this->setWindowFlags(Qt::FramelessWindowHint );
+	this->setWindowFlags(Qt::FramelessWindowHint);
 
-	auto titleBar = new TitleBar(QTStr("NewUi.Guide") + QTStr("NewUi.Settings"), this);
+	auto titleBar = new TitleBar(
+		QTStr("NewUi.Guide") + QTStr("NewUi.Settings"), this);
 	titleBar->setFixedHeight(30 * getScale());
 	QVBoxLayout *mainLayout = (QVBoxLayout *)ui->centralwidget->layout();
 	mainLayout->insertWidget(0, titleBar);
@@ -10276,7 +10284,7 @@ void OBSBasic::createUi()
 	allSettingsDocker = new OBSDock(this);
 	allSettingsDocker->installEventFilter(this);
 	this->addDockWidget(Qt::BottomDockWidgetArea, allSettingsDocker);
-	
+
 	auto frame_tool = new QFrame(this);
 	frame_tool->setObjectName("frame_tool");
 	frame_tool->setStyleSheet("#frame_tool{background-color: '#222222';}");
@@ -10292,7 +10300,8 @@ void OBSBasic::createUi()
 	/**************** tool ******************/
 	auto toolbar = new OBSToolbar(frame_tool);
 	toolbar->setFixedHeight(40 * getScale());
-	connect(toolbar, &OBSToolbar::showStreamPanel, this, &OBSBasic::showStreamingPanel);
+	connect(toolbar, &OBSToolbar::showStreamPanel, this,
+		&OBSBasic::showStreamingPanel);
 
 	auto frame_panel = new QFrame(frame_tool);
 	frame_panel->setStyleSheet("QFrame{background-color: transparent;}");
@@ -10306,12 +10315,14 @@ void OBSBasic::createUi()
 
 	scenePanel = new OBSPanel(QTStr("NewUi.MainScreen"), frame_panel);
 	connect(scenePanel, &OBSPanel::addClicked, this, [=]() {
-		this->showSceneSettingsPanel(accrecorder::source::SceneItem::Category::kMain);
+		this->showSceneSettingsPanel(
+			accrecorder::source::SceneItem::Category::kMain);
 	});
 
 	subScenePanel = new OBSPanel(QTStr("NewUi.Pip"), frame_panel);
 	connect(subScenePanel, &OBSPanel::addClicked, this, [=]() {
-		this->showSceneSettingsPanel(accrecorder::source::SceneItem::Category::kPiP);
+		this->showSceneSettingsPanel(
+			accrecorder::source::SceneItem::Category::kPiP);
 	});
 
 	audioPanel = new OBSPanel(QTStr("NewUi.AudioTrack"), frame_panel);
@@ -10330,7 +10341,8 @@ void OBSBasic::createUi()
 	frame_cover = new QFrame(allSettingsDocker);
 	frame_cover->setWindowFlags(Qt::FramelessWindowHint);
 	frame_cover->setStyleSheet("QFrame{background-color: transparent;}");
-	frame_cover->setFixedSize(allSettingsDocker->width(), allSettingsDocker->height());
+	frame_cover->setFixedSize(allSettingsDocker->width(),
+				  allSettingsDocker->height());
 	frame_cover->hide();
 }
 
@@ -10346,46 +10358,57 @@ void OBSBasic::initData()
 	sourceManager->AvailableSceneItems(items);
 
 	int i = 0;
-	foreach(auto item, items) {
-		if (item->category() ==  accrecorder::source::SceneItem::Category::kMain) {
+	foreach(auto item, items)
+	{
+		if (item->category() ==
+		    accrecorder::source::SceneItem::Category::kMain) {
 			scenePanel->addItem(item);
-		}else if (item->category() ==  accrecorder::source::SceneItem::Category::kPiP) {
+		} else if (item->category() ==
+			   accrecorder::source::SceneItem::Category::kPiP) {
 			subScenePanel->addItem(item);
-		} else if (item->category() ==  accrecorder::source::SceneItem::Category::kDefault) {
+		} else if (item->category() ==
+			   accrecorder::source::SceneItem::Category::kDefault) {
 		}
 	}
 }
 
 bool OBSBasic::eventFilter(QObject *obj, QEvent *event)
 {
-	if (obj == allSettingsDocker && event->type() == QEvent::Resize && frame_cover != nullptr)
-		frame_cover->setFixedSize(allSettingsDocker->width(), allSettingsDocker->height());
+	if (obj == allSettingsDocker && event->type() == QEvent::Resize &&
+	    frame_cover != nullptr)
+		frame_cover->setFixedSize(allSettingsDocker->width(),
+					  allSettingsDocker->height());
 
 	return OBSMainWindow::eventFilter(obj, event);
 }
 
-void OBSBasic::showSceneSettingsPanel(accrecorder::source::SceneItem::Category categoty)
+void OBSBasic::showSceneSettingsPanel(
+	accrecorder::source::SceneItem::Category categoty)
 {
 	auto panel = new ScenesSettingsPanel(sourceManager, categoty);
-	
-	connect(panel, &ScenesSettingsPanel::attachFinished, this, [=](
-			accrecorder::source::SceneItem *item, accrecorder::source::SceneItem::Category category) {
-		if (category == accrecorder::source::SceneItem::Category::kMain) {
-			scenePanel->addItem(item);
-			scenePanel->setFirstItemChecked();
-		}else if (category == accrecorder::source::SceneItem::Category::kPiP) {
-			subScenePanel->addItem(item);
-			subScenePanel->setFirstItemChecked();
-		}
-		panel->deleteLater();
-	});
+
+	connect(panel, &ScenesSettingsPanel::attachFinished, this,
+		[=](accrecorder::source::SceneItem *item,
+		    accrecorder::source::SceneItem::Category category) {
+			if (category ==
+			    accrecorder::source::SceneItem::Category::kMain) {
+				scenePanel->addItem(item);
+				scenePanel->setFirstItemChecked();
+			} else if (category == accrecorder::source::SceneItem::
+						       Category::kPiP) {
+				subScenePanel->addItem(item);
+				subScenePanel->setFirstItemChecked();
+			}
+			panel->deleteLater();
+		});
 	panel->setFixedSize(612 * getScale(), 496 * getScale());
 	panel->move(this->x() + (this->width() - panel->width()) / 2,
 		    this->y() + (this->height() - panel->height()) / 2);
 	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
 	panel->show();
 
-	connect(panel, &ScenesSettingsPanel::destroyed, frame_cover, &QFrame::hide);
+	connect(panel, &ScenesSettingsPanel::destroyed, frame_cover,
+		&QFrame::hide);
 	frame_cover->show();
 }
 
@@ -10398,7 +10421,8 @@ void OBSBasic::showAudioSettingsPanel()
 	panel->setWindowFlag(Qt::WindowStaysOnTopHint);
 	panel->show();
 
-	connect(panel, &AudioSettingsPanel::destroyed, frame_cover, &QFrame::hide);
+	connect(panel, &AudioSettingsPanel::destroyed, frame_cover,
+		&QFrame::hide);
 	frame_cover->show();
 }
 
