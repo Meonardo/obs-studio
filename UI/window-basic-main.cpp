@@ -8870,63 +8870,63 @@ int OBSBasic::GetProfilePath(char *path, size_t size, const char *file) const
 
 void OBSBasic::on_resetDocks_triggered(bool force)
 {
-	/* prune deleted extra docks */
-	for (int i = extraDocks.size() - 1; i >= 0; i--) {
-		if (!extraDocks[i]) {
-			extraDocks.removeAt(i);
-		}
-	}
+	///* prune deleted extra docks */
+	//for (int i = extraDocks.size() - 1; i >= 0; i--) {
+	//	if (!extraDocks[i]) {
+	//		extraDocks.removeAt(i);
+	//	}
+	//}
 
-	if (extraDocks.size() && !force) {
-		QMessageBox::StandardButton button = QMessageBox::question(
-			this, QTStr("ResetUIWarning.Title"),
-			QTStr("ResetUIWarning.Text"));
+	//if (extraDocks.size() && !force) {
+	//	QMessageBox::StandardButton button = QMessageBox::question(
+	//		this, QTStr("ResetUIWarning.Title"),
+	//		QTStr("ResetUIWarning.Text"));
 
-		if (button == QMessageBox::No)
-			return;
-	}
+	//	if (button == QMessageBox::No)
+	//		return;
+	//}
 
-	/* undock/hide/center extra docks */
-	for (int i = extraDocks.size() - 1; i >= 0; i--) {
-		if (extraDocks[i]) {
-			extraDocks[i]->setVisible(true);
-			extraDocks[i]->setFloating(true);
-			extraDocks[i]->move(frameGeometry().topLeft() +
-					    rect().center() -
-					    extraDocks[i]->rect().center());
-			extraDocks[i]->setVisible(false);
-		}
-	}
+	///* undock/hide/center extra docks */
+	//for (int i = extraDocks.size() - 1; i >= 0; i--) {
+	//	if (extraDocks[i]) {
+	//		extraDocks[i]->setVisible(true);
+	//		extraDocks[i]->setFloating(true);
+	//		extraDocks[i]->move(frameGeometry().topLeft() +
+	//				    rect().center() -
+	//				    extraDocks[i]->rect().center());
+	//		extraDocks[i]->setVisible(false);
+	//	}
+	//}
 
-	restoreState(startingDockLayout);
+	//restoreState(startingDockLayout);
 
-	int cx = width();
-	int cy = height();
+	//int cx = width();
+	//int cy = height();
 
-	int cx22_5 = cx * 225 / 1000;
-	int cx5 = cx * 5 / 100;
-	int cx21 = cx * 21 / 100;
+	//int cx22_5 = cx * 225 / 1000;
+	//int cx5 = cx * 5 / 100;
+	//int cx21 = cx * 21 / 100;
 
-	cy = cy * 225 / 1000;
+	//cy = cy * 225 / 1000;
 
-	int mixerSize = cx - (cx22_5 * 2 + cx5 + cx21);
+	//int mixerSize = cx - (cx22_5 * 2 + cx5 + cx21);
 
-	QList<QDockWidget *> docks{ui->scenesDock, ui->sourcesDock,
-				   ui->mixerDock, ui->transitionsDock,
-				   ui->controlsDock};
+	//QList<QDockWidget *> docks{ui->scenesDock, ui->sourcesDock,
+	//			   ui->mixerDock, ui->transitionsDock,
+	//			   ui->controlsDock};
 
-	QList<int> sizes{cx22_5, cx22_5, mixerSize, cx5, cx21};
+	//QList<int> sizes{cx22_5, cx22_5, mixerSize, cx5, cx21};
 
-	ui->scenesDock->setVisible(true);
-	ui->sourcesDock->setVisible(true);
-	ui->mixerDock->setVisible(true);
-	ui->transitionsDock->setVisible(true);
-	ui->controlsDock->setVisible(true);
-	statsDock->setVisible(false);
-	statsDock->setFloating(true);
+	//ui->scenesDock->setVisible(true);
+	//ui->sourcesDock->setVisible(true);
+	//ui->mixerDock->setVisible(true);
+	//ui->transitionsDock->setVisible(true);
+	//ui->controlsDock->setVisible(true);
+	//statsDock->setVisible(false);
+	//statsDock->setFloating(true);
 
-	resizeDocks(docks, {cy, cy, cy, cy, cy}, Qt::Vertical);
-	resizeDocks(docks, sizes, Qt::Horizontal);
+	//resizeDocks(docks, {cy, cy, cy, cy, cy}, Qt::Vertical);
+	//resizeDocks(docks, sizes, Qt::Horizontal);
 
 	activateWindow();
 }
