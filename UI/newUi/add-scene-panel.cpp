@@ -1078,11 +1078,10 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 
 		if (sourceManager->ApplySceneItemSettingsUpdate(screen))
 			emit attachFinished(screen, itemCategory);
-		this->close();
-	} else {
-		this->close();
-		this->deleteLater();
 	}
+
+	this->close();
+	this->deleteLater();
 }
 
 /*********************************** Add audio panel *******************************************/
