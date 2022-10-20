@@ -640,7 +640,9 @@ void OBSSourceManager::ListAudioItems(
 		QString q_name(name);
 		auto comp_str = QTStr("Basic.Settings.Advanced.Audio.MonitoringDevice.Default");
 		// do not show default device for now
-		if (q_name == comp_str)
+		if (q_name == comp_str ||
+		    q_name.contains("virtual-audio-capturer") ||
+		    q_name.contains("VB-Audio Virtual Cable"))
 			continue;
 		if (input) {
 			auto item = std::make_shared<source::AudioInputItem>(
