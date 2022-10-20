@@ -850,8 +850,8 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 	vec2 newPosition = item->GetSettings().pos;
 	if (newPosition.x >= 0 && newPosition.y >= 0) {
 		obs_sceneitem_set_pos(sceneItem, &newPosition);
+		obs_sceneitem_set_alignment(sceneItem, 5);
 	}
-	obs_sceneitem_set_alignment(sceneItem, 5);
 	// scale
 	vec2 newScale = item->GetSettings().scale;
 	if (newScale.x > 0 && newScale.y > 0) {
