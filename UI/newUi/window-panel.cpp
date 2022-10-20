@@ -202,7 +202,8 @@ void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 		hscrollArea->verticalScrollBar()->setValue(
 			scrollAreaContentWidget->height());
 
-		checkBoxGroup->removeButton(pitem->getCheckButton());
+		if (item->category() == accrecorder::source::SceneItem::Category::kMain)
+			checkBoxGroup->removeButton(pitem->getCheckButton());
 		pitem->deleteLater();
 
 		for (int i = 0; i < itemCount; i++) { //Reorder
@@ -211,7 +212,8 @@ void OBSPanel::addItem(accrecorder::source::SceneItem *item)
 	});
 
 	contentWidgetLayout->insertWidget(itemCount, panelItem);
-	checkBoxGroup->addButton(panelItem->getCheckButton());
+	if (item->category() == accrecorder::source::SceneItem::Category::kMain)
+		checkBoxGroup->addButton(panelItem->getCheckButton());
 	contentWidgetLayout->setStretch(contentWidgetLayout->count() - 1, 1);
 
 	itemCount++;
