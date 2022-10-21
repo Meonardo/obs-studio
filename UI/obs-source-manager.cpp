@@ -605,7 +605,8 @@ void OBSSourceManager::ListCameraItems(
 }
 
 void OBSSourceManager::ListAudioItems(
-	std::vector<std::shared_ptr<source::AudioSceneItem>> &items, bool input)
+	std::vector<std::shared_ptr<source::AudioSceneItem>> &items, bool input,
+	bool disableFilter)
 {
 	std::string uuid = utils::GetUUID();
 	const char *tmpName = uuid.c_str();
@@ -640,10 +641,15 @@ void OBSSourceManager::ListAudioItems(
 		QString q_name(name);
 		auto comp_str = QTStr("Basic.Settings.Advanced.Audio.MonitoringDevice.Default");
 		// do not show default device for now
-		if (q_name == comp_str ||
-		    q_name.contains("virtual-audio-capturer") ||
-		    q_name.contains("VB-Audio Virtual Cable"))
+		if (q_name == comp_str)
 			continue;
+		// filter specific devices if need
+		if (!disableFilter) {
+			if (q_name.contains("virtual-audio-capturer") ||
+			    q_name.contains("VB-Audio Virtual Cable"))
+				continue;
+		}
+
 		if (input) {
 			auto item = std::make_shared<source::AudioInputItem>(
 				std::string(name));
@@ -736,7 +742,7 @@ bool OBSSourceManager::AddAudioMixFilter(source::AudioSceneItem *item)
 	}
 
 	std::vector<std::shared_ptr<source::AudioSceneItem>> outputItems;
-	ListAudioItems(outputItems, false);
+	ListAudioItems(outputItems, false, true);
 	if (outputItems.empty()) {
 		blog(LOG_ERROR, "can not find mix device!");
 		return false;
@@ -754,7 +760,7 @@ bool OBSSourceManager::AddAudioMixFilter(source::AudioSceneItem *item)
 
 	std::string mixDeviceId;
 	for (const auto &item : outputItems) {
-		if (item->Name() == "CABLE Input (VB-Audio Virtual Cable)") {
+		if (item->Name().find("VB-Audio Virtual Cable") != std::string::npos) {
 			mixDeviceId = item->device_id_;
 			break;
 		}

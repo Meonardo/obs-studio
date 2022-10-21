@@ -119,14 +119,15 @@ void ComboBoxView::addItems(QStringList textList, QList<int> titleIndexList)
 		listWidget->setItemWidget(item, itemWidget);
 		itemMap.insert(item, itemWidget);
 		itemGroup->addButton(itemWidget->getBtn());
-		foreach(int titleIndex, titleIndexList) {
+		foreach(int titleIndex, titleIndexList)
+		{
 			if (titleIndex == i)
 				itemWidget->setBtnEnabled(false);
 		}
 		if (titleIndexList.size() > 0 && 1 == i)
 			firstItem = itemWidget->getBtn();
 		else if (i == 0)
-			firstItem = itemWidget->getBtn();	
+			firstItem = itemWidget->getBtn();
 	}
 
 	itemCount = textList.size();
@@ -569,11 +570,10 @@ void USBCameraSettingsWidget::initData(
 accrecorder::source::CameraSceneItem *
 USBCameraSettingsWidget::getCurrentCameraSource()
 {
-	if (usbCameraSource.size() <= 0 )
+	if (usbCameraSource.size() <= 0)
 		return nullptr;
 
-	return usbCameraSource[combobox_cameraName
-				       ->currentIndex()].get();
+	return usbCameraSource[combobox_cameraName->currentIndex()].get();
 }
 
 void USBCameraSettingsWidget::updateDataSourceIfNeed(
@@ -820,7 +820,7 @@ ScenesSettingsPanel::ScenesSettingsPanel(
 	accrecorder::manager::OBSSourceManager *manager,
 	accrecorder::source::SceneItem::Category categroy, QWidget *parent)
 	: sourceManager(manager), itemCategory(categroy), BasicPanel(parent)
-{	
+{
 	this->initUi();
 	this->installEventFilter(this);
 	this->initData();
@@ -1013,7 +1013,7 @@ void ScenesSettingsPanel::initUi()
 void ScenesSettingsPanel::initData()
 {
 	sceneItems = std::vector<
-			std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
+		std::shared_ptr<accrecorder::source::ScreenSceneItem>>();
 	//cameraItems = std::vector<
 	//		std::shared_ptr<accrecorder::source::CameraSceneItem>>();
 	sourceManager->ListScreenItems(sceneItems);
@@ -1034,12 +1034,13 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 		screen = new accrecorder::source::ScreenSceneItem(
 			*sceneItems[sceneSettingsWidget->getSceneIndex()].get());
 	} else if (1 == stackedWidget->currentIndex()) { // RTSP camera
-		QString strRtsp = QString::fromStdString(ipCameraSettingsWidget->getRTSPURL());
+		QString strRtsp = QString::fromStdString(
+			ipCameraSettingsWidget->getRTSPURL());
 		if (strRtsp.isEmpty()) {
 			ipCameraSettingsWidget->setEmptyStyle();
 			return;
 		}
-		
+
 		screen = new accrecorder::source::IPCameraSceneItem(
 			ipCameraSettingsWidget->getCameraName(),
 			ipCameraSettingsWidget->getRTSPURL(), true);
@@ -1047,7 +1048,7 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 		accrecorder::source::CameraSceneItem *cameraSource =
 			usbCameraSettingsWidget->getCurrentCameraSource();
 		if (cameraSource == nullptr)
-			return; 
+			return;
 		screen = new accrecorder::source::CameraSceneItem(
 			*usbCameraSettingsWidget->getCurrentCameraSource());
 	}
@@ -1151,12 +1152,23 @@ void AudioSettingsPanel::initUi()
 			.arg(getFontStyle(16)));
 	connect(pBtnYes, &QPushButton::clicked, this, [=]() {
 		// copy
-		auto input = new accrecorder::source::AudioInputItem(
-			*reinterpret_cast<accrecorder::source::AudioInputItem *>(
-				allAudioItems[combobox_audio->currentIndex()].get()));
-		if (sourceManager->AttachSceneItem(input)) {
-			// success
+		auto audioItem =
+			allAudioItems[combobox_audio->currentIndex()].get();
+		if (dynamic_cast<accrecorder::source::AudioInputItem *>(
+			    audioItem)) {
+			auto input = new accrecorder::source::AudioInputItem(
+				*reinterpret_cast<
+					accrecorder::source::AudioInputItem *>(
+					audioItem));
+			sourceManager->AttachSceneItem(input);
+		} else {
+			auto output = new accrecorder::source::AudioOutputItem(
+				*reinterpret_cast<
+					accrecorder::source::AudioOutputItem *>(
+					audioItem));
+			sourceManager->AttachSceneItem(output);
 		}
+
 		this->close();
 		this->deleteLater();
 	});
@@ -1165,10 +1177,12 @@ void AudioSettingsPanel::initUi()
 void AudioSettingsPanel::initData()
 {
 	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>
-		audioInuputItems = std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+		audioInuputItems = std::vector<
+			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
 	std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>
-		audioOutputItems = std::vector<std::shared_ptr<accrecorder::source::AudioSceneItem>>();
-	
+		audioOutputItems = std::vector<
+			std::shared_ptr<accrecorder::source::AudioSceneItem>>();
+
 	sourceManager->ListAudioItems(audioInuputItems);
 	sourceManager->ListAudioItems(audioOutputItems, false);
 	QStringList nameList;
@@ -1178,7 +1192,7 @@ void AudioSettingsPanel::initData()
 		titleIndexList.append(0);
 		nameList.append(QTStr("NewUi.AudioInput"));
 		allAudioItems.append(nullptr);
-	}	
+	}
 	foreach(auto item, audioInuputItems)
 	{
 		nameList.append(QString::fromStdString(item->Name()));

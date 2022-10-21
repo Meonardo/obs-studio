@@ -41,7 +41,7 @@ public:
 	// list all AudioInputDevices & AudioOutputDevices
 	void ListAudioItems(
 		std::vector<std::shared_ptr<source::AudioSceneItem>> &items,
-		bool input = true);
+		bool input = true, bool disableFilter = false);
 
 	// find the scene item by the given name
 	source::SceneItem *GetSceneItemByName(std::string &name);
