@@ -88,6 +88,12 @@ else()
   obs_status(FATAL_ERROR "obs-websocket submodule not available.")
 endif()
 
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/janus-videoroom/CMakeLists.txt)
+  add_subdirectory(janus-videoroom)
+else()
+  obs_status(FATAL_ERROR "janus-videoroom submodule not available.")
+endif()
+
 add_subdirectory(image-source)
 add_subdirectory(obs-x264)
 add_subdirectory(obs-libfdk)

@@ -70,8 +70,9 @@ function Configure-OBS {
     $BuildDirectoryActual = "${BuildDirectory}$(if (${BuildArch} -eq "x64") { "64" } else { "32" })"
     $GeneratorPlatform = "$(if (${BuildArch} -eq "x64") { "x64" } else { "Win32" })"
     
-    $QTDIR_BASE = "D:\\Programs\\Qt\\5.15.2\"
+    $QTDIR_BASE = "D:\Programs\Qt\5.15.2\"
     $QTDIR = "${QTDIR_BASE}$(if (${BuildArch} -eq "x64") { "msvc2019_64" } else { "msvc2019" })"
+    $LIBWEBRTC = "D:\File\WebRTC\LibWebRTC\src"
 
     $CmakeCommand = @(
         "-G", ${CmakeGenerator}
@@ -80,6 +81,7 @@ function Configure-OBS {
         "-DCMAKE_PREFIX_PATH:PATH=`"${CmakePrefixPath}`"",
         "-DCEF_ROOT_DIR:PATH=`"${CefDirectory}`"",
         "-DQTDIR:PATH=`"${QTDIR}`"",
+        "-DLIBWEBRTCDIR:PATH=`"${LIBWEBRTC}`"",
         "-DENABLE_BROWSER=ON",
         "-DVLC_PATH:PATH=`"${CheckoutDir}/../obs-build-dependencies/vlc-${WindowsVlcVersion}`"",
         "-DENABLE_VLC=ON",
