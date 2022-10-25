@@ -363,26 +363,25 @@ bool OBSSourceManager::AttachSceneItem(source::SceneItem *item,
 	item->SetCategory(category);
 	main_scene_->Attach(item, category);
 
-	// add audio monitor filter by default
-	if (dynamic_cast<source::AudioSceneItem *>(item)) {
-		auto audioItem = dynamic_cast<source::AudioSceneItem *>(item);
-		AddAudioMixFilter(audioItem);
-	} else {
-		// add to its group by default after attached to the scene
-		// AddSceneItemToGroup(item, category);
-		if (category == source::SceneItem::Category::kMain) {
-			int idx = main_scene_->FindFirstPiPSceneItemIndex();
-			if (idx >= 0) {
-				auto sceneItem =
-					obs_scene_find_sceneitem_by_id(main_scene_->scene_, item->SceneID());
-				if (sceneItem != nullptr) {
-					obs_sceneitem_set_order_position(
-						sceneItem, idx);
-				}
+	// add to its group by default after attached to the scene
+	// AddSceneItemToGroup(item, category);
+	if (category == source::SceneItem::Category::kMain) {
+		int idx = main_scene_->FindFirstPiPSceneItemIndex();
+		if (idx >= 0) {
+			auto sceneItem = obs_scene_find_sceneitem_by_id(
+				main_scene_->scene_, item->SceneID());
+			if (sceneItem != nullptr) {
+				obs_sceneitem_set_order_position(sceneItem,
+								 idx);
 			}
 		}
 	}
 
+	// add audio monitor filter by default
+	/*if (dynamic_cast<source::AudioSceneItem *>(item)) {
+		auto audioItem = dynamic_cast<source::AudioSceneItem *>(item);
+		AddAudioMixFilter(audioItem);
+	}*/
 	return true;
 }
 
@@ -448,7 +447,7 @@ bool OBSSourceManager::ApplySceneItemSettingsUpdate(source::SceneItem *item)
 void OBSSourceManager::ListScreenItems(
 	std::vector<std::shared_ptr<source::ScreenSceneItem>> &items)
 {
-	std::string uuid = utils::GetUUID();
+	std::string uuid = utils::GetUUID() + "(tmp)";
 	const char *tmpName = uuid.c_str();
 	const char *prop_name = "monitor";
 	const char *kind = "monitor_capture";
@@ -504,7 +503,7 @@ OBSSourceManager::CreateIPCameraItem(std::string &name, std::string &url)
 void OBSSourceManager::ListCameraItems(
 	std::vector<std::shared_ptr<source::CameraSceneItem>> &items)
 {
-	std::string uuid = utils::GetUUID();
+	std::string uuid = utils::GetUUID() + "(tmp)";
 	const char *tmpName = uuid.c_str();
 
 	const char *kind = "dshow_input";
@@ -608,7 +607,7 @@ void OBSSourceManager::ListAudioItems(
 	std::vector<std::shared_ptr<source::AudioSceneItem>> &items, bool input,
 	bool disableFilter)
 {
-	std::string uuid = utils::GetUUID();
+	std::string uuid = utils::GetUUID() + "(tmp)";
 	const char *tmpName = uuid.c_str();
 
 	const char *prop_name = "device_id";
