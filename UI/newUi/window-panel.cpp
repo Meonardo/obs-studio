@@ -2,6 +2,7 @@
 
 #include <qpushbutton.h>
 #include <qscrollbar.h>
+#include <qscroller.h>
 #include "font.hpp"
 
 OBSPanelItem::OBSPanelItem(int type, const QString &name, int index,
@@ -366,6 +367,17 @@ void OBSPanel::initUi()
 	hscrollArea->setWidget(scrollAreaContentWidget);
 	hscrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 	hscrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	QScroller::grabGesture(hscrollArea->viewport(),
+			       QScroller::LeftMouseButtonGesture);
+	QVariant OvershootPolicy = QVariant::fromValue<QScrollerProperties::OvershootPolicy>(
+			QScrollerProperties::OvershootAlwaysOff);
+	QScrollerProperties ScrollerProperties = QScroller::scroller(hscrollArea->viewport())
+			->scrollerProperties();
+	ScrollerProperties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy, OvershootPolicy);
+	ScrollerProperties.setScrollMetric(QScrollerProperties::HorizontalOvershootPolicy, OvershootPolicy);
+	QScroller::scroller(hscrollArea->viewport())
+		->setScrollerProperties(ScrollerProperties);
+
 	hscrollArea->installEventFilter(this);
 	QScrollBar *scrBar = hscrollArea->verticalScrollBar();
 	scrBar->setFixedWidth(6 * getScale());
