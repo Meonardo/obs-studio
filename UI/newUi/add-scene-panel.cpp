@@ -458,7 +458,7 @@ void IpCameraSettingsWidget::initUi()
 	QLabel *label_1 = new QLabel("RTSP", this);
 	label_1->setFixedWidth(label->width());
 	label_1->setStyleSheet(label->styleSheet());
-	lineedit_rtsp = new QLineEdit(this);
+	lineedit_rtsp = new CLineEdit(this);
 	lineedit_rtsp->setFixedSize(410 * getScale(), 51 * getScale());
 	lineedit_rtsp->setStyleSheet(
 		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; padding-left: %3px; %2}"
@@ -473,7 +473,7 @@ void IpCameraSettingsWidget::initUi()
 	palette.setColor(QPalette::Normal, QPalette::PlaceholderText,
 			 QColor(170, 170, 170));
 	lineedit_rtsp->setPalette(palette);
-	lineedit_rtsp->setContextMenuPolicy(Qt::NoContextMenu);
+//	lineedit_rtsp->setContextMenuPolicy(Qt::NoContextMenu);
 
 	QHBoxLayout *hlayout_1 = new QHBoxLayout;
 	hlayout_1->setContentsMargins(0, 0, 0, 0);
@@ -1254,7 +1254,7 @@ void StreamingSettingsPanel::initUi()
 					   .arg(getFontStyle(18)));
 	label_rtsp3->move(31 * getScale(), 323 * getScale());
 
-	lineedit_rtsp1 = new QLineEdit(this);
+	lineedit_rtsp1 = new CLineEdit(this);
 	lineedit_rtsp1->setFixedSize(340 * getScale(), 51 * getScale());
 	lineedit_rtsp1->setEnabled(true);
 	lineedit_rtsp1->setStyleSheet(
@@ -1269,9 +1269,8 @@ void StreamingSettingsPanel::initUi()
 	QPalette palette = lineedit_rtsp1->palette();
 	palette.setColor(QPalette::PlaceholderText, QColor(170, 170, 170));
 	lineedit_rtsp1->setPalette(palette);
-	lineedit_rtsp1->setContextMenuPolicy(Qt::NoContextMenu);
 
-	lineedit_rtsp2 = new QLineEdit(this);
+	lineedit_rtsp2 = new CLineEdit(this);
 	lineedit_rtsp2->setFixedSize(340 * getScale(), 51 * getScale());
 	lineedit_rtsp2->setEnabled(false);
 	lineedit_rtsp2->setStyleSheet(
@@ -1285,9 +1284,8 @@ void StreamingSettingsPanel::initUi()
 	lineedit_rtsp2->setFont(getFont(18));
 	lineedit_rtsp2->move(30 * getScale(), 241 * getScale());
 	lineedit_rtsp2->setPalette(lineedit_rtsp1->palette());
-	lineedit_rtsp2->setContextMenuPolicy(Qt::NoContextMenu);
 
-	lineedit_rtsp3 = new QLineEdit(this);
+	lineedit_rtsp3 = new CLineEdit(this);
 	lineedit_rtsp3->setFixedSize(340 * getScale(), 51 * getScale());
 	lineedit_rtsp3->setEnabled(false);
 	lineedit_rtsp3->setStyleSheet(
@@ -1301,7 +1299,6 @@ void StreamingSettingsPanel::initUi()
 	lineedit_rtsp3->setFont(getFont(18));
 	lineedit_rtsp3->move(30 * getScale(), 359 * getScale());
 	lineedit_rtsp3->setPalette(lineedit_rtsp1->palette());
-	lineedit_rtsp3->setContextMenuPolicy(Qt::NoContextMenu);
 
 	QCheckBox *checkbox_rtsp1 = new QCheckBox(this);
 	checkbox_rtsp1->setFixedSize(42 * getScale(), 24 * getScale());
@@ -1417,4 +1414,60 @@ void StreamingSettingsPanel::initData()
 	sourceManager->GetSteamAddress(address, QString().toStdString(),
 				       QString().toStdString());
 	lineedit_rtsp1->setText(QString::fromStdString(address));
+}
+
+/************************  CLineEdit *********************************/
+void CLineEdit::contextMenuEvent(QContextMenuEvent *e)
+{
+	QMenu *menu = new QMenu;
+	menu->setFixedWidth(120 * getScale());
+
+	QAction *copy = menu->addAction(QTStr("NewUi.Copy"), this, SLOT(copy()));
+	copy->setFont(getFont(14));
+	QAction *paste = menu->addAction(QTStr("NewUi.Paste"), this, SLOT(paste()));
+	paste->setFont(getFont(14));
+	if (!this->selectedText().isEmpty())
+		copy->setEnabled(true);
+	else
+		copy->setEnabled(false);
+
+	const QClipboard *clipboard = QApplication::clipboard();
+	if (!clipboard->text().isEmpty())
+		paste->setEnabled(true);
+	else
+		paste->setEnabled(false);
+		
+	menu->exec(e->globalPos());
+
+	delete menu;
+}
+
+void CLineEdit::copy()
+{
+	QString text = this->selectedText();
+	QClipboard *clipboard = QApplication::clipboard();
+	clipboard->setText(text);
+}
+
+void CLineEdit::paste()
+{
+	QString text = this->text();
+	QString selectedText = this->selectedText();
+
+	int selectedStart = this->selectionStart();
+	int selectedEnd = this->selectionEnd();
+	if (!selectedText.isEmpty()) {
+		text = text.remove(selectedStart, selectedEnd - selectedStart);
+	}
+
+	const QClipboard *clipboard = QGuiApplication::clipboard();
+	if (!clipboard->text().isEmpty()) {
+		if (!selectedText.isEmpty())
+			text.insert(selectedStart,
+				    clipboard->text().toLatin1());
+		else
+			text = text + clipboard->text();
+		this->setText(text);
+	}
+	
 }
