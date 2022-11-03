@@ -13,25 +13,15 @@ goto checkAdmin
 
 :checkDLL
 	echo Checking for 32-bit Virtual Cam registration...
-	reg query "HKLM\SOFTWARE\Classes\WOW6432Node\CLSID\{@VIRTUALCAM_GUID@}" >nul 2>&1
-	if %errorLevel% == 0 (
-		echo 32-bit Virtual Cam found, skipping install...
-		echo.
-	) else (
-		echo 32-bit Virtual Cam not found, installing...
-		goto install32DLL
-	)
+	reg query "HKLM\SOFTWARE\Classes\WOW6432Node\CLSID\{8FE9EACA-1950-11ED-861D-0242AC120002}" >nul 2>&1
+	echo 32-bit Virtual Cam not found, installing...
+	goto install32DLL
 
 :CheckDLLContinue
 	echo Checking for 64-bit Virtual Cam registration...
-	reg query "HKLM\SOFTWARE\Classes\CLSID\{@VIRTUALCAM_GUID@}" >nul 2>&1
-	if %errorLevel% == 0 (
-		echo 64-bit Virtual Cam found, skipping install...
-		echo.
-	) else (
-		echo 64-bit Virtual Cam not found, installing...
-		goto install64DLL
-	)
+	reg query "HKLM\SOFTWARE\Classes\CLSID\{8FE9EACA-1950-11ED-861D-0242AC120002}" >nul 2>&1
+	echo 64-bit Virtual Cam not found, installing...
+	goto install64DLL
 	goto endSuccess
 
 :install32DLL
@@ -41,7 +31,7 @@ goto checkAdmin
 	) else (
 		regsvr32.exe /i /s obs-virtualcam-module32.dll
 	)
-	reg query "HKLM\SOFTWARE\Classes\WOW6432Node\CLSID\{@VIRTUALCAM_GUID@}" >nul 2>&1
+	reg query "HKLM\SOFTWARE\Classes\WOW6432Node\CLSID\{8FE9EACA-1950-11ED-861D-0242AC120002}" >nul 2>&1
 	if %errorLevel% == 0 (
 		echo 32-bit Virtual Cam successfully installed
 		echo.
@@ -59,7 +49,7 @@ goto checkAdmin
 	) else (
 		regsvr32.exe /i /s obs-virtualcam-module64.dll
 	)
-	reg query "HKLM\SOFTWARE\Classes\CLSID\{@VIRTUALCAM_GUID@}" >nul 2>&1
+	reg query "HKLM\SOFTWARE\Classes\CLSID\{8FE9EACA-1950-11ED-861D-0242AC120002}" >nul 2>&1
 	if %errorLevel% == 0 (
 		echo 64-bit Virtual Cam successfully installed
 		echo.
@@ -75,5 +65,4 @@ goto checkAdmin
 	echo.
 
 :end
-	pause
 	exit
