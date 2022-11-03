@@ -21,6 +21,9 @@ public:
 	inline QAbstractButton *getCheckButton() { return checkbox; }
 	void setIndex(int index) { m_index = index; }
 
+protected:
+	bool eventFilter(QObject *obj, QEvent *event) override;
+
 private:
 	int m_type;
 	int m_index;

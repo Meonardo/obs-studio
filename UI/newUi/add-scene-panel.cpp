@@ -76,6 +76,7 @@ ComboBoxView::ComboBoxView(QWidget *parent) : QWidget(parent)
 	listWidget->setFocusPolicy(Qt::NoFocus);
 	listWidget->setGridSize(QSize(itemHeight, itemHeight));
 	listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+	listWidget->setSelectionMode(QAbstractItemView::NoSelection);
 
 	QHBoxLayout *layout = new QHBoxLayout(this);
 	layout->setContentsMargins(shadowBorder, shadowBorder, shadowBorder,
@@ -460,17 +461,19 @@ void IpCameraSettingsWidget::initUi()
 	lineedit_rtsp = new QLineEdit(this);
 	lineedit_rtsp->setFixedSize(410 * getScale(), 51 * getScale());
 	lineedit_rtsp->setStyleSheet(
-		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; padding-left: %3px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}")
 			.arg(4 * getScale())
-			.arg(getFontStyle(18)));
+			.arg(getFontStyle(18))
+			.arg(21 * getScale()));
 	lineedit_rtsp->setPlaceholderText(QTStr("NewUi.Input") + "RTSP");
 	lineedit_rtsp->setFont(getFont(18));
 	QPalette palette = lineedit_rtsp->palette();
 	palette.setColor(QPalette::Normal, QPalette::PlaceholderText,
 			 QColor(170, 170, 170));
 	lineedit_rtsp->setPalette(palette);
+	lineedit_rtsp->setContextMenuPolicy(Qt::NoContextMenu);
 
 	QHBoxLayout *hlayout_1 = new QHBoxLayout;
 	hlayout_1->setContentsMargins(0, 0, 0, 0);
@@ -1255,44 +1258,50 @@ void StreamingSettingsPanel::initUi()
 	lineedit_rtsp1->setFixedSize(340 * getScale(), 51 * getScale());
 	lineedit_rtsp1->setEnabled(true);
 	lineedit_rtsp1->setStyleSheet(
-		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; padding-left: %3px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}")
 			.arg(4 * getScale())
-			.arg(getFontStyle(18)));
+			.arg(getFontStyle(18))
+			.arg(21 * getScale()));
 	lineedit_rtsp1->setPlaceholderText(QTStr("NewUi.Input") + "RTMP1");
 	lineedit_rtsp1->move(30 * getScale(), 123 * getScale());
 	QPalette palette = lineedit_rtsp1->palette();
 	palette.setColor(QPalette::PlaceholderText, QColor(170, 170, 170));
 	lineedit_rtsp1->setPalette(palette);
+	lineedit_rtsp1->setContextMenuPolicy(Qt::NoContextMenu);
 
 	lineedit_rtsp2 = new QLineEdit(this);
 	lineedit_rtsp2->setFixedSize(340 * getScale(), 51 * getScale());
 	lineedit_rtsp2->setEnabled(false);
 	lineedit_rtsp2->setStyleSheet(
-		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px;  padding-left: %3px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}")
 			.arg(4 * getScale())
-			.arg(getFontStyle(18)));
+			.arg(getFontStyle(18))
+			.arg(21 * getScale()));
 	lineedit_rtsp2->setPlaceholderText(QTStr("NewUi.Input") + "RTMP2");
 	lineedit_rtsp2->setFont(getFont(18));
 	lineedit_rtsp2->move(30 * getScale(), 241 * getScale());
 	lineedit_rtsp2->setPalette(lineedit_rtsp1->palette());
+	lineedit_rtsp2->setContextMenuPolicy(Qt::NoContextMenu);
 
 	lineedit_rtsp3 = new QLineEdit(this);
 	lineedit_rtsp3->setFixedSize(340 * getScale(), 51 * getScale());
 	lineedit_rtsp3->setEnabled(false);
 	lineedit_rtsp3->setStyleSheet(
-		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px; %2}"
+		QString("QLineEdit{ background-color:rgb(240,240,240); border: none; color: rgb(68, 68, 68);border-radius: %1px;  padding-left: %3px; %2}"
 			"QLineEdit::hover{background-color: rgb(240,240,240);}"
 			"QLineEdit::disabled{color: rgb(170, 170, 170);}")
 			.arg(4 * getScale())
-			.arg(getFontStyle(18)));
+			.arg(getFontStyle(18))
+			.arg(21 * getScale()));
 	lineedit_rtsp3->setPlaceholderText(QTStr("NewUi.Input") + "RTMP3");
 	lineedit_rtsp3->setFont(getFont(18));
 	lineedit_rtsp3->move(30 * getScale(), 359 * getScale());
 	lineedit_rtsp3->setPalette(lineedit_rtsp1->palette());
+	lineedit_rtsp3->setContextMenuPolicy(Qt::NoContextMenu);
 
 	QCheckBox *checkbox_rtsp1 = new QCheckBox(this);
 	checkbox_rtsp1->setFixedSize(42 * getScale(), 24 * getScale());
