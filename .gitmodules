@@ -16,6 +16,3 @@
 [submodule "plugins/obs-websocket"]
 	path = plugins/obs-websocket
 	url = https://github.com/Meonardo/obs-websocket.git
-[submodule "UI/frontend-plugins/obs-audio-monitor"]
-	path = UI/frontend-plugins/obs-audio-monitor
-	url = https://github.com/Meonardo/obs-audio-monitor
