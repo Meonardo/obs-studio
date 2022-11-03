@@ -1055,8 +1055,10 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 			*usbCameraSettingsWidget->getCurrentCameraSource());
 	}
 
-	if (nullptr != screen &&
-	    sourceManager->AttachSceneItem(screen, itemCategory)) {
+	if (screen == nullptr)
+		return;
+
+	if (sourceManager->AttachSceneItem(screen, itemCategory)) {
 		if (itemCategory ==
 		    accrecorder::source::SceneItem::Category::kMain)
 			screen->Lock(true);
@@ -1081,6 +1083,10 @@ void ScenesSettingsPanel::slot_addBtn_clicked()
 
 		if (sourceManager->ApplySceneItemSettingsUpdate(screen))
 			emit attachFinished(screen, itemCategory);
+	} else {
+		// delete it if unable to attach to the scene
+		delete screen;
+		screen = nullptr;
 	}
 
 	this->close();
@@ -1157,8 +1163,10 @@ void AudioSettingsPanel::initUi()
 		auto input = new accrecorder::source::AudioInputItem(
 			*reinterpret_cast<accrecorder::source::AudioInputItem *>(
 				allAudioItems[combobox_audio->currentIndex()].get()));
-		if (sourceManager->AttachSceneItem(input)) {
-			// success
+		if (!sourceManager->AttachSceneItem(input)) {
+			// failed
+			delete input;
+			input = nullptr;
 		}
 		this->close();
 		this->deleteLater();

@@ -3535,7 +3535,7 @@ void OBSBasic::ActivateAudioSource(OBSSource source)
 
 	const char *source_id = obs_source_get_id(source);
 	bool showControlBtn = strcmp(source_id, "wasapi_input_capture") == 0 ||
-			      strcmp(source_id, "wasapi_outpur_capture") == 0;
+			      strcmp(source_id, "wasapi_output_capture") == 0;
 
 	bool vertical = config_get_bool(GetGlobalConfig(), "BasicWindow",
 					"VerticalVolControl");

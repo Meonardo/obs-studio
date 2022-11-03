@@ -89,6 +89,7 @@ private:
 
 	static obs_source_t *ValidateScene(std::string &name);
 	static obs_source_t *ValidateInput(std::string &name);
+	static obs_scene_t *ValidateScene2(const std::string &keyName);
 	static bool VirtualCamAvailable();
 
 	source::Scene *main_scene_;
