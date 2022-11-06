@@ -1,5 +1,6 @@
 #include "obs-source-manager.h"
 #include "obs-app.hpp"
+#include "qthread.h"
 
 namespace accrecorder::manager {
 OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
@@ -369,7 +370,8 @@ bool OBSSourceManager::AttachSceneItem(source::SceneItem *item,
 	if (!main_scene_->Attach(item, category))
 		return false;
 
-	// reorder the sceneitem if necessary
+	// reorder the sceneitem if necessary:
+	// make sure the main item always under the PiP item.
 	if (category == source::SceneItem::Category::kMain) {
 		int idx = main_scene_->FindFirstPiPSceneItemIndex();
 		if (idx >= 0) {
@@ -660,31 +662,31 @@ void OBSSourceManager::ListAudioItems(
 	obs_properties_destroy(props);
 }
 
-bool OBSSourceManager::AddSceneItemToGroup(source::SceneItem *item,
-					   source::SceneItem::Category category)
-{
-	OBSSourceAutoRelease source = ValidateInput(item->Name());
-	if (source == nullptr)
-		return false;
-	obs_sceneitem_t *scene_item =
-		obs_scene_sceneitem_from_source(main_scene_->scene_, source);
-	if (scene_item == nullptr)
-		return false;
-
-	if (category == source::SceneItem::Category::kMain) {
-		obs_sceneitem_t *group =
-			obs_scene_get_group(main_scene_->scene_, kMainGroup);
-		if (group != nullptr) {
-			obs_sceneitem_group_add_item(group, scene_item);
-		}
-	} else if (category == source::SceneItem::Category::kPiP) {
-		obs_sceneitem_t *group =
-			obs_scene_get_group(main_scene_->scene_, kPiPGroup);
-		if (group != nullptr) {
-			obs_sceneitem_group_add_item(group, scene_item);
-		}
-	}
-}
+//bool OBSSourceManager::AddSceneItemToGroup(source::SceneItem *item,
+//					   source::SceneItem::Category category)
+//{
+//	OBSSourceAutoRelease source = ValidateInput(item->Name());
+//	if (source == nullptr)
+//		return false;
+//	obs_sceneitem_t *scene_item =
+//		obs_scene_sceneitem_from_source(main_scene_->scene_, source);
+//	if (scene_item == nullptr)
+//		return false;
+//
+//	if (category == source::SceneItem::Category::kMain) {
+//		obs_sceneitem_t *group =
+//			obs_scene_get_group(main_scene_->scene_, kMainGroup);
+//		if (group != nullptr) {
+//			obs_sceneitem_group_add_item(group, scene_item);
+//		}
+//	} else if (category == source::SceneItem::Category::kPiP) {
+//		obs_sceneitem_t *group =
+//			obs_scene_get_group(main_scene_->scene_, kPiPGroup);
+//		if (group != nullptr) {
+//			obs_sceneitem_group_add_item(group, scene_item);
+//		}
+//	}
+//}
 
 source::SceneItem *OBSSourceManager::GetSceneItemByName(std::string &name)
 {
