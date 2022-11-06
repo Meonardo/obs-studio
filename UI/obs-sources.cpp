@@ -727,10 +727,12 @@ Scene::~Scene()
 
 bool Scene::Attach(SceneItem *item, SceneItem::Category category)
 {
-	obs_source_t *ret = obs_get_source_by_name(item->Name().c_str());
+	OBSSourceAutoRelease ret =
+		obs_get_source_by_name(item->Name().c_str());
 	if (ret) {
 		blog(LOG_ERROR, "source with name %s already attached!",
 		     item->Name().c_str());
+		//obs_source_release(ret);
 		return false;
 	}
 
@@ -749,8 +751,8 @@ bool Scene::Attach(SceneItem *item, SceneItem::Category category)
 		obs_source_set_monitoring_type(
 			input, OBS_MONITORING_TYPE_MONITOR_ONLY);
 
-	// create a scene item for the input
-	OBSSceneItemAutoRelease sceneItem =
+	// create a scene item for the input(!!!do not use auto release!!!)
+	obs_sceneitem_t* sceneItem =
 		CreateSceneItem(input, scene_, true, NULL, NULL);
 	if (sceneItem == nullptr) {
 		blog(LOG_ERROR, "create scene item failed!");
@@ -816,27 +818,8 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 		return false;
 	}
 
-	//// if the item belongs to kMain or kPiP category,
-	//// do the follow steps to find the scene item:
-	//// a. get the group from the scene;
-	//// b. get the item in the group;
-	//obs_sceneitem_t *sceneItem = nullptr;
-	//if (item->category() == source::SceneItem::Category::kMain) {
-	//	auto group = obs_scene_get_group(scene_, kMainGroup);
-	//	auto groupItem = obs_sceneitem_group_get_scene(group);
-	//	sceneItem = obs_scene_find_sceneitem_by_id(groupItem,
-	//						   item->SceneID());
-	//} else if (item->category() == source::SceneItem::Category::kPiP) {
-	//	auto group = obs_scene_get_group(scene_, kPiPGroup);
-	//	auto groupItem = obs_sceneitem_group_get_scene(group);
-	//	sceneItem = obs_scene_find_sceneitem_by_id(groupItem,
-	//						   item->SceneID());
-	//} else {
-	//	// audio items
-	//	sceneItem =
-	//		obs_scene_find_sceneitem_by_id(scene_, item->SceneID());
-	//}
-	obs_sceneitem_t *sceneItem = obs_scene_find_sceneitem_by_id(
+	OBSSceneItem sceneItem =
+		obs_scene_find_sceneitem_by_id(
 		scene_, item->SceneID());
 	if (sceneItem == nullptr) {
 		blog(LOG_ERROR, "can not find the scene item in the scene!");

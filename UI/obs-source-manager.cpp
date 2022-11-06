@@ -713,7 +713,7 @@ bool OBSSourceManager::Remove(source::SceneItem *item)
 		return false;
 
 	// remove from obs source tree
-	auto sceneItem = obs_scene_find_sceneitem_by_id(main_scene_->scene_,
+	OBSSceneItemAutoRelease sceneItem = obs_scene_find_sceneitem_by_id(main_scene_->scene_,
 							item->SceneID());
 	obs_sceneitem_remove(sceneItem);
 	OBSSourceAutoRelease input = ValidateInput(item->Name());
