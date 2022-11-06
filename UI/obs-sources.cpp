@@ -865,7 +865,7 @@ int Scene::FindFirstPiPSceneItemIndex() {
 		});
 
 	auto target = vec.front();
-	OBSSceneItemAutoRelease sceneItem =
+	auto sceneItem =
 		obs_scene_find_sceneitem_by_id(scene_, target->SceneID());
 	if (sceneItem == nullptr)
 		return -1;
