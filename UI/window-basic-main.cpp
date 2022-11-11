@@ -10188,8 +10188,11 @@ void OBSBasic::SetDisplayAffinity(QWindow *window)
 
 	DWORD curAffinity;
 	if (GetWindowDisplayAffinity(hwnd, &curAffinity)) {
-		if (hideFromCapture && curAffinity != WDA_EXCLUDEFROMCAPTURE)
+		if (hideFromCapture && curAffinity != WDA_EXCLUDEFROMCAPTURE) {
+			// Fix: black box issue(main window), display OBS after came from tray.
+			SetWindowDisplayAffinity(hwnd, WDA_NONE);
 			SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+		}
 		else if (!hideFromCapture && curAffinity != WDA_NONE)
 			SetWindowDisplayAffinity(hwnd, WDA_NONE);
 	}
