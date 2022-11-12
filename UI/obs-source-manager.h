@@ -66,8 +66,8 @@ public:
 	// add the target item to a group by its category
 	// kMain = kMainGroup
 	// kPiP = kPiPGroup
-	bool AddSceneItemToGroup(source::SceneItem *item,
-				 source::SceneItem::Category category);
+	/*bool AddSceneItemToGroup(source::SceneItem *item,
+				 source::SceneItem::Category category);*/
 
 private:
 	void LoadGroups(std::vector<obs_source_t *> &groups);
@@ -89,6 +89,7 @@ private:
 
 	static obs_source_t *ValidateScene(std::string &name);
 	static obs_source_t *ValidateInput(std::string &name);
+	static obs_scene_t *ValidateScene2(const std::string &keyName);
 	static bool VirtualCamAvailable();
 
 	source::Scene *main_scene_;

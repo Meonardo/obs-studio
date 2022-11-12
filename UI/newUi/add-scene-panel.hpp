@@ -23,6 +23,23 @@
 #include <qfontmetrics.h>
 #include <qcheckbox.h>
 #include <qtimer.h>
+#include <qmenu.h>
+#include <qclipboard.h>
+#include <qmimedata.h>
+
+class CLineEdit : public QLineEdit {
+	Q_OBJECT
+public:
+	explicit CLineEdit(QWidget *parent = nullptr)
+		: QLineEdit(parent) {}
+
+protected:
+	void contextMenuEvent(QContextMenuEvent *e);
+
+public slots:
+	void copy();
+	void paste();
+};
 
 /************************************** ComboBox item widget ****************************/
 class ComboBoxItemWidget : public QWidget {
@@ -151,7 +168,7 @@ public:
 
 private:
 	ComboBox *combobox_cameraName = nullptr;
-	QLineEdit *lineedit_rtsp = nullptr;
+	CLineEdit *lineedit_rtsp = nullptr;
 	ComboBox *combobox_rate = nullptr;
 	ComboBox *combobox_fps = nullptr;
 	ComboBox *combobox_encode = nullptr;
@@ -287,9 +304,9 @@ public:
 	~StreamingSettingsPanel() {}
 
 private:
-	QLineEdit *lineedit_rtsp1 = nullptr;
-	QLineEdit *lineedit_rtsp2 = nullptr;
-	QLineEdit *lineedit_rtsp3 = nullptr;
+	CLineEdit *lineedit_rtsp1 = nullptr;
+	CLineEdit *lineedit_rtsp2 = nullptr;
+	CLineEdit *lineedit_rtsp3 = nullptr;
 	QCheckBox *checkbox_rtsp1 = nullptr;
 	QCheckBox *checkbox_rtsp2 = nullptr;
 	QCheckBox *checkbox_rtsp3 = nullptr;

@@ -1,10 +1,9 @@
 #include "window-toolbar.hpp"
-#include <qlabel.h>
 #include <qcheckbox.h>
-#include <qpushbutton.h>
 #include <qpainter.h>
 #include <qlayout.h>
 #include <qdebug.h>
+#include <qevent.h>
 #include "font.hpp"
 #include "obs-app.hpp"
 
@@ -22,6 +21,49 @@ void OBSToolbar::paintEvent(QPaintEvent *event)
 
 	painter.fillRect(this->rect(), QColor(68, 68, 68));
 	return QWidget::paintEvent(event);
+}
+
+bool OBSToolbar::eventFilter(QObject *obj, QEvent *event)
+{
+	if ((obj == pBtn_settings_stream ||
+		obj == label_settings_stream) &&
+	    event->type() == QEvent::Enter) {
+		pBtn_settings_stream->setStyleSheet(
+			QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
+				"border-image: url(':/res/images/newUi/settings2@2x.png'); "
+				"min-width: %1; min-height: %1;}")
+				.arg(16 * getScale()));
+		label_settings_stream->setStyleSheet(
+			QString("QLabel{ color: white; padding-left: %2px; %1}")
+				.arg(getFontStyle(12))
+				.arg(3 * getScale()));
+	} else if ((obj == pBtn_settings_stream ||
+		    obj == label_settings_stream) &&
+		   event->type() == QEvent::Leave) {
+		//QMouseEvent *mouseEvent =
+		//	static_cast<QMouseEvent *>(event);
+		//if (pBtn_settings_stream->rect().contains(mouseEvent->pos()) ||
+		//    label_settings_stream->rect().contains(mouseEvent->pos()))
+		//	return QWidget::eventFilter(obj, event);
+		
+		pBtn_settings_stream->setStyleSheet(
+			QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
+				"border-image: url(':/res/images/newUi/settings@2x.png'); "
+				"min-width: %1; min-height: %1;}")
+				.arg(16 * getScale()));
+		label_settings_stream->setStyleSheet(
+			QString("QLabel{ color: rgb(170,170,170); padding-left: %2px; %1}")
+				.arg(getFontStyle(12))
+				.arg(3 * getScale()));
+	} else if ((obj == pBtn_settings_stream ||
+		    obj == label_settings_stream) &&
+		   event->type() == QEvent::MouseButtonRelease) {
+		QMouseEvent *mouseEvent =
+			static_cast<QMouseEvent *>(event);
+		if (mouseEvent->button() == Qt::LeftButton)
+			emit showStreamPanel();
+	}
+	return QWidget::eventFilter(obj, event);
 }
 
 void OBSToolbar::initUi()
@@ -89,16 +131,14 @@ void OBSToolbar::initUi()
 	label_2->setStyleSheet(
 		QString("QLabel{ color: white; %1}").arg(getFontStyle(14)));
 
-	QPushButton *pBtn_settings_stream = new QPushButton(this);
+	pBtn_settings_stream = new QPushButton(this);
 	pBtn_settings_stream->setFixedSize(16 * getScale(), 16 * getScale());
 	pBtn_settings_stream->setStyleSheet(
 		QString("QPushButton{ padding: 0px; border: none; background-color: transparent;"
 			"border-image: url(':/res/images/newUi/settings@2x.png'); "
-			"min-width: %1; min-height: %1;}"
-			"QPushButton::hover{border-image: url(':/res/images/newUi/settings2@2x.png');}")
+			"min-width: %1; min-height: %1;}")
 			.arg(16 * getScale()));
-	connect(pBtn_settings_stream, &QPushButton::clicked, this,
-		[=]() { emit showStreamPanel(); });
+	pBtn_settings_stream->installEventFilter(this);
 
 	QCheckBox *checkbox_stream = new QCheckBox(this);
 	checkbox_stream->setFixedSize(42 * getScale(), 24 * getScale());
@@ -117,11 +157,12 @@ void OBSToolbar::initUi()
 			//	pBtn_settings_stream->setEnabled(true);
 		});
 
-	QLabel *label_settings_stream = new QLabel(this);
+	label_settings_stream = new QLabel(this);
 	label_settings_stream->setText(QTStr("NewUi.Settings"));
+	label_settings_stream->installEventFilter(this);
 	label_settings_stream->setStyleSheet(
-		QString("QLabel{ color: rgb(170,170,170); %1}")
-			.arg(getFontStyle(12)));
+		QString("QLabel{ color: rgb(170,170,170); padding-left: %2px; %1}")
+			.arg(getFontStyle(12)).arg(3 * getScale()));
 
 	QHBoxLayout *layout = new QHBoxLayout(this);
 	layout->setSpacing(0);
@@ -163,8 +204,8 @@ void OBSToolbar::initUi()
 	layout->addSpacerItem(
 		new QSpacerItem(10 * getScale(), 1, QSizePolicy::Fixed));
 	layout->addWidget(pBtn_settings_stream, 0, Qt::AlignVCenter);
-	layout->addSpacerItem(
-		new QSpacerItem(10 * getScale(), 1, QSizePolicy::Fixed));
+	//layout->addSpacerItem(
+	//	new QSpacerItem(6 * getScale(), 1, QSizePolicy::Fixed));
 	layout->addWidget(label_settings_stream, 0, Qt::AlignVCenter);
 	layout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
 }

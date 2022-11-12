@@ -1,5 +1,6 @@
 #include "obs-source-manager.h"
 #include "obs-app.hpp"
+#include "qthread.h"
 
 namespace accrecorder::manager {
 OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
@@ -10,16 +11,6 @@ OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
 		// save it.
 		main_scene_ = new source::Scene(sceneName,
 						obs_scene_from_source(scene));
-		// load groups
-		//auto groups = std::vector<obs_source_t *>();
-		//LoadGroups(groups);
-
-		//for (auto &group : groups) {
-		//	std::string gourpName = obs_source_get_name(group);
-		//	// load scene from the scene
-		//	LoadSceneItemFromScene(gourpName);
-		//}
-
 		LoadSceneItemFromScene(sceneName);
 	} else {
 		// create new one.
@@ -30,9 +21,6 @@ OBSSourceManager::OBSSourceManager() : main_scene_(nullptr), api_(nullptr)
 		}
 		// save it.
 		main_scene_ = new source::Scene(sceneName, newScene);
-
-		// create groups
-		//main_scene_->CreateGroups();
 	}
 
 	// make current
@@ -318,6 +306,24 @@ obs_scene_t *OBSSourceManager::CreateScene(std::string &sceneName)
 	return createdScene;
 }
 
+obs_scene_t *OBSSourceManager::ValidateScene2(const std::string &name)
+{
+	OBSSourceAutoRelease sceneSource = obs_get_source_by_name(name.c_str());
+	if (!sceneSource)
+		return nullptr;
+
+	if (obs_source_get_type(sceneSource) != OBS_SOURCE_TYPE_SCENE) {
+		return nullptr;
+	}
+
+	bool isGroup = obs_source_is_group(sceneSource);
+	if (isGroup) {
+		return obs_scene_get_ref(obs_group_from_source(sceneSource));
+	} else {
+		return obs_scene_get_ref(obs_scene_from_source(sceneSource));
+	}
+}
+
 obs_source_t *OBSSourceManager::ValidateScene(std::string &name)
 {
 	obs_source_t *ret = obs_get_source_by_name(name.c_str());
@@ -361,10 +367,11 @@ bool OBSSourceManager::AttachSceneItem(source::SceneItem *item,
 	}
 
 	item->SetCategory(category);
-	main_scene_->Attach(item, category);
+	if (!main_scene_->Attach(item, category))
+		return false;
 
-	// add to its group by default after attached to the scene
-	// AddSceneItemToGroup(item, category);
+	// reorder the sceneitem if necessary:
+	// make sure the main item always under the PiP item.
 	if (category == source::SceneItem::Category::kMain) {
 		int idx = main_scene_->FindFirstPiPSceneItemIndex();
 		if (idx >= 0) {
@@ -532,9 +539,8 @@ void OBSSourceManager::ListCameraItems(
 		std::string name_str(name);
 		if (name_str.find("screen-capture-recorder") !=
 			    std::string::npos ||
-		    name_str.find("Virtual Camera") !=
-			    std::string::npos)
-			    continue;
+		    name_str.find("Virtual Camera") != std::string::npos)
+			continue;
 		auto item = std::make_shared<source::CameraSceneItem>(name_str);
 		item->device_id_ = std::string(id);
 
@@ -638,7 +644,8 @@ void OBSSourceManager::ListAudioItems(
 		     input ? "input" : "output", name, id);
 
 		QString q_name(name);
-		auto comp_str = QTStr("Basic.Settings.Advanced.Audio.MonitoringDevice.Default");
+		auto comp_str = QTStr(
+			"Basic.Settings.Advanced.Audio.MonitoringDevice.Default");
 		// do not show default device for now
 		if (q_name == comp_str)
 			continue;
@@ -666,31 +673,31 @@ void OBSSourceManager::ListAudioItems(
 	obs_properties_destroy(props);
 }
 
-bool OBSSourceManager::AddSceneItemToGroup(source::SceneItem *item,
-					   source::SceneItem::Category category)
-{
-	OBSSourceAutoRelease source = ValidateInput(item->Name());
-	if (source == nullptr)
-		return false;
-	obs_sceneitem_t *scene_item =
-		obs_scene_sceneitem_from_source(main_scene_->scene_, source);
-	if (scene_item == nullptr)
-		return false;
-
-	if (category == source::SceneItem::Category::kMain) {
-		obs_sceneitem_t *group =
-			obs_scene_get_group(main_scene_->scene_, kMainGroup);
-		if (group != nullptr) {
-			obs_sceneitem_group_add_item(group, scene_item);
-		}
-	} else if (category == source::SceneItem::Category::kPiP) {
-		obs_sceneitem_t *group =
-			obs_scene_get_group(main_scene_->scene_, kPiPGroup);
-		if (group != nullptr) {
-			obs_sceneitem_group_add_item(group, scene_item);
-		}
-	}
-}
+//bool OBSSourceManager::AddSceneItemToGroup(source::SceneItem *item,
+//					   source::SceneItem::Category category)
+//{
+//	OBSSourceAutoRelease source = ValidateInput(item->Name());
+//	if (source == nullptr)
+//		return false;
+//	obs_sceneitem_t *scene_item =
+//		obs_scene_sceneitem_from_source(main_scene_->scene_, source);
+//	if (scene_item == nullptr)
+//		return false;
+//
+//	if (category == source::SceneItem::Category::kMain) {
+//		obs_sceneitem_t *group =
+//			obs_scene_get_group(main_scene_->scene_, kMainGroup);
+//		if (group != nullptr) {
+//			obs_sceneitem_group_add_item(group, scene_item);
+//		}
+//	} else if (category == source::SceneItem::Category::kPiP) {
+//		obs_sceneitem_t *group =
+//			obs_scene_get_group(main_scene_->scene_, kPiPGroup);
+//		if (group != nullptr) {
+//			obs_sceneitem_group_add_item(group, scene_item);
+//		}
+//	}
+//}
 
 source::SceneItem *OBSSourceManager::GetSceneItemByName(std::string &name)
 {
@@ -719,7 +726,8 @@ bool OBSSourceManager::Remove(source::SceneItem *item)
 		return false;
 
 	// remove from obs source tree
-	auto sceneItem = obs_scene_find_sceneitem_by_id(main_scene_->scene_, item->SceneID());
+	OBSSceneItemAutoRelease sceneItem = obs_scene_find_sceneitem_by_id(
+		main_scene_->scene_, item->SceneID());
 	obs_sceneitem_remove(sceneItem);
 	OBSSourceAutoRelease input = ValidateInput(item->Name());
 	obs_source_remove(input);
@@ -759,7 +767,8 @@ bool OBSSourceManager::AddAudioMixFilter(source::AudioSceneItem *item)
 
 	std::string mixDeviceId;
 	for (const auto &item : outputItems) {
-		if (item->Name().find("VB-Audio Virtual Cable") != std::string::npos) {
+		if (item->Name().find("VB-Audio Virtual Cable") !=
+		    std::string::npos) {
 			mixDeviceId = item->device_id_;
 			break;
 		}

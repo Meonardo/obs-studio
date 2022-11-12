@@ -13,6 +13,19 @@ OBSPanelItem::OBSPanelItem(int type, const QString &name, int index,
 	this->initUi();
 }
 
+bool OBSPanelItem::eventFilter(QObject *obj, QEvent *event)
+{
+	if (event->type() == QEvent::MouseButtonRelease) {
+		QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+		if (mouseEvent->button() == Qt::LeftButton) {
+			qDebug() << "----button click";
+			checkbox->click();
+		}
+			
+	}
+	return QWidget::eventFilter(obj, event);
+}
+
 void OBSPanelItem::initUi()
 {
 	QHBoxLayout *hlayout = new QHBoxLayout(this);
