@@ -1177,7 +1177,7 @@ void AudioSettingsPanel::initUi()
 				*reinterpret_cast<
 					accrecorder::source::AudioOutputItem *>(
 					audioItem));
-			if (sourceManager->AttachSceneItem(output)) {
+			if (!sourceManager->AttachSceneItem(output)) {
 				delete output;
 			}
 		}
