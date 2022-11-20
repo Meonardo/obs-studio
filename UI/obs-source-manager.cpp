@@ -556,16 +556,23 @@ void OBSSourceManager::ListCameraItems(
 		size_t count_res = obs_property_list_item_count(p_res);
 
 		item->resolutions_.reserve(count_res);
+		int max_support_res = 0;
 		for (size_t j = 0; j < count_res; j++) {
 			const char *res = obs_property_list_item_name(p_res, j);
 			blog(LOG_ERROR, "enum device(%s), resolution=%s", name,
 			     res);
+			std::string res_str(res);
 			item->resolutions_.emplace_back(res);
+			// support max resolution: 1920x1080
+			if (res_str.find("1920") !=
+			    std::string::npos) {
+				max_support_res = j;
+			}
 		}
 
 		if (count_res > 0) {
 			// set default resolution value
-			item->SelectResolution(0);
+			item->SelectResolution(max_support_res);
 
 			// make a fake resolution selection
 			obs_data_set_string(data, resolution_p_name,
