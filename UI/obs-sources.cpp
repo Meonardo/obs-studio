@@ -369,13 +369,15 @@ obs_data_t *IPCameraSceneItem::Properties() const
 	const size_t count = 512;
 	char pipeline[count];
 	snprintf(pipeline, count,
-		 "uridecodebin uri=%s name=bin ! queue ! video.", url_.c_str());
+		 "uridecodebin uri=%s name=bin latency=50 ! queue ! video.", url_.c_str());
 
 	obs_data_set_string(data, "pipeline", pipeline);
 	obs_data_set_bool(data, "sync_appsink_audio", false);
 	obs_data_set_bool(data, "sync_appsink_video", false);
-	obs_data_set_bool(data, "disable_async_appsink_video", true);
-	obs_data_set_bool(data, "disable_async_appsink_audio", true);
+	obs_data_set_bool(data, "disable_async_appsink_video", false);
+	obs_data_set_bool(data, "disable_async_appsink_audio", false);
+	obs_data_set_bool(data, "block_video", true);
+	obs_data_set_bool(data, "restart_on_error", true);
 	obs_data_set_bool(data, "use_timestamps_audio", false);
 	obs_data_set_bool(data, "use_timestamps_video", false);
 	obs_data_set_bool(data, "stop_on_hide", stop_on_hide_);
