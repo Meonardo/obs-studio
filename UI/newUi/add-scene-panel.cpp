@@ -1398,6 +1398,9 @@ void StreamingSettingsPanel::initUi()
 			.arg(6 * getScale())
 			.arg(getFontStyle(16)));
 	connect(pBtnCancel, &QPushButton::clicked, this, [=]() {
+#if DEBUG
+		sourceManager->StopJanusStream();
+#endif
 		this->close();
 		this->deleteLater();
 	});
@@ -1413,6 +1416,9 @@ void StreamingSettingsPanel::initUi()
 			.arg(6 * getScale())
 			.arg(getFontStyle(16)));
 	connect(pBtnYes, &QPushButton::clicked, this, [=]() {
+#if DEBUG
+		sourceManager->StartJanusStream();
+#endif
 		QString str;
 		if (checkbox_rtsp1->isChecked())
 			str = lineedit_rtsp1->text();

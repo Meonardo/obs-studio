@@ -53,6 +53,12 @@ public:
 	bool StartVirtualCamera();
 	// stop virtual camera
 	bool StopVirtualCamera();
+
+	// start janus stream
+	bool StartJanusStream();
+	// stop janus stream
+	bool StopJanusStream();
+
 	// set stream address, like: rtmp://192.168.99.135
 	bool SetStreamAddress(std::string &addr, std::string &username,
 			      std::string &passwd);

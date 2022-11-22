@@ -9,6 +9,17 @@ struct BasicOutputHandler {
 	OBSOutputAutoRelease streamOutput;
 	OBSOutputAutoRelease replayBuffer;
 	OBSOutputAutoRelease virtualCam;
+
+	// janus output
+	OBSOutputAutoRelease janusOutput;
+	/// janus stream(to videoroom plugin)
+	OBSSignal startStreaming2Janus;
+	OBSSignal stopStreaming2Janus;
+	bool janusStreamingActive = false;
+	virtual void StartJanusStreaming();
+	virtual void StopJanusStreaming();
+	virtual bool JanusStreamActive() const;
+
 	bool streamingActive = false;
 	bool recordingActive = false;
 	bool delayActive = false;

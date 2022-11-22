@@ -134,6 +134,11 @@ struct obs_frontend_callbacks {
 	virtual void obs_frontend_stop_virtualcam(void) = 0;
 	virtual bool obs_frontend_virtualcam_active(void) = 0;
 
+	// janus output
+	virtual void obs_frontend_start_janus_stream(void) = 0;
+	virtual void obs_frontend_stop_janus_stream(void) = 0;
+	virtual bool obs_frontend_janus_stream_active(void) = 0;
+
 	virtual void obs_frontend_reset_video(void) = 0;
 
 	virtual void

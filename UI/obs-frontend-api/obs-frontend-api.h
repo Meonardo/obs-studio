@@ -222,6 +222,11 @@ EXPORT void obs_frontend_start_virtualcam(void);
 EXPORT void obs_frontend_stop_virtualcam(void);
 EXPORT bool obs_frontend_virtualcam_active(void);
 
+// janus output
+EXPORT void obs_frontend_start_janus_stream(void);
+EXPORT void obs_frontend_stop_janus_stream(void);
+EXPORT bool obs_frontend_janus_stream_active(void);
+
 EXPORT void obs_frontend_reset_video(void);
 
 EXPORT void obs_frontend_open_source_properties(obs_source_t *source);

@@ -24,6 +24,7 @@ extern volatile bool recording_active;
 extern volatile bool recording_paused;
 extern volatile bool replaybuf_active;
 extern volatile bool virtualcam_active;
+extern volatile bool janus_stream_active;
 
 /* ------------------------------------------------------------------------- */
 
@@ -608,6 +609,18 @@ struct OBSStudioAPI : obs_frontend_callbacks {
 	bool obs_frontend_virtualcam_active(void) override
 	{
 		return os_atomic_load_bool(&virtualcam_active);
+	}
+
+	void obs_frontend_start_janus_stream(void) {
+		QMetaObject::invokeMethod(main, "StartJanusStream");
+	}
+
+	void obs_frontend_stop_janus_stream(void) {
+		QMetaObject::invokeMethod(main, "StopJanusStream");
+	}
+
+	bool obs_frontend_janus_stream_active(void) {
+		return os_atomic_load_bool(&janus_stream_active);
 	}
 
 	void obs_frontend_reset_video(void) override { main->ResetVideo(); }

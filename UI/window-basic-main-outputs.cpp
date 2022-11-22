@@ -16,6 +16,7 @@ volatile bool recording_active = false;
 volatile bool recording_paused = false;
 volatile bool replaybuf_active = false;
 volatile bool virtualcam_active = false;
+volatile bool janus_stream_active = false;
 
 #define FTL_PROTOCOL "ftl"
 #define RTMP_PROTOCOL "rtmp"
@@ -184,6 +185,33 @@ static void OBSStopVirtualCam(void *data, calldata_t *params)
 	OBSBasicVCamConfig::StopVideo();
 }
 
+#if DEBUG
+static void OBSStartStreaming2Janus(void *data, calldata_t *params)
+{
+	BasicOutputHandler *output = static_cast<BasicOutputHandler *>(data);
+
+	output->janusStreamingActive = true;
+	os_atomic_set_bool(&janus_stream_active, true);
+	QMetaObject::invokeMethod(output->main, "OnJanusStreamStart");
+
+	UNUSED_PARAMETER(params);
+}
+
+static void OBSStopStreaming2Janus(void *data, calldata_t *params)
+{
+	BasicOutputHandler *output = static_cast<BasicOutputHandler *>(data);
+	int code = (int)calldata_int(params, "code");
+
+	output->janusStreamingActive = false;
+	os_atomic_set_bool(&janus_stream_active, false);
+	QMetaObject::invokeMethod(output->main, "OnJanusStreamStop",
+				  Q_ARG(int, code));
+
+	obs_output_set_media(output->virtualCam, nullptr, nullptr);
+	OBSBasicVCamConfig::StopVideo();
+}
+#endif
+
 /* ------------------------------------------------------------------------ */
 
 static bool CreateAACEncoder(OBSEncoder &res, string &id, int bitrate,
@@ -225,6 +253,27 @@ inline BasicOutputHandler::BasicOutputHandler(OBSBasic *main_) : main(main_)
 					this);
 		stopVirtualCam.Connect(signal, "stop", OBSStopVirtualCam, this);
 	}
+
+	#if DEBUG
+	/// janus output init
+	{
+		// default settings for janus output
+		uint64_t room = 123456;
+		OBSDataAutoRelease settings = obs_data_create();
+		obs_data_set_string(settings, "url", "ws://192.168.99.48:8188");
+		obs_data_set_string(settings, "display", "obs");
+		obs_data_set_int(settings, "room", room);
+		obs_data_set_string(settings, "pin", std::to_string(room).c_str());
+
+		janusOutput = obs_output_create("janus_output", "janus_output",
+						settings, nullptr);
+		signal_handler_t *signal =
+			obs_output_get_signal_handler(janusOutput);
+		startStreaming2Janus.Connect(signal, "start", OBSStartStreaming2Janus,
+					this);
+		stopStreaming2Janus.Connect(signal, "stop", OBSStopStreaming2Janus, this);
+	}
+	#endif
 }
 
 bool BasicOutputHandler::StartVirtualCam()
@@ -261,6 +310,45 @@ bool BasicOutputHandler::VirtualCamActive() const
 		return obs_output_active(virtualCam);
 	}
 	return false;
+}
+
+void BasicOutputHandler::StartJanusStreaming() {
+	auto view = obs_view_create();
+	// Update output source from current preview
+	OBSSource s = OBSBasic::Get()->GetCurrentSceneSource();
+	obs_source_get_ref(s);
+	obs_source_t *source = s;
+
+	// set source to view
+	{
+		auto current = obs_view_get_source(view, 0);
+		if (source != current)
+			obs_view_set_source(view, 0, source);
+		// release
+		obs_source_release(source);
+		obs_source_release(current);
+	}
+	
+	auto video = obs_view_add(view);
+	obs_output_set_media(janusOutput, video, obs_get_audio());
+	if (!Active())
+		SetupOutputs();
+
+	bool success = obs_output_start(janusOutput);
+	if (!success) {
+		blog(LOG_ERROR, "can not start janus stream");
+		obs_view_remove(view);
+		obs_view_set_source(view, 0, nullptr);
+		video = nullptr;
+	}
+}
+
+void BasicOutputHandler::StopJanusStreaming() {
+	obs_output_stop(janusOutput);
+}
+
+bool BasicOutputHandler::JanusStreamActive() const {
+	return obs_output_active(janusOutput);
 }
 
 /* ------------------------------------------------------------------------ */

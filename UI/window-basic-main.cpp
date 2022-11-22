@@ -7536,6 +7536,55 @@ void OBSBasic::OnVirtualCamStop(int)
 	OnDeactivate();
 }
 
+void OBSBasic::StartJanusStream() {
+	if (!outputHandler || !outputHandler->janusOutput)
+		return;
+	if (outputHandler->JanusStreamActive())
+		return;
+	if (disableOutputsRef)
+		return;
+
+	SaveProject();
+
+	outputHandler->StartJanusStreaming();
+}
+
+void OBSBasic::StopJanusStream() {
+	if (!outputHandler || !outputHandler->janusOutput)
+		return;
+
+	SaveProject();
+
+	if (outputHandler->JanusStreamActive())
+		outputHandler->StopJanusStreaming();
+
+	OnDeactivate();
+}
+
+void OBSBasic::OnJanusStreamStart() {
+	if (!outputHandler || !outputHandler->janusOutput)
+		return;
+	OnActivate();
+
+	/*if (api)
+		api->on_event(OBS_FRONTEND_EVENT_VIRTUALCAM_STARTED);*/
+
+	blog(LOG_INFO,
+	     "==== Janus Stream Start ==========================================");
+}
+
+void OBSBasic::OnJanusStreamStop(int code) {
+	if (!outputHandler || !outputHandler->janusOutput)
+		return;
+	OnActivate();
+
+	/*if (api)
+		api->on_event(OBS_FRONTEND_EVENT_VIRTUALCAM_STOPPED);*/
+
+	blog(LOG_INFO,
+	     "==== Janus Stream Stop ==========================================");
+}
+
 void OBSBasic::OnClickedHide()
 {
 	api->on_event(OBS_FRONTEND_EVENT_MAIN_WINDOW_CLICK_HIDE);

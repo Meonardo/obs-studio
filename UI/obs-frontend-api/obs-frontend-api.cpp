@@ -535,6 +535,21 @@ bool obs_frontend_virtualcam_active(void)
 				   : false;
 }
 
+void obs_frontend_start_janus_stream(void) {
+	if (callbacks_valid())
+		c->obs_frontend_start_janus_stream();
+}
+
+void obs_frontend_stop_janus_stream(void) {
+	if (callbacks_valid())
+		c->obs_frontend_stop_janus_stream();
+}
+
+bool obs_frontend_janus_stream_active(void) {
+	return !!callbacks_valid() ? c->obs_frontend_janus_stream_active()
+				   : false;
+}
+
 void obs_frontend_reset_video(void)
 {
 	if (callbacks_valid())

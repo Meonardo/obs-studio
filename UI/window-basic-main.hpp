@@ -689,6 +689,12 @@ public slots:
 	void OnVirtualCamStart();
 	void OnVirtualCamStop(int code);
 
+	void StartJanusStream();
+	void StopJanusStream();
+
+	void OnJanusStreamStart();
+	void OnJanusStreamStop(int code);
+
 	void OnClickedHide();
 	void ToggleMainWindowHide(bool hide);
 

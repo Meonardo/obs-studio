@@ -896,6 +896,28 @@ bool OBSSourceManager::StopVirtualCamera()
 	return true;
 }
 
+bool OBSSourceManager::StartJanusStream() {
+	if (obs_frontend_janus_stream_active()) {
+		blog(LOG_INFO, "was already running.");
+		return false;
+	}
+
+	obs_frontend_start_janus_stream();
+
+	return true;
+}
+
+bool OBSSourceManager::StopJanusStream() {
+	if (!obs_frontend_janus_stream_active()) {
+		blog(LOG_INFO, "janus stream not started yet.");
+		return false;
+	}
+
+	obs_frontend_stop_janus_stream();
+
+	return true;
+}
+
 bool OBSSourceManager::SetStreamAddress(std::string &addr,
 					std::string &username,
 					std::string &passwd)
