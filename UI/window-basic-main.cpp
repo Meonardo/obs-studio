@@ -10401,6 +10401,9 @@ void OBSBasic::createUi()
 void OBSBasic::initData()
 {
 	sourceManager = new accrecorder::manager::OBSSourceManager;
+	// Add default audio output source
+	sourceManager->AddDefaultAudioSource();
+
 	scenePanel->setManager(sourceManager);
 	subScenePanel->setManager(sourceManager);
 	audioPanel->setManager(sourceManager);

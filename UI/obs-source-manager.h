@@ -75,6 +75,8 @@ public:
 	/*bool AddSceneItemToGroup(source::SceneItem *item,
 				 source::SceneItem::Category category);*/
 
+	void AddDefaultAudioSource();
+
 private:
 	void LoadGroups(std::vector<obs_source_t *> &groups);
 	void LoadSceneItemFromScene(std::string &sceneName);

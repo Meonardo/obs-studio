@@ -564,8 +564,7 @@ void OBSSourceManager::ListCameraItems(
 			std::string res_str(res);
 			item->resolutions_.emplace_back(res);
 			// support max resolution: 1920x1080
-			if (res_str.find("1920") !=
-			    std::string::npos) {
+			if (res_str.find("1920") != std::string::npos) {
 				max_support_res = j;
 			}
 		}
@@ -614,6 +613,57 @@ void OBSSourceManager::ListCameraItems(
 
 	// release properties for enum device list.
 	obs_properties_destroy(props);
+}
+
+void OBSSourceManager::AddDefaultAudioSource()
+{
+	std::string uuid = utils::GetUUID() + "(tmp)";
+	const char *tmpName = uuid.c_str();
+
+	const char *prop_name = "device_id";
+	char *kind = "wasapi_output_capture";
+
+	OBSSourceAutoRelease source = obs_get_source_by_name(tmpName);
+	if (source != nullptr) {
+		blog(LOG_ERROR, "can not enum audio item list.");
+		return;
+	}
+
+	// create tmp source
+	source = obs_source_create(kind, tmpName, NULL, nullptr);
+
+	// get properties
+	obs_properties_t *props = obs_source_properties(source);
+	// get detail
+	obs_property_t *p = obs_properties_get(props, prop_name);
+	size_t count = obs_property_list_item_count(p);
+
+	source::AudioOutputItem *item = nullptr;
+	for (size_t i = 0; i < count; i++) {
+		const char *name = obs_property_list_item_name(p, i);
+		const char *id = obs_property_list_item_string(p, i);
+		blog(LOG_ERROR, "enum audio device(%s): %s, id=%s", "output",
+		     name, id);
+
+		QString q_name(name);
+		auto comp_str = QTStr(
+			"Basic.Settings.Advanced.Audio.MonitoringDevice.Default");
+		// do not show default device for now
+		if (q_name == comp_str) {
+			item = new source::AudioOutputItem(std::string(name));
+			item->device_id_ = id;
+			break;
+		}
+	}
+
+	// release properties for enum device list.
+	obs_properties_destroy(props);
+
+	if (item == nullptr)
+		return;
+
+	// attach to scene
+	AttachSceneItem(item);
 }
 
 void OBSSourceManager::ListAudioItems(
@@ -896,7 +946,8 @@ bool OBSSourceManager::StopVirtualCamera()
 	return true;
 }
 
-bool OBSSourceManager::StartJanusStream() {
+bool OBSSourceManager::StartJanusStream()
+{
 	if (obs_frontend_janus_stream_active()) {
 		blog(LOG_INFO, "was already running.");
 		return false;
@@ -907,7 +958,8 @@ bool OBSSourceManager::StartJanusStream() {
 	return true;
 }
 
-bool OBSSourceManager::StopJanusStream() {
+bool OBSSourceManager::StopJanusStream()
+{
 	if (!obs_frontend_janus_stream_active()) {
 		blog(LOG_INFO, "janus stream not started yet.");
 		return false;
