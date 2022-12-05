@@ -1549,12 +1549,23 @@ void OBSBasic::InitBasicConfigDefaults2()
 					      "Pre23Defaults");
 	bool useNV = EncoderAvailable("ffmpeg_nvenc") && !oldEncDefaults;
 
-	config_set_default_string(basicConfig, "SimpleOutput", "StreamEncoder",
-				  useNV ? SIMPLE_ENCODER_NVENC
-					: SIMPLE_ENCODER_X264);
-	config_set_default_string(basicConfig, "SimpleOutput", "RecEncoder",
-				  useNV ? SIMPLE_ENCODER_NVENC
-					: SIMPLE_ENCODER_X264);
+	if (!useNV) {
+		// try to use qsv hw instead
+		bool useQSV = EncoderAvailable("obs_qsv11");
+		config_set_default_string(
+			basicConfig, "SimpleOutput", "StreamEncoder",
+			useQSV ? SIMPLE_ENCODER_QSV : SIMPLE_ENCODER_X264);
+		config_set_default_string(
+			basicConfig, "SimpleOutput", "RecEncoder",
+			useQSV ? SIMPLE_ENCODER_QSV : SIMPLE_ENCODER_X264);
+	} else {
+		config_set_default_string(
+			basicConfig, "SimpleOutput", "StreamEncoder",
+			useNV ? SIMPLE_ENCODER_NVENC : SIMPLE_ENCODER_X264);
+		config_set_default_string(
+			basicConfig, "SimpleOutput", "RecEncoder",
+			useNV ? SIMPLE_ENCODER_NVENC : SIMPLE_ENCODER_X264);
+	}
 }
 
 bool OBSBasic::InitBasicConfig()

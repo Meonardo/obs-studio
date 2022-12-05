@@ -4,6 +4,8 @@
 #include <thread>
 #include <random>
 
+extern bool EncoderAvailable(const char *encoder);
+
 namespace accrecorder::utils {
 void SplitString(std::string &source, std::string &&token,
 		 std::vector<std::string> &result)
@@ -209,7 +211,13 @@ obs_data_t *ScreenSceneItem::Properties() const
 {
 	obs_data_t *data = obs_data_create();
 	obs_data_set_int(data, "monitor", index);
-	obs_data_set_int(data, "method", 0);
+
+	if (EncoderAvailable("ffmpeg_nvenc")) {
+		obs_data_set_int(data, "method", 2);
+	} else {
+		obs_data_set_int(data, "method", 0);
+	}
+
 	obs_data_set_bool(data, "cursor", show_cursor);
 	return data;
 }
@@ -369,7 +377,8 @@ obs_data_t *IPCameraSceneItem::Properties() const
 	const size_t count = 512;
 	char pipeline[count];
 	snprintf(pipeline, count,
-		 "uridecodebin uri=%s name=bin latency=50 ! queue ! video.", url_.c_str());
+		 "uridecodebin uri=%s name=bin latency=50 ! queue ! video.",
+		 url_.c_str());
 
 	obs_data_set_string(data, "pipeline", pipeline);
 	obs_data_set_bool(data, "sync_appsink_audio", false);
@@ -728,8 +737,7 @@ Scene::~Scene()
 
 bool Scene::Attach(SceneItem *item, SceneItem::Category category)
 {
-	OBSSourceAutoRelease ret =
-		obs_get_source_by_name(item->Name().c_str());
+	OBSSourceAutoRelease ret = obs_get_source_by_name(item->Name().c_str());
 	if (ret) {
 		blog(LOG_ERROR, "source with name %s already attached!",
 		     item->Name().c_str());
@@ -753,7 +761,7 @@ bool Scene::Attach(SceneItem *item, SceneItem::Category category)
 			input, OBS_MONITORING_TYPE_MONITOR_ONLY);
 
 	// create a scene item for the input(!!!do not use auto release!!!)
-	obs_sceneitem_t* sceneItem =
+	obs_sceneitem_t *sceneItem =
 		CreateSceneItem(input, scene_, true, NULL, NULL);
 	if (sceneItem == nullptr) {
 		blog(LOG_ERROR, "create scene item failed!");
@@ -820,8 +828,7 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 	}
 
 	OBSSceneItem sceneItem =
-		obs_scene_find_sceneitem_by_id(
-		scene_, item->SceneID());
+		obs_scene_find_sceneitem_by_id(scene_, item->SceneID());
 	if (sceneItem == nullptr) {
 		blog(LOG_ERROR, "can not find the scene item in the scene!");
 		return false;
@@ -851,7 +858,8 @@ bool Scene::ApplySceneItemSettingsUpdate(SceneItem *item)
 	return true;
 }
 
-int Scene::FindFirstPiPSceneItemIndex() {
+int Scene::FindFirstPiPSceneItemIndex()
+{
 	auto vec = std::vector<SceneItem *>();
 	for (auto &item : items_) {
 		if (item->category() == SceneItem::Category::kPiP)
@@ -863,7 +871,7 @@ int Scene::FindFirstPiPSceneItemIndex() {
 	std::sort(vec.begin(), vec.end(),
 		  [](SceneItem *item1, SceneItem *item2) {
 			  return item1->SceneID() < item2->SceneID();
-		});
+		  });
 
 	auto target = vec.front();
 	auto sceneItem =
