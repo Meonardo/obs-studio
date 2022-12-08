@@ -1510,9 +1510,9 @@ bool OBSBasic::InitBasicConfigDefaults()
 	}
 
 	config_set_default_uint(basicConfig, "Video", "FPSType", 0);
-	config_set_default_string(basicConfig, "Video", "FPSCommon", "25 PAL");
-	config_set_default_uint(basicConfig, "Video", "FPSInt", 25);
-	config_set_default_uint(basicConfig, "Video", "FPSNum", 25);
+	config_set_default_string(basicConfig, "Video", "FPSCommon", "30");
+	config_set_default_uint(basicConfig, "Video", "FPSInt", 30);
+	config_set_default_uint(basicConfig, "Video", "FPSNum", 30);
 	config_set_default_uint(basicConfig, "Video", "FPSDen", 1);
 	config_set_default_string(basicConfig, "Video", "ScaleType", "bicubic");
 	config_set_default_string(basicConfig, "Video", "ColorFormat", "NV12");
