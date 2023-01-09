@@ -79,6 +79,9 @@ protected:
 	std::string GetRecordingFilename(const char *path, const char *ext,
 					 bool noSpace, bool overwrite,
 					 const char *format, bool ffmpeg);
+
+private:
+	void CreateJanusOutputVideoEncoder(video_t *video);
 };
 
 BasicOutputHandler *CreateSimpleOutputHandler(OBSBasic *main);

@@ -21,6 +21,8 @@ volatile bool janus_stream_active = false;
 #define FTL_PROTOCOL "ftl"
 #define RTMP_PROTOCOL "rtmp"
 
+const char *get_simple_output_encoder(const char *encoder);
+
 static void OBSStreamStarting(void *data, calldata_t *params)
 {
 	BasicOutputHandler *output = static_cast<BasicOutputHandler *>(data);
@@ -263,10 +265,12 @@ inline BasicOutputHandler::BasicOutputHandler(OBSBasic *main_) : main(main_)
 		obs_data_set_string(settings, "url", "ws://192.168.99.48:8188");
 		obs_data_set_string(settings, "display", "obs");
 		obs_data_set_int(settings, "room", room);
+		obs_data_set_int(settings, "id", 111);
 		obs_data_set_string(settings, "pin", std::to_string(room).c_str());
 
 		janusOutput = obs_output_create("janus_output", "janus_output",
 						settings, nullptr);
+		
 		signal_handler_t *signal =
 			obs_output_get_signal_handler(janusOutput);
 		startStreaming2Janus.Connect(signal, "start", OBSStartStreaming2Janus,
@@ -312,6 +316,94 @@ bool BasicOutputHandler::VirtualCamActive() const
 	return false;
 }
 
+void BasicOutputHandler::CreateJanusOutputVideoEncoder(video_t *video)
+{
+	// set video encoder
+	const char *encoder = config_get_string(main->Config(), "SimpleOutput",
+						"StreamEncoder");
+	auto vencoder = obs_video_encoder_create(
+		get_simple_output_encoder(encoder), "janus-output",
+		nullptr, nullptr);
+	if (!vencoder)
+		throw "Failed to create video recording encoder (simple output)";
+	obs_output_set_video_encoder(janusOutput, vencoder);
+	obs_encoder_set_video(vencoder, video);
+
+	OBSDataAutoRelease videoSettings = obs_data_create();
+	OBSDataAutoRelease aacSettings = obs_data_create();
+
+	int videoBitrate =
+		config_get_uint(main->Config(), "SimpleOutput", "VBitrate");
+	bool advanced =
+		config_get_bool(main->Config(), "SimpleOutput", "UseAdvanced");
+	bool enforceBitrate = !config_get_bool(main->Config(), "Stream1",
+					       "IgnoreRecommended");
+	const char *custom = config_get_string(main->Config(), "SimpleOutput",
+					       "x264Settings");
+
+	const char *presetType;
+	const char *preset;
+
+	if (strcmp(encoder, SIMPLE_ENCODER_QSV) == 0) {
+		presetType = "QSVPreset";
+
+	} else if (strcmp(encoder, SIMPLE_ENCODER_AMD) == 0) {
+		presetType = "AMDPreset";
+
+#ifdef ENABLE_HEVC
+	} else if (strcmp(encoder, SIMPLE_ENCODER_AMD_HEVC) == 0) {
+		presetType = "AMDPreset";
+#endif
+
+	} else if (strcmp(encoder, SIMPLE_ENCODER_NVENC) == 0) {
+		presetType = "NVENCPreset";
+
+#ifdef ENABLE_HEVC
+	} else if (strcmp(encoder, SIMPLE_ENCODER_NVENC_HEVC) == 0) {
+		presetType = "NVENCPreset";
+#endif
+
+	} else if (strcmp(encoder, SIMPLE_ENCODER_NVENC_AV1) == 0) {
+		presetType = "NVENCPreset";
+
+	} else {
+		presetType = "Preset";
+	}
+
+	preset = config_get_string(main->Config(), "SimpleOutput", presetType);
+	obs_data_set_string(videoSettings, "preset", preset);
+
+	obs_data_set_string(videoSettings, "rate_control", "CBR");
+	obs_data_set_int(videoSettings, "bitrate", videoBitrate);
+
+	if (advanced)
+		obs_data_set_string(videoSettings, "x264opts", custom);
+
+	obs_data_set_string(aacSettings, "rate_control", "CBR");
+
+	obs_service_apply_encoder_settings(main->GetService(), videoSettings,
+					   aacSettings);
+
+	if (!enforceBitrate) {
+		obs_data_set_int(videoSettings, "bitrate", videoBitrate);
+	}
+
+	enum video_format format = video_output_get_format(video);
+
+	switch (format) {
+	case VIDEO_FORMAT_I420:
+	case VIDEO_FORMAT_NV12:
+	case VIDEO_FORMAT_I010:
+	case VIDEO_FORMAT_P010:
+		break;
+	default:
+		obs_encoder_set_preferred_video_format(vencoder,
+						       VIDEO_FORMAT_NV12);
+	}
+
+	obs_encoder_update(vencoder, videoSettings);
+}
+
 void BasicOutputHandler::StartJanusStreaming() {
 	auto view = obs_view_create();
 	// Update output source from current preview
@@ -333,6 +425,10 @@ void BasicOutputHandler::StartJanusStreaming() {
 	obs_output_set_media(janusOutput, video, obs_get_audio());
 	if (!Active())
 		SetupOutputs();
+
+#ifdef USE_ENCODED_DATA
+	CreateJanusOutputVideoEncoder(video);
+#endif
 
 	bool success = obs_output_start(janusOutput);
 	if (!success) {
