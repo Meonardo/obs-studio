@@ -72,7 +72,7 @@ function Configure-OBS {
     
     $QTDIR_BASE = "D:\Programs\Qt\5.15.2\"
     $QTDIR = "${QTDIR_BASE}$(if (${BuildArch} -eq "x64") { "msvc2019_64" } else { "msvc2019" })"
-    $LIBWEBRTC = "D:\File\WebRTC\LibWebRTC\src"
+    $LIBWEBRTC = "D:\File\WebRTC\LibWebRTC-m104\src"
 
     $CmakeCommand = @(
         "-G", ${CmakeGenerator}
