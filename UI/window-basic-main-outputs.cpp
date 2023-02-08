@@ -187,7 +187,6 @@ static void OBSStopVirtualCam(void *data, calldata_t *params)
 	OBSBasicVCamConfig::StopVideo();
 }
 
-#if DEBUG
 static void OBSStartStreaming2Janus(void *data, calldata_t *params)
 {
 	BasicOutputHandler *output = static_cast<BasicOutputHandler *>(data);
@@ -212,7 +211,6 @@ static void OBSStopStreaming2Janus(void *data, calldata_t *params)
 	obs_output_set_media(output->virtualCam, nullptr, nullptr);
 	OBSBasicVCamConfig::StopVideo();
 }
-#endif
 
 /* ------------------------------------------------------------------------ */
 
@@ -256,7 +254,6 @@ inline BasicOutputHandler::BasicOutputHandler(OBSBasic *main_) : main(main_)
 		stopVirtualCam.Connect(signal, "stop", OBSStopVirtualCam, this);
 	}
 
-	#if DEBUG
 	/// janus output init
 	{
 		// default settings for janus output
@@ -277,7 +274,6 @@ inline BasicOutputHandler::BasicOutputHandler(OBSBasic *main_) : main(main_)
 					this);
 		stopStreaming2Janus.Connect(signal, "stop", OBSStopStreaming2Janus, this);
 	}
-	#endif
 }
 
 bool BasicOutputHandler::StartVirtualCam()
