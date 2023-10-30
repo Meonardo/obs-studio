@@ -10,3 +10,6 @@
 [submodule "plugins/obs-websocket"]
 	path = plugins/obs-websocket
 	url = https://github.com/obsproject/obs-websocket.git
+[submodule "app"]
+	path = app
+	url = https://github.com/Meonardo/recorder.git

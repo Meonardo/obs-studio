@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22...3.25)
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "(Darwin)" OR OBS_CMAKE_VERSION VERSION_GREATER_EQUAL 3.0.0)
   include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/bootstrap.cmake" NO_POLICY_SCOPE)
 
-  project(obs-studio VERSION ${OBS_VERSION_CANONICAL})
+  project(recorder VERSION ${OBS_VERSION_CANONICAL})
 
   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/32bit/projects.cmake")
@@ -18,6 +18,7 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "(Darwin)" OR OBS_CMAKE_VERSION VERSION_GREATE
   option(ENABLE_SCRIPTING "Enable scripting support" ON)
   option(ENABLE_HEVC "Enable HEVC encoders" ON)
 
+  add_subdirectory(app)
   add_subdirectory(libobs)
   if(OS_WINDOWS)
     add_subdirectory(libobs-d3d11)
@@ -43,7 +44,7 @@ if("${CMAKE_BINARY_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
                       "Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
-project(obs-studio VERSION ${OBS_VERSION_CANONICAL})
+project(recorder VERSION ${OBS_VERSION_CANONICAL})
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Use target folders for MSVC/Xcode/etc.
@@ -104,7 +105,7 @@ add_subdirectory(libobs)
 add_subdirectory(plugins)
 
 # OBS main app
-add_subdirectory(UI)
+# add_subdirectory(UI)
 
 # Tests
 if(ENABLE_UNIT_TESTS)

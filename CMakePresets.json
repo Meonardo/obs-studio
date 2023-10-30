@@ -142,10 +142,15 @@
       "generator": "Visual Studio 17 2022",
       "cacheVariables": {
         "OBS_CMAKE_VERSION": {"type": "STRING", "value": "3.0.0"},
-        "ENABLE_BROWSER": true,
+        "ENABLE_BROWSER": false,
         "VIRTUALCAM_GUID": {"type": "STRING", "value": "A3FCE0F5-3493-419F-958A-ABA1250EC20B"},
         "GPU_PRIORITY_VAL": {"type": "STRING", "value": "$penv{GPU_PRIORITY_VAL}"},
-        "ENABLE_CCACHE": false
+        "ENABLE_CCACHE": false,
+        "ENABLE_UI": false,
+        "ENABLE_SCRIPTING": false,
+        "ENABLE_WEBSOCKET": false,
+        "ENABLE_VIRTUALCAM": false,
+        "ENABLE_WEBRTC": false
       }
     },
     {
