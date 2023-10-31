@@ -18,7 +18,6 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "(Darwin)" OR OBS_CMAKE_VERSION VERSION_GREATE
   option(ENABLE_SCRIPTING "Enable scripting support" ON)
   option(ENABLE_HEVC "Enable HEVC encoders" ON)
 
-  add_subdirectory(app)
   add_subdirectory(libobs)
   if(OS_WINDOWS)
     add_subdirectory(libobs-d3d11)
@@ -29,7 +28,8 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "(Darwin)" OR OBS_CMAKE_VERSION VERSION_GREATE
 
   add_subdirectory(test/test-input)
 
-  add_subdirectory(UI)
+  # add_subdirectory(UI)
+  add_subdirectory(app)
 
   message_configuration()
   return()
@@ -106,6 +106,7 @@ add_subdirectory(plugins)
 
 # OBS main app
 # add_subdirectory(UI)
+add_subdirectory(app)
 
 # Tests
 if(ENABLE_UNIT_TESTS)

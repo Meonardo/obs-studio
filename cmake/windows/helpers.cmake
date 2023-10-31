@@ -39,6 +39,12 @@ function(set_target_properties_obs target)
     # cmake-format: off
     _target_install_obs(${target} DESTINATION ${OBS_EXECUTABLE_DESTINATION})
     # cmake-format: on
+    if(target STREQUAL recorder)
+      get_property(obs_executables GLOBAL PROPERTY _OBS_EXECUTABLES)
+      get_property(obs_modules GLOBAL PROPERTY OBS_MODULES_ENABLED)
+      add_dependencies(${target} ${obs_executables} ${obs_modules})
+      _bundle_dependencies(${target})
+    endif()
 
     if(target STREQUAL obs-studio)
       get_property(obs_executables GLOBAL PROPERTY _OBS_EXECUTABLES)
