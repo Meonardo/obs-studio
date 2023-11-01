@@ -150,7 +150,8 @@
         "ENABLE_SCRIPTING": false,
         "ENABLE_WEBSOCKET": false,
         "ENABLE_VIRTUALCAM": false,
-        "ENABLE_WEBRTC": false
+        "ENABLE_WEBRTC": false,
+	"CMAKE_COMPILE_WARNING_AS_ERROR": false
       }
     },
     {

@@ -13,3 +13,6 @@
 [submodule "app"]
 	path = app
 	url = https://github.com/Meonardo/recorder.git
+[submodule "plugins/obs-rtsp"]
+	path = plugins/obs-rtsp
+	url = https://github.com/Meonardo/obs-rtsp.git
