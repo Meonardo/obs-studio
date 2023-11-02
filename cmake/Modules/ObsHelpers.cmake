@@ -81,7 +81,7 @@ function(setup_plugin_target target)
             COMPONENT obs_${target}
             EXCLUDE_FROM_ALL)
 
-  setup_target_resources("${target}" "obs-plugins/${target}")
+  setup_target_resources("${target}" "plugins/${target}")
   set_property(GLOBAL APPEND PROPERTY OBS_MODULE_LIST "${target}")
   add_custom_command(
     TARGET ${target}
@@ -392,20 +392,20 @@ function(_install_obs_plugin_with_data target source)
      AND NOT OS_MACOS)
     install(
       DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${source}/
-      DESTINATION ${OBS_DATA_DESTINATION}/obs-plugins/${target}
+      DESTINATION ${OBS_DATA_DESTINATION}/plugins/${target}
       USE_SOURCE_PERMISSIONS
       COMPONENT ${target}_Runtime)
 
     install(
       DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${source}/
-      DESTINATION ${OBS_OUTPUT_DIR}/$<CONFIG>/${OBS_DATA_DESTINATION}/obs-plugins/${target}
+      DESTINATION ${OBS_OUTPUT_DIR}/$<CONFIG>/${OBS_DATA_DESTINATION}/plugins/${target}
       COMPONENT obs_${target}
       EXCLUDE_FROM_ALL)
 
     if(OS_WINDOWS AND DEFINED ENV{obsInstallerTempDir})
       install(
         DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${source}/
-        DESTINATION $ENV{obsInstallerTempDir}/${OBS_DATA_DESTINATION}/obs-plugins/${target}
+        DESTINATION $ENV{obsInstallerTempDir}/${OBS_DATA_DESTINATION}/plugins/${target}
         COMPONENT obs_${target}
         EXCLUDE_FROM_ALL)
     endif()

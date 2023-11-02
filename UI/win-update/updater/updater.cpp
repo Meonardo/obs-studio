@@ -1677,7 +1677,7 @@ static bool Update(wchar_t *cmdLine)
 
 		StringCbCopy(src, sizeof(src), obs_base_directory);
 		StringCbCat(src, sizeof(src),
-			    L"\\data\\obs-plugins\\win-dshow\\");
+			    L"\\data\\plugins\\win-dshow\\");
 
 		StringCbCopy(tmp, sizeof(tmp), L"\"");
 		StringCbCat(tmp, sizeof(tmp), regsvr);

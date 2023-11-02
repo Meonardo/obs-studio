@@ -84,11 +84,11 @@ target_link_libraries(obs-virtualcam-module PRIVATE _virtualcam)
 
 configure_file(virtualcam-install.bat.in virtualcam-install.bat)
 target_add_resource(obs-virtualcam-module "${CMAKE_CURRENT_BINARY_DIR}/virtualcam-install.bat"
-                    "${OBS_DATA_DESTINATION}/obs-plugins/win-dshow")
+                    "${OBS_DATA_DESTINATION}/plugins/win-dshow")
 
 configure_file(virtualcam-uninstall.bat.in virtualcam-uninstall.bat)
 target_add_resource(obs-virtualcam-module "${CMAKE_CURRENT_BINARY_DIR}/virtualcam-uninstall.bat"
-                    "${OBS_DATA_DESTINATION}/obs-plugins/win-dshow")
+                    "${OBS_DATA_DESTINATION}/plugins/win-dshow")
 
 include(cmake/32bit.cmake)
 

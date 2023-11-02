@@ -62,9 +62,9 @@ static const char *module_bin[] = {
 };
 
 static const char *module_data[] = {
-	OBS_INSTALL_DATA_PATH "/obs-plugins/%module%",
-	OBS_DATA_PATH "/obs-plugins/%module%",
-	FLATPAK_PLUGIN_PATH "/share/obs/obs-plugins/%module%"};
+	OBS_INSTALL_DATA_PATH "/plugins/%module%",
+	OBS_DATA_PATH "/plugins/%module%",
+	FLATPAK_PLUGIN_PATH "/share/obs/plugins/%module%"};
 
 static const int module_patterns_size =
 	sizeof(module_bin) / sizeof(module_bin[0]);
