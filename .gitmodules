@@ -7,3 +7,6 @@
 [submodule "plugins/obs-rtsp"]
 	path = plugins/obs-rtsp
 	url = https://github.com/Meonardo/obs-rtsp.git
+[submodule "app"]
+	path = app
+	url = http://192.168.99.22/media/recorder.git
