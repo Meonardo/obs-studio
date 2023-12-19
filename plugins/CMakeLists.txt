@@ -12,25 +12,25 @@ if(OBS_CMAKE_VERSION VERSION_GREATER_EQUAL 3.0.0)
   set_property(GLOBAL APPEND PROPERTY OBS_FEATURES_ENABLED "Plugin Support")
 
   macro(check_obs_browser)
-    if(NOT (OS_WINDOWS AND NOT CMAKE_GENERATOR_PLATFORM MATCHES "(Win32|x64)"))
-      if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/obs-browser/cmake/macos/Info.plist.in")
-        add_subdirectory(obs-browser)
-      elseif(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/obs-browser/CMakeLists.txt")
-        message(FATAL_ERROR "Required submodule 'obs-browser' not available.")
-      endif()
-    endif()
+    # if(NOT (OS_WINDOWS AND NOT CMAKE_GENERATOR_PLATFORM MATCHES "(Win32|x64)"))
+    #   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/obs-browser/cmake/macos/Info.plist.in")
+    #     add_subdirectory(obs-browser)
+    #   elseif(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/obs-browser/CMakeLists.txt")
+    #     message(FATAL_ERROR "Required submodule 'obs-browser' not available.")
+    #   endif()
+    # endif()
   endmacro()
 
   macro(check_obs_websocket)
-    if(OS_WINDOWS
-       OR OS_MACOS
-       OR OS_LINUX)
-      if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/obs-websocket/cmake/macos/Info.plist.in")
-        add_subdirectory(obs-websocket)
-      elseif(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/obs-websocket/CMakeLists.txt")
-        message(FATAL_ERROR "Required submodule 'obs-websocket' not available.")
-      endif()
-    endif()
+    # if(OS_WINDOWS
+    #    OR OS_MACOS
+    #    OR OS_LINUX)
+    #   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/obs-websocket/cmake/macos/Info.plist.in")
+    #     add_subdirectory(obs-websocket)
+    #   elseif(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/obs-websocket/CMakeLists.txt")
+    #     message(FATAL_ERROR "Required submodule 'obs-websocket' not available.")
+    #   endif()
+    # endif()
   endmacro()
 
   # Add plugins in alphabetical order to retain order in IDE projects
@@ -101,11 +101,11 @@ if(NOT ENABLE_PLUGINS)
 endif()
 
 function(check_obs_browser)
-  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/obs-browser/CMakeLists.txt)
-    add_subdirectory(obs-browser)
-  else()
-    obs_status(FATAL_ERROR "obs-browser submodule not available.")
-  endif()
+  # if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/obs-browser/CMakeLists.txt)
+  #   add_subdirectory(obs-browser)
+  # else()
+  #   obs_status(FATAL_ERROR "obs-browser submodule not available.")
+  # endif()
 endfunction()
 
 # APPLE/WIN32/UNIX are soft-deprecated: https://discourse.cmake.org/t/platform-id-vs-win32-vs-cmake-system-name/1226/2
