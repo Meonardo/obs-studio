@@ -169,7 +169,8 @@ function(_check_dependencies)
           CACHE PATH "VLC source code directory" FORCE)
       list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
     elseif(dependency STREQUAL qt6)
-      list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
+      message(WARN "Qt6 deps ${CMAKE_PREFIX_PATH}")
+      # list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
     elseif(dependency STREQUAL cef)
       set(CEF_ROOT_DIR
           "${dependencies_dir}/${destination}"
