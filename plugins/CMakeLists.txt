@@ -74,6 +74,10 @@ if(OBS_CMAKE_VERSION VERSION_GREATER_EQUAL 3.0.0)
     add_subdirectory(obs-vst)
   endif()
   add_subdirectory(obs-webrtc)
+
+  # hese are not built by default
+  add_subdirectory(obs-rtsp)
+
   check_obs_websocket()
   add_subdirectory(obs-x264)
   add_subdirectory(rtmp-services)
@@ -185,3 +189,6 @@ add_subdirectory(rtmp-services)
 add_subdirectory(text-freetype2)
 add_subdirectory(aja)
 add_subdirectory(obs-webrtc)
+
+# hese are not built by default
+add_subdirectory(obs-rtsp)
